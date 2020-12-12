@@ -1,11 +1,16 @@
 
 TARGET=MonoReversi
 OUTDIR=.\build
+SRC_DIR=.\src
 LINK=link.exe
 
 OBJS=\
-	$(OUTDIR)\main.obj\
-	$(OUTDIR)\util.obj
+	$(OUTDIR)\const.obj\
+	$(OUTDIR)\bit_operation.obj\
+	$(OUTDIR)\board.obj\
+	$(OUTDIR)\game.obj\
+	$(OUTDIR)\util.obj\
+	$(OUTDIR)\main.obj
 
 all: $(OUTDIR)\$(TARGET).exe
 
@@ -38,5 +43,5 @@ LINK_FLAGS=\
 $(OUTDIR)\$(TARGET).exe: $(OUTDIR) $(OBJS)
 	$(LINK) $(LINK_FLAGS) $(OBJS)
 
-.cpp{$(OUTDIR)}.obj:
+{$(SRC_DIR)}.cpp{$(OUTDIR)}.obj:
 	$(CPP) $(CFLAGS) $<

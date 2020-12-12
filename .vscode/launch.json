@@ -5,16 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "cl.exe - アクティブ ファイルのビルドとデバッグ",
+            "name": "デバッグ",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${fileDirname}\\${fileBasenameNoExtension}.exe",
+            "program": "${workspaceFolder}\\build\\MonoReversi.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": false,
-            "preLaunchTask": "cl.exe build active file"
+            "externalConsole": true,
+            "preLaunchTask": "make"
         }
     ]
 }
