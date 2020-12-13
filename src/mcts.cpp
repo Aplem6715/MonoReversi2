@@ -4,7 +4,7 @@
 
 int Node::expand_thresh = 1;
 
-void Node::Init(NodePool *pool, uint64 own, uint64 opp, double transProb)
+void Node::Init(NodePool *pool, uint64 own, uint64 opp, float transProb)
 {
     this->finished = (CalcMobility(own, opp) == 0 && CalcMobility(opp, own));
     this->n = 0;
@@ -16,7 +16,7 @@ void Node::Init(NodePool *pool, uint64 own, uint64 opp, double transProb)
     this->pool = pool;
 }
 
-double Node::Expand()
+float Node::Expand()
 {
     uint64 mobility = CalcMobility(own, opp);
     uint64 pos = 0;
@@ -32,8 +32,8 @@ double Node::Expand()
 
     //vec_t result = net.predict;
     //result = {p, v};
-    double probs[64] = {0};
-    double v = 1.0;
+    float probs[64] = {0};
+    float v = 1.0;
 
     while (mobility != 0)
     {
@@ -46,14 +46,14 @@ double Node::Expand()
     }
 }
 
-double Node::Ucb(unsigned int parentN)
+float Node::Ucb(unsigned int parentN)
 {
     return w / n + costWeight * policyProb * sqrt(parentN) / (1 + n);
 }
 
-double Node::Next()
+float Node::Next()
 {
-    double value = 0;
+    float value = 0;
 
     // ゲーム終端なら勝敗を評価として返す
     if (finished)
@@ -90,8 +90,8 @@ double Node::Next()
     else
     {
         // 最大スコアの子ノードを探索
-        double score;
-        double maxScore = -1000000;
+        float score;
+        float maxScore = -1000000;
         Node *bestNode;
         for (Node *child : childs)
         {
@@ -111,7 +111,7 @@ double Node::Next()
     }
 }
 
-double Node::Evaluate()
+float Node::Evaluate()
 {
     return 1.0;
 }
@@ -121,7 +121,7 @@ NodePool::NodePool(int initSize)
     pool.reserve(initSize);
 }
 
-Node *NodePool::GetNewNode(uint64 own, uint64 opp, double transProb)
+Node *NodePool::GetNewNode(uint64 own, uint64 opp, float transProb)
 {
     Node *node = pool.back();
     pool.pop_back();

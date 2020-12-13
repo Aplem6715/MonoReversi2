@@ -11,12 +11,12 @@ class Node
 {
 private:
     static int expand_thresh;
-    static double costWeight;
+    static float costWeight;
 
     bool finished;
     unsigned int n;
-    double w;
-    double policyProb;
+    float w;
+    float policyProb;
 
     uint64 own, opp;
     std::vector<Node *> childs;
@@ -26,14 +26,14 @@ public:
     Node(){};
     ~Node(){};
 
-    void Init(NodePool *pool, uint64 own, uint64 opp, double transProb);
+    void Init(NodePool *pool, uint64 own, uint64 opp, float transProb);
 
     int GetNumVisited() { return n; }
 
-    double Expand();
-    double Ucb(unsigned int parentN);
-    double Next();
-    double Evaluate();
+    float Expand();
+    float Ucb(unsigned int parentN);
+    float Next();
+    float Evaluate();
 };
 
 class NodePool
@@ -45,7 +45,7 @@ public:
     NodePool(int initSize);
     ~NodePool();
 
-    Node *GetNewNode(uint64 own, uint64 opp, double transProb);
+    Node *GetNewNode(uint64 own, uint64 opp, float transProb);
     void RemoveNode(Node *node);
 };
 
