@@ -11,8 +11,13 @@ class Node
 {
 private:
     static int expand_thresh;
-    int n;
+    static double costWeight;
+
+    bool finished;
+    unsigned int n;
     double w;
+    double policyProb;
+
     uint64 own, opp;
     std::vector<Node *> childs;
     NodePool *pool;
@@ -26,10 +31,9 @@ public:
     int GetNumVisited() { return n; }
 
     void Expand();
+    double Ucb(unsigned int parentN);
     double Next();
-    double BackProp();
     double Evaluate();
-    double Ucb();
 };
 
 class NodePool
