@@ -1,7 +1,9 @@
 ﻿#include <iostream>
 #include <string>
 #include <stdio.h>
+
 #include "game.h"
+#include "mcts.h"
 #include "bit_operation.h"
 
 Game::Game(GameMode mode)
@@ -26,7 +28,6 @@ uint8 SelectColor()
 uint64 WaitPosInput()
 {
     std::string str_pos;
-    uint64 pos;
     int x, y;
 
     while (true)
@@ -56,6 +57,13 @@ void Game::Start()
 {
     uint8 humanColor;
     uint64 input;
+    MCTS *ai;
+
+    if (mode != GameMode::HUMAN_VS_HUMAN)
+    {
+        ai = new MCTS(5);
+    }
+
     if (mode == GameMode::HUMAN_VS_CPU)
     {
         humanColor = SelectColor();
@@ -79,7 +87,7 @@ void Game::Start()
         }
         else
         {
-            input = 0; //AI 未実装
+            input = ai->DeterminPos(board.GetOwn(), board.GetOpp());
         }
 
         int idx = CalcPosIndex(input);

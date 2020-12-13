@@ -138,3 +138,8 @@ int CalcPosIndex(uint64 pos)
     }
     return idx;
 }
+
+uint64 CalcPosBit(unsigned char posIdx)
+{
+    return 0x8000000000000000 >> posIdx;
+}

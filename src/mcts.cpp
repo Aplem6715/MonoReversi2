@@ -1,10 +1,13 @@
-#include <math.h>
+﻿#include <math.h>
+#include <random>
 #include "mcts.h"
 #include "bit_operation.h"
 
-int Node::expand_thresh = 1;
+unsigned int Node::expand_thresh = 1;
+float Node::costWeight = 1.0;
+unsigned int MCTS::NODE_PER_SEC = 500;
 
-void Node::Init(NodePool *pool, uint64 own, uint64 opp, float transProb)
+void Node::Init(NodePool *pool, uint64 own, uint64 opp, unsigned char posIdx, float transProb)
 {
     this->finished = (CalcMobility(own, opp) == 0 && CalcMobility(opp, own));
     this->n = 0;
@@ -22,18 +25,18 @@ float Node::Expand()
     uint64 pos = 0;
     uint64 flips = 0;
 
-    // パスの場合
-    if (mobility == 0)
-    {
-        // 手番を反転させた子ノードを追加（手番以外変化なしの子ノード）
-        childs.push_back(pool->GetNewNode(opp, own, 1));
-        return;
-    }
-
     //vec_t result = net.predict;
     //result = {p, v};
     float probs[64] = {0};
     float v = 1.0;
+
+    // パスの場合
+    if (mobility == 0)
+    {
+        // 手番を反転させた子ノードを追加（手番以外変化なしの子ノード）
+        childs.push_back(pool->GetNewNode(opp, own, 1, 0));
+        return v;
+    }
 
     while (mobility != 0)
     {
@@ -42,13 +45,14 @@ float Node::Expand()
         unsigned char posIdx = CalcPosIndex(pos);
 
         flips = CalcFlip(own, opp, pos);
-        childs.push_back(pool->GetNewNode(opp ^ flips, own ^ flips ^ pos, probs[posIdx]));
+        childs.push_back(pool->GetNewNode(opp ^ flips, own ^ flips ^ pos, probs[posIdx], posIdx));
     }
+    return v;
 }
 
 float Node::Ucb(unsigned int parentN)
 {
-    return w / n + costWeight * policyProb * sqrt(parentN) / (1 + n);
+    return w / n + costWeight * policyProb * (float)sqrt(parentN) / (1 + n);
 }
 
 float Node::Next()
@@ -77,7 +81,6 @@ float Node::Next()
     {
         // 訪問回数が一定以上で拡張
         value = Evaluate();
-        w += value;
         n++;
         // 一定以下なら現状を評価して返す
 
@@ -85,6 +88,7 @@ float Node::Next()
         {
             value = Expand();
         }
+        w += value;
         return value;
     }
     else
@@ -93,10 +97,16 @@ float Node::Next()
         float score;
         float maxScore = -1000000;
         Node *bestNode;
+        unsigned int childNSum = 0;
+        for (Node *child : childs)
+        {
+            childNSum += child->GetNumVisited();
+        }
+
         for (Node *child : childs)
         {
             // 相手の手番のスコアは反転
-            score = -child->Ucb(n);
+            score = -child->Ucb(childNSum);
             if (score > maxScore)
             {
                 bestNode = child;
@@ -116,21 +126,116 @@ float Node::Evaluate()
     return 1.0;
 }
 
-NodePool::NodePool(int initSize)
+unsigned char Node::SelectMove(bool isDeterministic)
 {
-    pool.reserve(initSize);
+    if (isDeterministic)
+    {
+        int n;
+        int nMax = 0;
+        unsigned char bestMove = 0;
+        for (Node *child : childs)
+        {
+            n = child->GetNumVisited();
+            if (n > nMax)
+            {
+                nMax = n;
+                bestMove = child->GetPos();
+            }
+        }
+        return bestMove;
+    }
+    else
+    {
+        uint64 childNSum = 0;
+        for (Node *child : childs)
+        {
+            childNSum += child->GetNumVisited();
+        }
+        float rndSlider = rand() / (float)RAND_MAX;
+        float accum = 0;
+        for (Node *child : childs)
+        {
+            accum += child->GetNumVisited() / (float)childNSum;
+            if (accum >= rndSlider)
+            {
+                return child->GetPos();
+            }
+        }
+        printf(">>>>>>>>>>>> Unreachable Code? <<<<<<<<<<<<<\n");
+        return childs.back()->GetPos();
+    }
 }
 
-Node *NodePool::GetNewNode(uint64 own, uint64 opp, float transProb)
+NodePool::NodePool(int initSize, int additionSize)
 {
+    this->additionSize = additionSize;
+    for (int i = 0; i < initSize; i++)
+    {
+        pool.push_back(new Node());
+    }
+}
+
+NodePool::~NodePool()
+{
+    Node *node;
+    while (!pool.empty())
+    {
+        node = pool.back();
+        pool.pop_back();
+        delete node;
+    }
+}
+
+Node *NodePool::GetNewNode(uint64 own, uint64 opp, float transProb, unsigned char posIdx)
+{
+    if (pool.empty())
+    {
+        for (int i = 0; i < additionSize; i++)
+        {
+            pool.push_back(new Node());
+        }
+    }
     Node *node = pool.back();
     pool.pop_back();
 
-    node->Init(this, own, opp, transProb);
+    node->Init(this, own, opp, posIdx, transProb);
     return node;
 }
 
 void NodePool::RemoveNode(Node *node)
 {
     pool.push_back(node);
+}
+
+MCTS::MCTS(unsigned int timeLimitSec)
+{
+    this->timeLimit = timeLimitSec * CLOCKS_PER_SEC;
+    this->pool = new NodePool(timeLimitSec * this->NODE_PER_SEC, this->NODE_PER_SEC);
+}
+
+MCTS::~MCTS()
+{
+    delete this->pool;
+}
+
+uint64 MCTS::DeterminPos(uint64 own, uint64 opp)
+{
+    clock_t start = clock();
+
+    uint64 mobility = CalcMobility(own, opp);
+    uint64 pos = 0;
+    uint64 flips = 0;
+
+    //vec_t result = net.predict;
+    //result = {p, v};
+
+    Node *node = pool->GetNewNode(own, opp, 1, 0);
+
+    // 指定時間が経過するまで探索
+    while (start + timeLimit < clock())
+    {
+        node->Next();
+    }
+
+    return CalcPosBit(node->SelectMove(true));
 }
