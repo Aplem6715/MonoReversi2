@@ -2,17 +2,21 @@
 #include "mcts.h"
 #include "bit_operation.h"
 
-void Node::Init(uint64 own, uint64 opp, double transProb)
+int Node::expand_thresh = 1;
+
+void Node::Init(NodePool *pool, uint64 own, uint64 opp, double transProb)
 {
-    this->own = own;
-    this->opp = opp;
+    this->finished = (CalcMobility(own, opp) == 0 && CalcMobility(opp, own));
     this->n = 0;
     this->w = 0;
     this->policyProb = transProb;
-    this->finished = (CalcMobility(own, opp) == 0 && CalcMobility(opp, own));
+    this->own = own;
+    this->opp = opp;
+    this->childs.clear();
+    this->pool = pool;
 }
 
-void Node::Expand()
+double Node::Expand()
 {
     uint64 mobility = CalcMobility(own, opp);
     uint64 pos = 0;
@@ -22,17 +26,23 @@ void Node::Expand()
     if (mobility == 0)
     {
         // 手番を反転させた子ノードを追加（手番以外変化なしの子ノード）
-        childs.push_back(pool->GetNewNode(opp, own));
+        childs.push_back(pool->GetNewNode(opp, own, 1));
         return;
     }
+
+    //vec_t result = net.predict;
+    //result = {p, v};
+    double probs[64] = {0};
+    double v = 1.0;
 
     while (mobility != 0)
     {
         pos = GetLSB(mobility);
         mobility ^= pos;
+        unsigned char posIdx = CalcPosIndex(pos);
 
         flips = CalcFlip(own, opp, pos);
-        childs.push_back(pool->GetNewNode(opp ^ flips, own ^ flips ^ pos));
+        childs.push_back(pool->GetNewNode(opp ^ flips, own ^ flips ^ pos, probs[posIdx]));
     }
 }
 
@@ -71,9 +81,9 @@ double Node::Next()
         n++;
         // 一定以下なら現状を評価して返す
 
-        if (this->n > expand_thresh)
+        if (this->n >= expand_thresh)
         {
-            Expand();
+            value = Expand();
         }
         return value;
     }
@@ -104,4 +114,23 @@ double Node::Next()
 double Node::Evaluate()
 {
     return 1.0;
+}
+
+NodePool::NodePool(int initSize)
+{
+    pool.reserve(initSize);
+}
+
+Node *NodePool::GetNewNode(uint64 own, uint64 opp, double transProb)
+{
+    Node *node = pool.back();
+    pool.pop_back();
+
+    node->Init(this, own, opp, transProb);
+    return node;
+}
+
+void NodePool::RemoveNode(Node *node)
+{
+    pool.push_back(node);
 }

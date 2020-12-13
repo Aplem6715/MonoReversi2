@@ -26,15 +26,14 @@ public:
     Node(){};
     ~Node(){};
 
-    void Init(uint64 own, uint64 opp, double transProb);
+    void Init(NodePool *pool, uint64 own, uint64 opp, double transProb);
 
     int GetNumVisited() { return n; }
 
-    void Expand();
+    double Expand();
     double Ucb(unsigned int parentN);
     double Next();
     double Evaluate();
-    bool Playout();
 };
 
 class NodePool
@@ -46,7 +45,7 @@ public:
     NodePool(int initSize);
     ~NodePool();
 
-    Node *GetNewNode(uint64 own, uint64 opp);
+    Node *GetNewNode(uint64 own, uint64 opp, double transProb);
     void RemoveNode(Node *node);
 };
 
