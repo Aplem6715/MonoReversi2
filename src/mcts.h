@@ -26,7 +26,7 @@ public:
     Node(){};
     ~Node(){};
 
-    void Init(uint64 own, uint64 opp);
+    void Init(uint64 own, uint64 opp, double transProb);
 
     int GetNumVisited() { return n; }
 
@@ -34,6 +34,7 @@ public:
     double Ucb(unsigned int parentN);
     double Next();
     double Evaluate();
+    bool Playout();
 };
 
 class NodePool

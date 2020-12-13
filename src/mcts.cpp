@@ -2,12 +2,14 @@
 #include "mcts.h"
 #include "bit_operation.h"
 
-void Node::Init(uint64 own, uint64 opp)
+void Node::Init(uint64 own, uint64 opp, double transProb)
 {
     this->own = own;
     this->opp = opp;
     this->n = 0;
     this->w = 0;
+    this->policyProb = transProb;
+    this->finished = (CalcMobility(own, opp) == 0 && CalcMobility(opp, own));
 }
 
 void Node::Expand()
@@ -42,19 +44,21 @@ double Node::Ucb(unsigned int parentN)
 double Node::Next()
 {
     double value = 0;
-    n++;
 
+    // ゲーム終端なら勝敗を評価として返す
     if (finished)
     {
+        // 勝ちは0, 負けは-1
         if (CountBits(own) > CountBits(opp))
-        {
-            value = 1;
-        }
-        else
         {
             value = 0;
         }
+        else
+        {
+            value = -1;
+        }
         w += value;
+        n++;
         return value;
     }
 
@@ -64,6 +68,7 @@ double Node::Next()
         // 訪問回数が一定以上で拡張
         value = Evaluate();
         w += value;
+        n++;
         // 一定以下なら現状を評価して返す
 
         if (this->n > expand_thresh)
@@ -88,9 +93,10 @@ double Node::Next()
                 maxScore = score;
             }
         }
-
         value = bestNode->Next();
+
         w += value;
+        n++;
         return value;
     }
 }
