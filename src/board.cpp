@@ -133,11 +133,11 @@ void Board::Draw()
                 }
                 else if (cursor & black)
                 {
-                    printf("##");
+                    printf("○");
                 }
                 else if (cursor & white)
                 {
-                    printf("＆");
+                    printf("●");
                 }
                 else if (cursor & mobility)
                 {
@@ -155,6 +155,7 @@ void Board::Draw()
         }
         printf("\n");
     }
+    printf("○:%d  ●:%d\n", GetStoneCount(Const::BLACK), GetStoneCount(Const::WHITE));
 }
 
 int Board::GetStoneCount(uint8 color)

@@ -3,7 +3,7 @@
 
 int main()
 {
-    Game game = Game(GameMode::HUMAN_VS_HUMAN);
+    Game game = Game(GameMode::HUMAN_VS_CPU);
     game.Start();
     return 1;
 }

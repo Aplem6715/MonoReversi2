@@ -8,6 +8,7 @@ OBJS=\
 	$(OUTDIR)\const.obj\
 	$(OUTDIR)\bit_operation.obj\
 	$(OUTDIR)\board.obj\
+	$(OUTDIR)\node.obj\
 	$(OUTDIR)\mcts.obj\
 	$(OUTDIR)\game.obj\
 	$(OUTDIR)\util.obj\
