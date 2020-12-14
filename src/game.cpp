@@ -5,7 +5,7 @@
 #include <thread>
 
 #include "game.h"
-#include "mcts.h"
+#include "ai/mcts.h"
 #include "bit_operation.h"
 
 Game::Game(GameMode mode)

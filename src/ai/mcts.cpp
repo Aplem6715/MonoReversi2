@@ -1,7 +1,7 @@
 ﻿#include <math.h>
 #include <random>
-#include "mcts.h"
-#include "node.h"
+#include "ai/mcts.h"
+#include "ai/node.h"
 #include "bit_operation.h"
 
 unsigned int MCTS::NODE_PER_SEC = 500;

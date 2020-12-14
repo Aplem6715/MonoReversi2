@@ -4,11 +4,13 @@
 
 #include <vector>
 #include "const.h"
+
+class Node;
 class NodePool;
 
 class Node
 {
-    
+
 private:
     static unsigned int expand_thresh;
     static float costWeight;

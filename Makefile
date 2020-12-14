@@ -1,18 +1,22 @@
 
 TARGET=MonoReversi
 OUTDIR=.\build
-SRC_DIR=.\src
+AI_OUTDIR=.\build\ai
 LINK=link.exe
+
+SRC_DIR=.\src
+AI_SRC_DIR=.\src\ai
+INCLUDE_PATH=.\src
 
 OBJS=\
 	$(OUTDIR)\const.obj\
 	$(OUTDIR)\bit_operation.obj\
 	$(OUTDIR)\board.obj\
-	$(OUTDIR)\node.obj\
-	$(OUTDIR)\mcts.obj\
 	$(OUTDIR)\game.obj\
-	$(OUTDIR)\util.obj\
-	$(OUTDIR)\main.obj
+	$(OUTDIR)\main.obj\
+	$(AI_OUTDIR)\mcts.obj\
+	$(AI_OUTDIR)\node.obj\
+
 
 all: $(OUTDIR)\$(TARGET).exe
 
@@ -22,17 +26,19 @@ clean:
 $(OUTDIR):
 	@if not exist $(OUTDIR) mkdir $(OUTDIR)
 
+$(AI_OUTDIR):
+	@if not exist $(AI_OUTDIR) mkdir $(AI_OUTDIR)
+
 
 CFLAGS=\
 	/nologo\
 	/W3\
-	/Fo"$(OUTDIR)\\"\
-	/Fd"$(OUTDIR)\\"\
 	/c\
 	/Zi\
 	/D_WIN32_WINNT=0x0600\
 	/DUNICODE\
-	/D_UNICODE
+	/D_UNICODE\
+	/I$(INCLUDE_PATH)
 
 LINK_FLAGS=\
 	/nologo\
@@ -42,8 +48,11 @@ LINK_FLAGS=\
 	/DEBUG
 
 
-$(OUTDIR)\$(TARGET).exe: $(OUTDIR) $(OBJS)
+$(OUTDIR)\$(TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(OBJS)
 	$(LINK) $(LINK_FLAGS) $(OBJS)
 
 {$(SRC_DIR)}.cpp{$(OUTDIR)}.obj:
-	$(CPP) $(CFLAGS) $<
+	$(CPP) $(CFLAGS) /Fo"$(OUTDIR)\\" /Fd"$(OUTDIR)\\" $<
+
+{$(AI_SRC_DIR)}.cpp{$(AI_OUTDIR)}.obj:
+	$(CPP) $(CFLAGS) /Fo"$(AI_OUTDIR)\\" /Fd"$(AI_OUTDIR)\\" $<
