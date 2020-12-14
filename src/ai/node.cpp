@@ -83,7 +83,7 @@ float Node::Next()
     if (this->childs.empty())
     {
         // 訪問回数が一定以上で拡張
-        value = Evaluate();
+        // value = Evaluate();
         n++;
         // 一定以下なら現状を評価して返す
 
