@@ -21,7 +21,7 @@ OBJS=\
 all: $(OUTDIR)\$(TARGET).exe
 
 clean:
-	-@erase /Q $(OUTDIR)\*
+	-@erase /Q $(OUTDIR)\* $(AI_OUTDIR)
 
 $(OUTDIR):
 	@if not exist $(OUTDIR) mkdir $(OUTDIR)
@@ -38,6 +38,7 @@ CFLAGS=\
 	/D_WIN32_WINNT=0x0600\
 	/DUNICODE\
 	/D_UNICODE\
+	/EHsc\
 	/I$(INCLUDE_PATH)
 
 LINK_FLAGS=\
