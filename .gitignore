@@ -1,5 +1,6 @@
 
 build/*
+tiny_dnn/
 
 *.pdb
 *.obj
