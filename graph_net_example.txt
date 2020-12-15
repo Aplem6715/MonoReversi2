@@ -1,0 +1,90 @@
+digraph "graph" {
+  node [ shape=record ];
+  "input0" [
+    label= "input|{{in|<in0>8x8x3(data)}|{out|<out0>8x8x3(data)}}"
+  ];
+  "input0":out0 -> "conv0":in0;
+  "conv0" [
+    label= "conv|{{in|<in0>8x8x3(data)|<in1>3x3x144(weight)|<in2>1x1x48(bias)}|{out|<out0>8x8x48(data)}}"
+  ];
+  "conv0":out0 -> "batch-norm0":in0;
+  "batch-norm0" [
+    label= "batch-norm|{{in|<in0>64x1x48(data)}|{out|<out0>64x1x48(data)}}"
+  ];
+  "batch-norm0":out0 -> "leaky-relu-activation0":in0;
+  "leaky-relu-activation0" [
+    label= "leaky-relu-activation|{{in|<in0>64x1x48(data)}|{out|<out0>64x1x48(data)}}"
+  ];
+  "leaky-relu-activation0":out0 -> "conv1":in0;
+  "conv1" [
+    label= "conv|{{in|<in0>8x8x48(data)|<in1>3x3x2304(weight)|<in2>1x1x48(bias)}|{out|<out0>8x8x48(data)}}"
+  ];
+  "conv1":out0 -> "batch-norm1":in0;
+  "batch-norm1" [
+    label= "batch-norm|{{in|<in0>64x1x48(data)}|{out|<out0>64x1x48(data)}}"
+  ];
+  "batch-norm1":out0 -> "leaky-relu-activation1":in0;
+  "leaky-relu-activation1" [
+    label= "leaky-relu-activation|{{in|<in0>64x1x48(data)}|{out|<out0>64x1x48(data)}}"
+  ];
+  "leaky-relu-activation1":out0 -> "conv2":in0;
+  "conv2" [
+    label= "conv|{{in|<in0>8x8x48(data)|<in1>3x3x2304(weight)|<in2>1x1x48(bias)}|{out|<out0>8x8x48(data)}}"
+  ];
+  "conv2":out0 -> "batch-norm2":in0;
+  "batch-norm2" [
+    label= "batch-norm|{{in|<in0>64x1x48(data)}|{out|<out0>64x1x48(data)}}"
+  ];
+  "batch-norm2":out0 -> "leaky-relu-activation2":in0;
+  "leaky-relu-activation2" [
+    label= "leaky-relu-activation|{{in|<in0>64x1x48(data)}|{out|<out0>64x1x48(data)}}"
+  ];
+  "leaky-relu-activation2":out0 -> "conv3":in0;
+  "leaky-relu-activation2":out0 -> "conv4":in0;
+  "conv3" [
+    label= "conv|{{in|<in0>8x8x48(data)|<in1>1x1x96(weight)|<in2>1x1x2(bias)}|{out|<out0>8x8x2(data)}}"
+  ];
+  "conv3":out0 -> "batch-norm3":in0;
+  "conv4" [
+    label= "conv|{{in|<in0>8x8x48(data)|<in1>1x1x48(weight)|<in2>1x1x1(bias)}|{out|<out0>8x8x1(data)}}"
+  ];
+  "conv4":out0 -> "batch-norm4":in0;
+  "batch-norm3" [
+    label= "batch-norm|{{in|<in0>64x1x2(data)}|{out|<out0>64x1x2(data)}}"
+  ];
+  "batch-norm3":out0 -> "leaky-relu-activation3":in0;
+  "batch-norm4" [
+    label= "batch-norm|{{in|<in0>64x1x1(data)}|{out|<out0>64x1x1(data)}}"
+  ];
+  "batch-norm4":out0 -> "leaky-relu-activation4":in0;
+  "leaky-relu-activation3" [
+    label= "leaky-relu-activation|{{in|<in0>64x1x2(data)}|{out|<out0>64x1x2(data)}}"
+  ];
+  "leaky-relu-activation3":out0 -> "fully-connected0":in0;
+  "leaky-relu-activation4" [
+    label= "leaky-relu-activation|{{in|<in0>64x1x1(data)}|{out|<out0>64x1x1(data)}}"
+  ];
+  "leaky-relu-activation4":out0 -> "fully-connected1":in0;
+  "fully-connected0" [
+    label= "fully-connected|{{in|<in0>128x1x1(data)|<in1>128x64x1(weight)|<in2>64x1x1(bias)}|{out|<out0>64x1x1(data)}}"
+  ];
+  "fully-connected0":out0 -> "softmax-activation0":in0;
+  "fully-connected1" [
+    label= "fully-connected|{{in|<in0>64x1x1(data)|<in1>64x128x1(weight)|<in2>128x1x1(bias)}|{out|<out0>128x1x1(data)}}"
+  ];
+  "fully-connected1":out0 -> "leaky-relu-activation5":in0;
+  "softmax-activation0" [
+    label= "softmax-activation|{{in|<in0>64x1x1(data)}|{out|<out0>64x1x1(data)}}"
+  ];
+  "leaky-relu-activation5" [
+    label= "leaky-relu-activation|{{in|<in0>128x1x1(data)}|{out|<out0>128x1x1(data)}}"
+  ];
+  "leaky-relu-activation5":out0 -> "fully-connected2":in0;
+  "fully-connected2" [
+    label= "fully-connected|{{in|<in0>128x1x1(data)|<in1>128x1x1(weight)|<in2>1x1x1(bias)}|{out|<out0>1x1x1(data)}}"
+  ];
+  "fully-connected2":out0 -> "linear0":in0;
+  "linear0" [
+    label= "linear|{{in|<in0>1x1x1(data)}|{out|<out0>1x1x1(data)}}"
+  ];
+}

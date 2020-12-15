@@ -10,9 +10,26 @@ int CountBits(uint64 stone);
 int CalcPosIndex(uint64 pos);
 uint64 CalcPosBit(unsigned char posIdx);
 
-inline unsigned char AntiColor(unsigned char color) { return color ^ 1; }
-inline uint64 GetLSB(uint64 bits) { return (-bits & bits); }
-inline int max(int x1, int x2) { return x1 > x2 ? x1 : x2; }
-inline int min(int x1, int x2) { return x1 < x2 ? x1 : x2; }
+inline unsigned char AntiColor(unsigned char color)
+{
+    return color ^ 1;
+}
+
+#pragma warning(push)
+#pragma warning(disable : 4146)
+inline uint64 GetLSB(uint64 bits)
+{
+    return (-bits & bits);
+}
+#pragma warning(pop)
+
+inline int max(int x1, int x2)
+{
+    return x1 > x2 ? x1 : x2;
+}
+inline int min(int x1, int x2)
+{
+    return x1 < x2 ? x1 : x2;
+}
 
 #endif

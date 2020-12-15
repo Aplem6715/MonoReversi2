@@ -13,7 +13,9 @@ struct Const
     static const uint8 EMPTY;
 
     static const uint8 PASS;
-    static const uint8 UNDO;  
+    static const uint8 UNDO;
+
+    static const uint8 BOARD_SIZE;
 };
 
 #endif

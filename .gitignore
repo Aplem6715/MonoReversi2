@@ -1,6 +1,9 @@
 
 build/*
+
+# external lib
 tiny_dnn/
+cereal/
 
 *.pdb
 *.obj

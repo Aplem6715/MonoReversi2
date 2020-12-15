@@ -16,6 +16,7 @@ OBJS=\
 	$(OUTDIR)\main.obj\
 	$(AI_OUTDIR)\mcts.obj\
 	$(AI_OUTDIR)\node.obj\
+	$(AI_OUTDIR)\model.obj\
 
 
 all: $(OUTDIR)\$(TARGET).exe
