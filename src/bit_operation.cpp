@@ -1,4 +1,6 @@
-﻿#include "bit_operation.h"
+﻿#include <vector>
+#include "aligned_allocator.h"
+#include "bit_operation.h"
 
 uint64 CalcMobilityL(uint64 aly, uint64 masked_opp, uint64 empty,
                      unsigned char dir)
@@ -142,4 +144,21 @@ int CalcPosIndex(uint64 pos)
 uint64 CalcPosBit(unsigned char posIdx)
 {
     return 0x8000000000000000 >> posIdx;
+}
+
+void ConvertBoard(uint64 board, std::vector<std::vector<float_t, tiny_dnn::aligned_allocator<float_t, 64>>> &out)
+{
+    for (int y = 7; y >= 0; y--)
+    {
+        out[y] = {
+            (float)((board >> (y * 8 + 7)) & 1),
+            (float)((board >> (y * 8 + 6)) & 1),
+            (float)((board >> (y * 8 + 5)) & 1),
+            (float)((board >> (y * 8 + 4)) & 1),
+            (float)((board >> (y * 8 + 3)) & 1),
+            (float)((board >> (y * 8 + 2)) & 1),
+            (float)((board >> (y * 8 + 1)) & 1),
+            (float)((board >> (y * 8 + 0)) & 1),
+        };
+    }
 }

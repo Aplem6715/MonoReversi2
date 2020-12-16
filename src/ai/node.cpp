@@ -123,10 +123,12 @@ float Node::Next()
     }
 }
 
+/*
 float Node::Evaluate()
 {
     return 1.0;
 }
+*/
 
 unsigned char Node::SelectMove(bool isDeterministic)
 {

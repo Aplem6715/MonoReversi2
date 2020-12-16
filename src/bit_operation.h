@@ -9,6 +9,7 @@ uint64 CalcFlip(uint64 aly, uint64 opp, uint64 pos);
 int CountBits(uint64 stone);
 int CalcPosIndex(uint64 pos);
 uint64 CalcPosBit(unsigned char posIdx);
+void ConvertBoard(uint64 board, std::vector<std::vector<float_t, tiny_dnn::aligned_allocator<float_t, 64>>> &out);
 
 inline unsigned char AntiColor(unsigned char color)
 {

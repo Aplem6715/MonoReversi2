@@ -15,7 +15,7 @@ public:
     ACModel(net_phase mode);
     ~ACModel(){};
 
-    void predict(uint64 own, uint64 opp, float *outValue, float *outPolicy);
+    void predict(uint64 own, uint64 opp, uint64 mob, float *outValue, float *outPolicy);
     void train();
 };
 

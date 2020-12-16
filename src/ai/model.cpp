@@ -1,4 +1,5 @@
 ﻿#include "model.h"
+#include "bit_operation.h"
 #include <vector>
 
 using namespace tiny_dnn::layers;
@@ -50,21 +51,15 @@ ACModel::ACModel(net_phase mode)
     softmax activation_policy;
     linear activation_value(1);
 
-    conv_p1 << bn_p1
-            << activation_p1
-            << outPolicy_fc
-            << activation_policy;
+    conv_p1 << bn_p1 << activation_p1
+            << outPolicy_fc << activation_policy;
 
-    conv_v1 << bn_v1
-            << activation_v1
-            << fc_v2
-            << activation_v2
-            << outValue_fc
-            << activation_value;
+    conv_v1 << bn_v1 << activation_v1
+            << fc_v2 << activation_v2
+            << outValue_fc << activation_value;
 
     // policyネット部
     mid << conv_p1;
-
     // valueネット部
     mid << conv_v1;
 
@@ -76,8 +71,20 @@ ACModel::ACModel(net_phase mode)
     viz.generate(ofs);
 };
 
-void ACModel::predict(uint64 own, uint64 opp, float *outValue, float *outPolicy)
+void ACModel::predict(uint64 own, uint64 opp, uint64 mob, float &outValue, float *outPolicy)
 {
+    // 3 x 8 x 8
+    static std::vector<std::vector<vec_t>> inputs(3, std::vector<vec_t>(8, vec_t(8)));
+    static tiny_dnn::tensor_t output;
+    ConvertBoard(own, inputs[0]);
+    ConvertBoard(opp, inputs[1]);
+    ConvertBoard(mob, inputs[2]);
+
+    output = net.predict(inputs);
+    for (int i = 0; i < 64; i++)
+    {
+        outPolicy[i] = output[0][i][0];
+    }
 }
 
 void ACModel::train()
