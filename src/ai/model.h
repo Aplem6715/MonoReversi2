@@ -6,6 +6,19 @@
 
 using namespace tiny_dnn;
 
+typedef struct StateInfo
+{
+    uint64 own, opp;
+    uint64 mob;
+} StateInfo;
+
+typedef struct GameData
+{
+    StateInfo state;
+    float z;
+    vec_t p;
+} GameData;
+
 class ACModel
 {
 private:
@@ -15,8 +28,8 @@ public:
     ACModel(net_phase mode);
     ~ACModel(){};
 
-    void predict(uint64 own, uint64 opp, uint64 mob, float *outValue, float *outPolicy);
-    void train();
+    void predict(uint64 own, uint64 opp, uint64 mob, float &outValue, vec_t &outPolicy);
+    void train(const std::vector<const GameData> &gameData);
 };
 
 #endif

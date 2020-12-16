@@ -49,7 +49,7 @@ ACModel::ACModel(net_phase mode)
     fc outValue_fc(v_hidden, 1);
 
     softmax activation_policy;
-    linear activation_value(1);
+    tanh_layer activation_value(1);
 
     conv_p1 << bn_p1 << activation_p1
             << outPolicy_fc << activation_policy;
@@ -71,22 +71,30 @@ ACModel::ACModel(net_phase mode)
     viz.generate(ofs);
 };
 
-void ACModel::predict(uint64 own, uint64 opp, uint64 mob, float &outValue, float *outPolicy)
+void ACModel::predict(uint64 own, uint64 opp, uint64 mob, float &outValue, vec_t &outPolicy)
 {
     // 3 x 8 x 8
-    static std::vector<std::vector<vec_t>> inputs(3, std::vector<vec_t>(8, vec_t(8)));
+    static std::vector<tensor_t> inputs(3, tensor_t(8, vec_t(8)));
     static tiny_dnn::tensor_t output;
     ConvertBoard(own, inputs[0]);
     ConvertBoard(opp, inputs[1]);
     ConvertBoard(mob, inputs[2]);
 
-    output = net.predict(inputs);
+    output = net.predict(inputs)[0];
     for (int i = 0; i < 64; i++)
     {
-        outPolicy[i] = output[0][i][0];
+        outPolicy = output[0];
     }
+    outValue = output[1][0];
 }
 
-void ACModel::train()
+void ACModel::train(const std::vector<const GameData> &gameData)
 {
+    adam opt;
+    std::vector<std::vector<tensor_t>> input;
+    std::vector<tensor_t> desiredOut;
+    size_t batchSize = 64;
+    size_t epochs = 10;
+
+    net.fit<mse>(opt, input, desiredOut, batchSize, epochs);
 }
