@@ -2,22 +2,14 @@
 #define MODEL_DEFINED
 
 #include "const.h"
+#include "dnn_io.h"
+
+#pragma warning(push)
+#pragma warning(disable : 4267)
 #include "tiny_dnn/tiny_dnn.h"
+#pragma warning(pop)
 
 using namespace tiny_dnn;
-
-typedef struct StateInfo
-{
-    uint64 own, opp;
-    uint64 mob;
-} StateInfo;
-
-typedef struct GameData
-{
-    StateInfo state;
-    float z;
-    vec_t p;
-} GameData;
 
 class ACModel
 {

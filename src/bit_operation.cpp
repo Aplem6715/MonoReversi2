@@ -1,5 +1,4 @@
-﻿#include <vector>
-#include "aligned_allocator.h"
+﻿
 #include "bit_operation.h"
 
 uint64 CalcMobilityL(uint64 aly, uint64 masked_opp, uint64 empty,

@@ -83,8 +83,8 @@ digraph "graph" {
   "fully-connected2" [
     label= "fully-connected|{{in|<in0>128x1x1(data)|<in1>128x1x1(weight)|<in2>1x1x1(bias)}|{out|<out0>1x1x1(data)}}"
   ];
-  "fully-connected2":out0 -> "linear0":in0;
-  "linear0" [
-    label= "linear|{{in|<in0>1x1x1(data)}|{out|<out0>1x1x1(data)}}"
+  "fully-connected2":out0 -> "tanh-activation0":in0;
+  "tanh-activation0" [
+    label= "tanh-activation|{{in|<in0>1x1x1(data)}|{out|<out0>1x1x1(data)}}"
   ];
 }

@@ -91,10 +91,10 @@ void ACModel::predict(uint64 own, uint64 opp, uint64 mob, float &outValue, vec_t
 void ACModel::train(const std::vector<const GameData> &gameData)
 {
     adam opt;
-    std::vector<std::vector<tensor_t>> input;
+    std::vector<tensor_t> input;
     std::vector<tensor_t> desiredOut;
     size_t batchSize = 64;
-    size_t epochs = 10;
+    int epochs = 10;
 
     net.fit<mse>(opt, input, desiredOut, batchSize, epochs);
 }

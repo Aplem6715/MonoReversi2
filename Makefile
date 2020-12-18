@@ -39,8 +39,15 @@ CFLAGS=\
 	/D_WIN32_WINNT=0x0600\
 	/DUNICODE\
 	/D_UNICODE\
+	/source-charset:utf-8\
+	/USE_SSE\
+	/USE_AVX\
+	/USE_AVX2\
+	/USE_CUDA\
+	/bigobj\
 	/EHsc\
 	/I$(INCLUDE_PATH)
+	# /USE_SERIALIZER\ #
 
 LINK_FLAGS=\
 	/nologo\

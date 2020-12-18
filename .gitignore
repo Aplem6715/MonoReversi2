@@ -4,6 +4,8 @@ build/*
 # external lib
 tiny_dnn/
 cereal/
+third_party/
+
 paper/
 
 *.pdb
