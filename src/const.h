@@ -16,6 +16,8 @@ struct Const
     static const uint8 UNDO;
 
     static const uint8 BOARD_SIZE;
+
+    static const float MAX_VALUE;
 };
 
 #endif

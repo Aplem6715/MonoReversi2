@@ -4,29 +4,31 @@
 
 #include "const.h"
 
-// 41[byte]
-typedef struct AbNode {
-    // 評価値
+// 273[byte]
+typedef struct AbNode
+{
+    // 評価値(4x2)
     float alpha, beta;
-    // 評価値を計算した手番までの深さ
+    // 評価値を計算した手番までの深さ(1)
     unsigned char depth;
-    // 自分石　相手石　着手可能位置
+    // 自分石　相手石　着手可能位置(8x3)
     uint64 own, opp, mob;
-    // 下につながる子ノード
-    AbNode* childs;
+    // 下につながる子ノード(8x30)
+    AbNode *childs[30];
 } AbNode;
 
-typedef struct AbPool {
+typedef struct AbPool
+{
     uint64 size;
     uint64 extend_size;
     uint64 bottom_idx;
-    AbNode* objects;
-    AbNode** pool;
+    AbNode *objects;
+    AbNode **pool;
 } AbPool;
 
-void InitABPool(AbPool* abPool, uint64 size, uint64 extend_size);
-void DeleteABPool(AbPool* abPool);
-AbNode* GetNewABNode(AbPool* abPool);
-void RemoveABNode(AbPool* abPool, AbNode* node);
+void InitABPool(AbPool *abPool, uint64 size, uint64 extend_size);
+void DeleteABPool(AbPool *abPool);
+AbNode *GetNewABNode(AbPool *abPool);
+void RemoveABNode(AbPool *abPool, AbNode *node);
 
 #endif
