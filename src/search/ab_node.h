@@ -1,8 +1,10 @@
-
+﻿
 #ifndef AB_NODE_DEFINED
 #define AB_NODE_DEFINED
 
-#include "const.h"
+#include "../const.h"
+
+#define MAX_CHILD_NUM (30)
 
 // 273[byte]
 typedef struct AbNode
@@ -14,7 +16,7 @@ typedef struct AbNode
     // 自分石　相手石　着手可能位置(8x3)
     uint64 own, opp, mob;
     // 下につながる子ノード(8x30)
-    AbNode *childs[30];
+    AbNode *childs[MAX_CHILD_NUM];
 } AbNode;
 
 typedef struct AbPool
@@ -22,6 +24,8 @@ typedef struct AbPool
     uint64 size;
     uint64 extend_size;
     uint64 bottom_idx;
+    uint64 usedNum;
+    uint64 stockNum;
     AbNode *objects;
     AbNode **pool;
 } AbPool;

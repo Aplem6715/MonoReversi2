@@ -1,16 +1,20 @@
 #ifndef PVS_DEFINED
 #define PVS_DEFINED
 
-#include "search/ab_node.h"
+#define WIN_VALUE (1000000)
+
+#include "../const.h"
 
 typedef struct SearchTree
 {
-    AbPool nodePool;
+    unsigned char depth;
 } SearchTree;
 
-void PVSRoot(uint64 own, uint64 opp, unsigned char depth);
-void PVS(SearchTree *tree, AbNode *currNode);
+void InitTree(SearchTree *tree, unsigned char depth);
+void DeleteTree(SearchTree *tree);
+uint64 Search(SearchTree *tree, uint64 own, uint64 opp);
+void PVS(SearchTree *tree);
 
-float AlphaBeta(SearchTree *tree, AbNode *currNode);
+float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed);
 
 #endif

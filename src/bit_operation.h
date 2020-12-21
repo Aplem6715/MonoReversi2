@@ -33,11 +33,17 @@ inline uint64 GetLSB(uint64 bits)
 }
 #pragma warning(pop)
 
-inline int max(int x1, int x2)
+inline int max(const int x1, const int x2)
 {
     return x1 > x2 ? x1 : x2;
 }
-inline int min(int x1, int x2)
+
+inline float maxf(const float x1, const float x2)
+{
+    return x1 > x2 ? x1 : x2;
+}
+
+inline int min(const int x1, const int x2)
 {
     return x1 < x2 ? x1 : x2;
 }

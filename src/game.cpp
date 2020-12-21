@@ -5,7 +5,8 @@
 #include <thread>
 
 #include "game.h"
-#include "ai/mcts.h"
+//#include "ai/mcts.h"
+#include "search/search.h"
 #include "bit_operation.h"
 
 Game::Game(GameMode mode)
@@ -59,14 +60,16 @@ void Game::Start()
 {
     uint8 humanColor;
     uint64 input;
-    MCTS *ai;
+    //MCTS *ai;
+    SearchTree tree;
     if (mode != GameMode::HUMAN_VS_HUMAN)
     {
-        ai = new MCTS(1);
+        //ai = new MCTS(1);
     }
 
     if (mode == GameMode::HUMAN_VS_CPU)
     {
+        InitTree(&tree, 8);
         humanColor = SelectColor();
     }
 
@@ -96,7 +99,7 @@ void Game::Start()
         }
         else
         {
-            input = ai->DeterminPos(board.GetOwn(), board.GetOpp());
+            input = Search(&tree, board.GetOwn(), board.GetOpp());
         }
 
         int idx = CalcPosIndex(input);

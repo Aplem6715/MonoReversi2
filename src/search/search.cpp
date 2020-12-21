@@ -1,36 +1,97 @@
-
+﻿
 #include "search.h"
-#include "bit_operation.h"
+#include "../bit_operation.h"
+#include "eval.h"
 
-inline void MobilityToChilds(SearchTree *tree, AbNode *node, const uint64 own, const uint64 opp, uint64 mob, const float alpha, const float beta, const unsigned char depth)
+void InitTree(SearchTree *tree, unsigned char depth)
 {
-    uint64 pos, flip;
-    AbNode *newNode;
-    
-    int childCount = 0;
+    tree->depth = depth;
+}
+
+void DeleteTree(SearchTree *tree)
+{
+}
+
+uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
+{
+    float score, maxScore = -Const::MAX_VALUE;
+    uint64 bestPos, pos, mob, rev;
+
+    mob = CalcMobility(own, opp);
+
     while (mob != 0)
     {
         pos = GetLSB(mob);
         mob ^= pos;
-        flip = CalcFlip(own, opp, pos);
+        rev = CalcFlip(own, opp, pos);
+        score = -AlphaBeta(tree, opp ^ rev, own ^ rev ^ pos, -Const::MAX_VALUE, Const::MAX_VALUE, tree->depth, false);
 
-        newNode = GetNewABNode(&tree->nodePool);
-        newNode->alpha = alpha;
-        newNode->beta = beta;
-        newNode->depth = depth - 1;
-        newNode->own = opp ^ pos;
-        newNode->opp = own ^ pos ^ flip;
-        newNode->childs[0] = NULL;
-        node->childs[childCount] = newNode;
-
-        childCount++;
+        if (score > maxScore)
+        {
+            maxScore = score;
+            bestPos = pos;
+        }
     }
+
+    return bestPos;
 }
 
-void PVSRoot(uint64 own, uint64 opp, unsigned char depth)
+void PVS(SearchTree *tree);
+
+float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed)
 {
-    AbPool abPool;
-    InitABPool(&abPool, 1000000, 100000);
-}
+    uint64 mob, pos, rev;
+    if (depth <= 0)
+    {
+        return EvalPosTable(own, opp);
+    }
 
-void PVS(SearchTree *tree, AbNode *node);
+    mob = CalcMobility(own, opp);
+
+    // 手があるか
+    if (mob == 0)
+    {
+        // 2連続パスなら終了
+        if (passed == 1)
+        {
+            if (CountBits(own) > CountBits(opp))
+            {
+                return WIN_VALUE;
+            }
+            else if (CountBits(own) < CountBits(opp))
+            {
+                return -WIN_VALUE;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+        else
+        {
+            alpha = maxf(alpha, -AlphaBeta(tree, opp, own, -beta, -alpha, depth - 1, true));
+        }
+    }
+    else
+    {
+        // 打つ手がある時
+        while (mob != 0)
+        {
+            // 着手位置・反転位置を取得
+            pos = GetLSB(mob);
+            mob ^= pos;
+            rev = CalcFlip(own, opp, pos);
+
+            // 子ノードを探索
+            alpha = maxf(alpha, -AlphaBeta(tree, opp ^ rev, own ^ rev ^ pos, -beta, -alpha, depth - 1, false));
+
+            // 上限突破したら
+            if (alpha >= beta)
+            {
+                // カット
+                return alpha;
+            }
+        }
+    }
+    return alpha;
+}

@@ -1,11 +1,15 @@
 
 TARGET=MonoReversi
+LINK=link.exe
+
 OUTDIR=.\build
 AI_OUTDIR=.\build\ai
-LINK=link.exe
+SEARCH_OUTDIR=.\build\search
 
 SRC_DIR=.\src
 AI_SRC_DIR=.\src\ai
+SEARCH_DIR=.\src\search
+
 INCLUDE_PATH=.\src
 
 OBJS=\
@@ -17,18 +21,24 @@ OBJS=\
 	$(AI_OUTDIR)\mcts.obj\
 	$(AI_OUTDIR)\node.obj\
 	$(AI_OUTDIR)\model.obj\
+	$(SEARCH_OUTDIR)\eval.obj\
+	$(SEARCH_OUTDIR)\ab_node.obj\
+	$(SEARCH_OUTDIR)\search.obj
 
 
 all: $(OUTDIR)\$(TARGET).exe
 
 clean:
-	-@erase /Q $(OUTDIR)\* $(AI_OUTDIR)
+	-@erase /Q $(OUTDIR)\* $(AI_OUTDIR)\* $(SEARCH_OUTDIR)\*
 
 $(OUTDIR):
 	@if not exist $(OUTDIR) mkdir $(OUTDIR)
 
 $(AI_OUTDIR):
 	@if not exist $(AI_OUTDIR) mkdir $(AI_OUTDIR)
+
+$(SEARCH_OUTDIR):
+	@if not exist $(SEARCH_OUTDIR) mkdir $(SEARCH_OUTDIR)
 
 
 CFLAGS=\
@@ -57,7 +67,7 @@ LINK_FLAGS=\
 	/DEBUG
 
 
-$(OUTDIR)\$(TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(OBJS)
+$(OUTDIR)\$(TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(SEARCH_OUTDIR) $(OBJS)
 	$(LINK) $(LINK_FLAGS) $(OBJS)
 
 {$(SRC_DIR)}.cpp{$(OUTDIR)}.obj:
@@ -65,3 +75,6 @@ $(OUTDIR)\$(TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(OBJS)
 
 {$(AI_SRC_DIR)}.cpp{$(AI_OUTDIR)}.obj:
 	$(CPP) $(CFLAGS) /Fo"$(AI_OUTDIR)\\" /Fd"$(AI_OUTDIR)\\" $<
+	
+{$(SEARCH_DIR)}.cpp{$(SEARCH_OUTDIR)}.obj:
+	$(CPP) $(CFLAGS) /Fo"$(SEARCH_OUTDIR)\\" /Fd"$(SEARCH_OUTDIR)\\" $<

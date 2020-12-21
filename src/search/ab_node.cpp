@@ -1,4 +1,4 @@
-#include "ab_node.h"
+﻿#include "ab_node.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -11,11 +11,24 @@ void InitABPool(AbPool *abPool, uint64 size, uint64 extend_size)
     abPool->extend_size = extend_size;
     abPool->pool = (AbNode **)malloc(sizeof(AbNode *) * abPool->size);
     abPool->objects = (AbNode *)malloc(sizeof(AbNode) * abPool->size);
+
+    if (abPool->pool == NULL)
+    {
+        printf("ノードプール領域の確保失敗\n");
+        return;
+    }
+    if (abPool->objects == NULL)
+    {
+        printf("ノードオブジェクト領域の確保失敗\n");
+        return;
+    }
     for (i = 0; i < abPool->size; i++)
     {
         abPool->pool[i] = &abPool->objects[i];
     }
-    abPool->bottom_idx = i;
+    abPool->bottom_idx = i - 1;
+    abPool->usedNum = 0;
+    abPool->stockNum = i;
 }
 
 void DeleteABPool(AbPool *abPool)
@@ -40,7 +53,7 @@ int ExtendPool(AbPool *abPool)
 
     abPool->pool = tmp;
     abPool->objects = objTmp;
-    int i;
+    uint64 i;
     for (i = abPool->size; i < abPool->size + abPool->extend_size; i++)
     {
         abPool->bottom_idx++;
@@ -60,9 +73,9 @@ AbNode *GetNewABNode(AbPool *abPool)
             return NULL;
         }
     }
-    abPool->bottom_idx--;
 
-    AbNode *node = abPool->pool[abPool->bottom_idx + 1];
+    AbNode *node = abPool->pool[abPool->bottom_idx];
+    abPool->bottom_idx--;
     node->alpha = -Const::MAX_VALUE;
     node->beta = Const::MAX_VALUE;
     node->depth = 0;
@@ -70,16 +83,32 @@ AbNode *GetNewABNode(AbPool *abPool)
     node->opp = 0;
     node->own = 0;
     node->mob = 0;
-    node->childs[0] = NULL;
+
+    for (int i = 0; i < MAX_CHILD_NUM; i++)
+    {
+        node->childs[i] = NULL;
+    }
+
+    abPool->usedNum++;
 
     return node;
 }
 
 void RemoveABNode(AbPool *abPool, AbNode *node)
 {
+    // 子ノードの返却
+    for (int i = 0; i < MAX_CHILD_NUM; i++)
+    {
+        if (node->childs[i] == NULL)
+        {
+            break;
+        }
+        RemoveABNode(abPool, node->childs[i]);
+    }
     abPool->bottom_idx++;
     // 上限突破チェック
     assert(abPool->bottom_idx < abPool->size);
 
     abPool->pool[abPool->bottom_idx] = node;
+    abPool->usedNum--;
 }
