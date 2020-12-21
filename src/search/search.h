@@ -3,11 +3,15 @@
 
 #define WIN_VALUE (1000000)
 
+#include <chrono>
 #include "../const.h"
 
 typedef struct SearchTree
 {
     unsigned char depth;
+    size_t nodeCount;
+    double usedTime;
+    float score;
 } SearchTree;
 
 void InitTree(SearchTree *tree, unsigned char depth);

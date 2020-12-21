@@ -17,6 +17,10 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
     float score, maxScore = -Const::MAX_VALUE;
     uint64 bestPos, pos, mob, rev;
 
+    std::chrono::system_clock::time_point start, end;
+    start = std::chrono::system_clock::now();
+    tree->nodeCount = 0;
+
     mob = CalcMobility(own, opp);
 
     while (mob != 0)
@@ -33,6 +37,11 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
         }
     }
 
+    end = std::chrono::system_clock::now();
+    tree->usedTime = static_cast<double>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000.0);
+    tree->score = maxScore;
+
     return bestPos;
 }
 
@@ -41,6 +50,8 @@ void PVS(SearchTree *tree);
 float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed)
 {
     uint64 mob, pos, rev;
+
+    tree->nodeCount++;
     if (depth <= 0)
     {
         return EvalPosTable(own, opp);
