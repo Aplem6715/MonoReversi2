@@ -99,6 +99,7 @@ void Game::Start()
         }
         else
         {
+            printf("※考え中・・・\r");
             input = Search(&tree, board.GetOwn(), board.GetOpp());
         }
 
