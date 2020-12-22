@@ -59,6 +59,31 @@ void Board::Put(uint64 pos)
     turn ^= 1;
 }
 
+uint64 Board::MoveRandom()
+{
+    uint64 mob = GetMobility();
+    if (mob == 0)
+        return 0;
+    uint64 pos = 0x8000000000000000;
+    uint8 nbMobs = CountBits(mob);
+    uint8 target = rand() % nbMobs + 1;
+    int ignored = 0;
+    while (1)
+    {
+        if ((pos & mob) != 0)
+        {
+            ignored++;
+            if (ignored == target)
+            {
+                break;
+            }
+        }
+        pos >>= 1;
+    }
+    Put(pos);
+    return pos;
+}
+
 void Board::Undo()
 {
     uint64 flip, pos;

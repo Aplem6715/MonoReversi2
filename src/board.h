@@ -33,6 +33,7 @@ public:
     uint8 GetTurnColor();
     void Reset();
     void Put(uint64 pos);
+    uint64 MoveRandom();
     void Undo();
     void UndoUntilColorChange();
     void Skip();
