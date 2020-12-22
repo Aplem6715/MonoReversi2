@@ -141,9 +141,12 @@ void Game::Start()
     std::cout << ((numBlack == numWhite)
                       ? "引き分け！！"
                       : ((numBlack > numWhite) ? "○の勝ち！" : "●の勝ち！\n"));
+    char xAscii;
+    int y;
     for (int i = 0; i < 60; i++)
     {
-        printf("%d, ", moves[i]);
+        CalcPosAscii(moves[i], xAscii, y);
+        printf("%c%d, ", xAscii, y);
     }
     printf("\n");
     getchar();

@@ -145,6 +145,12 @@ uint64 CalcPosBit(unsigned char posIdx)
     return 0x8000000000000000 >> posIdx;
 }
 
+void CalcPosAscii(unsigned char posIdx, char &x, int &y)
+{
+    x = 'A' + posIdx % 8;
+    y = posIdx / 8 + 1;
+}
+
 void ConvertBoard(uint64 board, std::vector<std::vector<float_t, tiny_dnn::aligned_allocator<float_t, 64>>> &out)
 {
     for (int y = 7; y >= 0; y--)

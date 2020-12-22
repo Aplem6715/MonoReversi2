@@ -3,7 +3,7 @@
 
 int main()
 {
-    Game game = Game(PlayerEnum::AI, PlayerEnum::AI);
+    Game game = Game(PlayerEnum::HUMAN, PlayerEnum::HUMAN);
     game.Start();
 
     return 1;
