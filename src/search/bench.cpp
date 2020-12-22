@@ -1,6 +1,5 @@
 
 #include <fstream>
-#include <time.h>
 
 #include "bench.h"
 #include "../board.h"
@@ -15,7 +14,6 @@ void MakeBench(int nbGames, uint8 nbRandomTurn)
     int y;
     uint8 moves[60];
 
-    srand((unsigned int)time(NULL));
     std::ofstream outfile(SEARCH_BENCH_FILE, std::ios::app);
 
     for (int i = 0; i < nbGames; i++)
@@ -47,6 +45,8 @@ void MakeBench(int nbGames, uint8 nbRandomTurn)
     }
 }
 
-void Bench1Game(uint8 *moves);
+void Bench1Game(uint8 *moves){
+    
+}
 
 void BenchSearching();
