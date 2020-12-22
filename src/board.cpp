@@ -87,6 +87,15 @@ void Board::Undo()
     }
 }
 
+void Board::UndoUntilColorChange()
+{
+    uint8 prev_turn = turn;
+    while (prev_turn == turn)
+    {
+        Undo();
+    }
+}
+
 void Board::Skip()
 {
     turn ^= 1;

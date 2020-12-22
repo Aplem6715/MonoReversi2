@@ -34,6 +34,7 @@ public:
     void Reset();
     void Put(uint64 pos);
     void Undo();
+    void UndoUntilColorChange();
     void Skip();
     void Draw();
     int GetStoneCount(uint8 color);

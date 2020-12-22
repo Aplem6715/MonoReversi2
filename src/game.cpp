@@ -6,29 +6,17 @@
 
 #include "game.h"
 //#include "ai/mcts.h"
-#include "search/search.h"
 #include "bit_operation.h"
 
-Game::Game(GameMode mode)
+Game::Game(PlayerEnum white, PlayerEnum black)
 {
-    this->mode = mode;
+    this->player[Const::WHITE] = white;
+    this->player[Const::BLACK] = black;
 }
 
 Game::~Game() {}
 
-uint8 SelectColor()
-{
-    int color;
-    std::cout << "あなたの色を入力してください（黒："
-              << (int)Const::BLACK
-              << ", 白:"
-              << (int)Const::WHITE
-              << "）:";
-    std::cin >> color;
-    return color;
-}
-
-uint64 WaitPosInput()
+uint64 WaitPosHumanInput()
 {
     std::string str_pos;
     int x, y;
@@ -56,21 +44,46 @@ uint64 WaitPosInput()
     }
 }
 
+uint64 Game::WaitPosAI(uint8 color)
+{
+    uint64 input;
+    printf("※考え中・・・\r");
+    input = Search(&tree[color], board.GetOwn(), board.GetOpp());
+    printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f\n",
+           tree[color].usedTime, tree[color].nodeCount, tree[color].nodeCount / tree[color].usedTime, tree[color].score);
+    return input;
+}
+
+uint64 Game::WaitPos(uint8 color)
+{
+    if (player[color] == PlayerEnum::HUMAN)
+    {
+        return WaitPosHumanInput();
+    }
+    else if (player[color] == PlayerEnum::AI)
+    {
+        return WaitPosAI(color); // TODO
+    }
+    else
+    {
+        printf("Unreachable");
+        assert(0);
+        return 0;
+    }
+}
+
 void Game::Start()
 {
-    uint8 humanColor;
     uint64 input;
-    //MCTS *ai;
-    SearchTree tree;
-    if (mode != GameMode::HUMAN_VS_HUMAN)
-    {
-        //ai = new MCTS(1);
-    }
 
-    if (mode == GameMode::HUMAN_VS_CPU)
+    // AIの初期化
+    if (player[Const::WHITE] == PlayerEnum::AI)
     {
-        InitTree(&tree, 8);
-        humanColor = SelectColor();
+        InitTree(&tree[Const::WHITE], 8);
+    }
+    if (player[Const::BLACK] == PlayerEnum::AI)
+    {
+        InitTree(&tree[Const::BLACK], 8);
     }
 
     board.Reset();
@@ -85,27 +98,17 @@ void Game::Start()
             board.Skip();
             continue;
         }
-        if (mode == GameMode::HUMAN_VS_HUMAN || board.GetTurnColor() == humanColor)
+
+        // 入力/解析の着手位置を待機
+        input = WaitPos(board.GetTurnColor());
+        if (input == Const::UNDO)
         {
-            input = WaitPosInput();
-            if (input == Const::UNDO)
-            {
-                do
-                {
-                    board.Undo();
-                } while (mode != GameMode::HUMAN_VS_HUMAN && board.GetTurnColor() != humanColor);
-                continue;
-            }
-        }
-        else
-        {
-            printf("※考え中・・・\r");
-            input = Search(&tree, board.GetOwn(), board.GetOpp());
-            printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f\n",
-                   tree.usedTime, tree.nodeCount, tree.nodeCount / tree.usedTime, tree.score);
+            board.UndoUntilColorChange();
         }
 
+        // 入力位置のインデックスを取得
         int idx = CalcPosIndex(input);
+        // 合法手判定
         if (!board.IsLegal(input))
         {
             std::cout
@@ -122,8 +125,13 @@ void Game::Start()
                 << idx / 8 + 1
                 << "に置きました\n";
         }
+
+        // 実際に着手
         board.Put(input);
-    }
+
+    } //end of loop:　while (!board.IsFinished())
+
+    // 勝敗を表示
     board.Draw();
     int numBlack = board.GetStoneCount(Const::BLACK);
     int numWhite = board.GetStoneCount(Const::WHITE);
