@@ -16,6 +16,8 @@ private:
     PlayerEnum player[2];
     SearchTree tree[2];
     Board board;
+    uint8 moves[60];
+    uint8 turn;
 
 public:
     Game(PlayerEnum white, PlayerEnum black);

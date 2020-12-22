@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void InitABPool(AbPool *abPool, uint64 size, uint64 extend_size)
+void InitABPool(AbPool *abPool, uint32 size, uint32 extend_size)
 {
-    int i;
+    uint32 i;
     abPool->size = size;
     abPool->extend_size = extend_size;
     abPool->pool = (AbNode **)malloc(sizeof(AbNode *) * abPool->size);
@@ -53,7 +53,7 @@ int ExtendPool(AbPool *abPool)
 
     abPool->pool = tmp;
     abPool->objects = objTmp;
-    uint64 i;
+    uint32 i;
     for (i = abPool->size; i < abPool->size + abPool->extend_size; i++)
     {
         abPool->bottom_idx++;

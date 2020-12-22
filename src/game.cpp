@@ -75,15 +75,16 @@ uint64 Game::WaitPos(uint8 color)
 void Game::Start()
 {
     uint64 input;
+    turn = 0;
 
     // AIの初期化
     if (player[Const::WHITE] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::WHITE], 8);
+        InitTree(&tree[Const::WHITE], 6);
     }
     if (player[Const::BLACK] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::BLACK], 8);
+        InitTree(&tree[Const::BLACK], 6);
     }
 
     board.Reset();
@@ -107,13 +108,13 @@ void Game::Start()
         }
 
         // 入力位置のインデックスを取得
-        int idx = CalcPosIndex(input);
+        uint8 posIdx = CalcPosIndex(input);
         // 合法手判定
         if (!board.IsLegal(input))
         {
             std::cout
-                << (char)('A' + idx % 8)
-                << idx / 8 + 1
+                << (char)('A' + posIdx % 8)
+                << posIdx / 8 + 1
                 << "には置けません\n";
             continue;
         }
@@ -121,9 +122,11 @@ void Game::Start()
         {
             std::cout
                 << (board.GetTurnColor() == Const::BLACK ? "○が" : "●が")
-                << (char)('A' + idx % 8)
-                << idx / 8 + 1
+                << (char)('A' + posIdx % 8)
+                << posIdx / 8 + 1
                 << "に置きました\n";
+            moves[turn] = posIdx;
+            turn++;
         }
 
         // 実際に着手
@@ -137,7 +140,12 @@ void Game::Start()
     int numWhite = board.GetStoneCount(Const::WHITE);
     std::cout << ((numBlack == numWhite)
                       ? "引き分け！！"
-                      : ((numBlack > numWhite) ? "○の勝ち！" : "●の勝ち！"));
+                      : ((numBlack > numWhite) ? "○の勝ち！" : "●の勝ち！\n"));
+    for (int i = 0; i < 60; i++)
+    {
+        printf("%d, ", moves[i]);
+    }
+    printf("\n");
     getchar();
     getchar();
 }

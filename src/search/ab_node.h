@@ -21,8 +21,8 @@ typedef struct AbNode
 
 typedef struct AbPool
 {
-    uint64 size;
-    uint64 extend_size;
+    uint32 size;
+    uint32 extend_size;
     uint64 bottom_idx;
     uint64 usedNum;
     uint64 stockNum;
@@ -30,7 +30,7 @@ typedef struct AbPool
     AbNode **pool;
 } AbPool;
 
-void InitABPool(AbPool *abPool, uint64 size, uint64 extend_size);
+void InitABPool(AbPool *abPool, uint32 size, uint32 extend_size);
 void DeleteABPool(AbPool *abPool);
 AbNode *GetNewABNode(AbPool *abPool);
 void RemoveABNode(AbPool *abPool, AbNode *node);

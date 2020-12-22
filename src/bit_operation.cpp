@@ -128,7 +128,7 @@ int CountBits(uint64 stone)
     return count;
 }
 
-int CalcPosIndex(uint64 pos)
+uint8 CalcPosIndex(uint64 pos)
 {
     uint64 cursor = 0x8000000000000000;
     int idx = 0;
