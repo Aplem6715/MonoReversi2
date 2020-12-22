@@ -101,7 +101,7 @@ void Game::Start()
         {
             printf("※考え中・・・\r");
             input = Search(&tree, board.GetOwn(), board.GetOpp());
-            printf("思考時間：%.2f[s]  探索ノード数：%llu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f\n",
+            printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f\n",
                    tree.usedTime, tree.nodeCount, tree.nodeCount / tree.usedTime, tree.score);
         }
 

@@ -8,9 +8,7 @@ void InitTree(SearchTree *tree, unsigned char depth)
     tree->depth = depth;
 }
 
-void DeleteTree(SearchTree *tree)
-{
-}
+void DeleteTree(SearchTree *tree) {}
 
 uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
 {
@@ -65,6 +63,7 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
         // 2連続パスなら終了
         if (passed == 1)
         {
+            // 勝敗判定
             if (CountBits(own) > CountBits(opp))
             {
                 return WIN_VALUE;
@@ -80,6 +79,7 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
         }
         else
         {
+            // 手番を入れ替えて探索続行
             alpha = maxf(alpha, -AlphaBeta(tree, opp, own, -beta, -alpha, depth - 1, true));
         }
     }
