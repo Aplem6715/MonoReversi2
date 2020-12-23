@@ -1,15 +1,18 @@
 #include <stdio.h>
 #include <time.h>
+#include <vector>
 #include "game.h"
 #include "search/bench.h"
 
 int main()
 {
     srand((unsigned int)time(NULL));
-    //Game game = Game(PlayerEnum::HUMAN, PlayerEnum::AI);
-    //game.Start();
+    Game game = Game(PlayerEnum::AI, PlayerEnum::HUMAN);
+    game.Start();
 
-    BenchSearching();
+    //std::vector<unsigned char> depths = {4, 6, 8};
+
+    //BenchSearching(depths);
 
     return 1;
 }

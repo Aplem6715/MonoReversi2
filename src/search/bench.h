@@ -12,6 +12,6 @@ void MakeBench(int nbGames, uint8 nbRandomTurn);
 
 void Bench1Game(SearchTree &tree, std::vector<uint8> moves, int nbPut, std::ofstream &logfile);
 
-void BenchSearching();
+void BenchSearching(std::vector<unsigned char> depths);
 
 #endif
