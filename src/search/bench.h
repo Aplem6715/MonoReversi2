@@ -6,7 +6,7 @@
 #include "../const.h"
 
 #define SEARCH_BENCH_FILE "./resources/bench/search.txt"
-#define BENCH_LOG_FILE "./resources/bench/search_log.txt"
+#define BENCH_LOG_FILE "./resources/bench/search_log.csv"
 
 void MakeBench(int nbGames, uint8 nbRandomTurn);
 

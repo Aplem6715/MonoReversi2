@@ -53,17 +53,15 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
 {
     Board board;
     uint64 pos;
+    char xAscii;
+    int y;
 
     board.Reset();
+
     for (uint8 move : moves)
     {
-        char x;
-        int y;
-        CalcPosAscii(move, x, y);
-        logfile << x << y;
         board.Put(CalcPosBit(move));
     }
-    logfile << "\n";
 
     board.Draw();
     for (int i = 0; i < nbPut; i++)
@@ -79,11 +77,13 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
         pos = Search(&tree, board.GetOwn(), board.GetOpp());
         board.Put(pos);
         board.Draw();
+        CalcPosAscii(CalcPosIndex(pos), xAscii, y);
         logfile << (int)tree.depth << ","
                 << tree.usedTime << ","
                 << tree.nodeCount << ","
                 << tree.nodeCount / tree.usedTime << ","
-                << tree.score << "\n";
+                << tree.score << ","
+                << xAscii << y << "\n";
     }
 }
 
@@ -97,16 +97,25 @@ void BenchSearching(vector<unsigned char> depths)
 
     logfile.setf(ios::fixed, ios::floatfield);
     logfile.precision(2);
-    logfile << "探索深度,思考時間,探索ノード数,探索速度,推定CPUスコア\n";
+    logfile << "探索深度,思考時間,探索ノード数,探索速度,推定CPUスコア,着手位置\n";
     LoadGameRecords(SEARCH_BENCH_FILE, records);
 
     for (vector<uint8> moves : records)
     {
+        for (uint8 move : moves)
+        {
+            char x;
+            int y;
+            CalcPosAscii(move, x, y);
+            logfile << x << y;
+        }
+        logfile << "\n";
         for (unsigned char depth : depths)
         {
             InitTree(&tree, depth);
             Bench1Game(tree, moves, 2, logfile);
         }
+        logfile << "\n";
     }
 
     logfile.unsetf(ios::floatfield);
