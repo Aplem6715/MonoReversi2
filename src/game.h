@@ -19,8 +19,8 @@ private:
     PlayerEnum player[2];
     SearchTree tree[2];
     Board board;
-    uint8 moves[60];
     uint8 turn;
+    std::vector<uint8> moves;
 
 public:
     Game(PlayerEnum white, PlayerEnum black);
@@ -28,6 +28,7 @@ public:
     uint64 Game::WaitPosAI(uint8 color);
     uint64 Game::WaitPos(uint8 color);
 
+    void Reset();
     void Start();
 };
 

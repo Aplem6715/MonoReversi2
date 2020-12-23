@@ -38,6 +38,7 @@ Game::Game(PlayerEnum white, PlayerEnum black)
 {
     this->player[Const::WHITE] = white;
     this->player[Const::BLACK] = black;
+    Reset();
 }
 
 Game::~Game() {}
@@ -98,10 +99,18 @@ uint64 Game::WaitPos(uint8 color)
     }
 }
 
+void Game::Reset()
+{
+    moves.clear();
+    board.Reset();
+    turn = 0;
+}
+
 void Game::Start()
 {
     uint64 input;
     turn = 0;
+    Reset();
 
     // AIの初期化
     if (player[Const::WHITE] == PlayerEnum::AI)
@@ -113,7 +122,6 @@ void Game::Start()
         InitTree(&tree[Const::BLACK], 5);
     }
 
-    board.Reset();
     while (!board.IsFinished())
     {
         board.Draw();
@@ -151,7 +159,7 @@ void Game::Start()
                 << (char)('A' + posIdx % 8)
                 << posIdx / 8 + 1
                 << "に置きました\n";
-            moves[turn] = posIdx;
+            moves.push_back(posIdx);
             turn++;
         }
 
@@ -169,9 +177,9 @@ void Game::Start()
                  : ((numBlack > numWhite) ? "○の勝ち！" : "●の勝ち！\n"));
     char xAscii;
     int y;
-    for (int i = 0; i < 60; i++)
+    for (uint8 move : moves)
     {
-        CalcPosAscii(moves[i], xAscii, y);
+        CalcPosAscii(move, xAscii, y);
         printf("%c%d, ", xAscii, y);
     }
     printf("\n");

@@ -7,12 +7,12 @@
 int main()
 {
     srand((unsigned int)time(NULL));
-    Game game = Game(PlayerEnum::AI, PlayerEnum::HUMAN);
-    game.Start();
+    //Game game = Game(PlayerEnum::AI, PlayerEnum::HUMAN);
+    //game.Start();
 
-    //std::vector<unsigned char> depths = {4, 6, 8};
+    std::vector<unsigned char> depths = {4, 6, 8};
 
-    //BenchSearching(depths);
+    BenchSearching(depths);
 
     return 1;
 }
