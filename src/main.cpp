@@ -9,11 +9,7 @@ int main()
     //Game game = Game(PlayerEnum::HUMAN, PlayerEnum::AI);
     //game.Start();
 
-    MakeBench(5, 6);
-    MakeBench(5, 16);
-    MakeBench(5, 26);
-    MakeBench(5, 36);
-    MakeBench(5, 46);
+    BenchSearching();
 
     return 1;
 }

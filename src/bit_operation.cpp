@@ -140,6 +140,11 @@ uint8 CalcPosIndex(uint64 pos)
     return idx;
 }
 
+uint8 CalcPosIndex(const char *ascii)
+{
+    return (ascii[0] - 'A') + (ascii[1] - '1') * 8;
+}
+
 uint64 CalcPosBit(unsigned char posIdx)
 {
     return 0x8000000000000000 >> posIdx;
