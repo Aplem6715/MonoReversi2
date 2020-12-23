@@ -1,4 +1,5 @@
-﻿#include <iostream>
+﻿#include <fstream>
+#include <iostream>
 #include <string>
 #include <stdio.h>
 #include <chrono>
@@ -7,6 +8,31 @@
 #include "game.h"
 //#include "ai/mcts.h"
 #include "bit_operation.h"
+
+using namespace std;
+
+void LoadGameRecords(char *file, vector<vector<uint8>> &records)
+{
+    ifstream infile(file);
+    string str;
+
+    if (infile.fail())
+    {
+        cerr << "Failed to open file." << endl;
+        return;
+    }
+
+    vector<uint8> moves;
+    while (getline(infile, str))
+    {
+        moves.clear();
+        for (size_t i = 0; i < str.length(); i += 2)
+        {
+            moves.push_back(CalcPosIndex(str.substr(i, 2).c_str()));
+        }
+        records.push_back(moves);
+    }
+}
 
 Game::Game(PlayerEnum white, PlayerEnum black)
 {
@@ -18,13 +44,13 @@ Game::~Game() {}
 
 uint64 WaitPosHumanInput()
 {
-    std::string str_pos;
+    string str_pos;
     int x, y;
 
     while (true)
     {
-        std::cout << "位置を入力してください（A1～H8）:";
-        std::cin >> str_pos;
+        cout << "位置を入力してください（A1～H8）:";
+        cin >> str_pos;
         if (str_pos[0] == 'U')
         {
             return Const::UNDO;
@@ -39,7 +65,7 @@ uint64 WaitPosHumanInput()
         }
         else
         {
-            std::cout << x << "," << y << " には置けません\n";
+            cout << x << "," << y << " には置けません\n";
         }
     }
 }
@@ -93,9 +119,9 @@ void Game::Start()
         board.Draw();
         if (board.GetMobility() == 0)
         {
-            std::cout << (board.GetTurnColor() == Const::BLACK ? "○の" : "●の")
-                      << "置く場所がありません！スキップ！\n";
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            cout << (board.GetTurnColor() == Const::BLACK ? "○の" : "●の")
+                 << "置く場所がありません！スキップ！\n";
+            this_thread::sleep_for(chrono::seconds(1));
             board.Skip();
             continue;
         }
@@ -112,7 +138,7 @@ void Game::Start()
         // 合法手判定
         if (!board.IsLegal(input))
         {
-            std::cout
+            cout
                 << (char)('A' + posIdx % 8)
                 << posIdx / 8 + 1
                 << "には置けません\n";
@@ -120,7 +146,7 @@ void Game::Start()
         }
         else
         {
-            std::cout
+            cout
                 << (board.GetTurnColor() == Const::BLACK ? "○が" : "●が")
                 << (char)('A' + posIdx % 8)
                 << posIdx / 8 + 1
@@ -138,9 +164,9 @@ void Game::Start()
     board.Draw();
     int numBlack = board.GetStoneCount(Const::BLACK);
     int numWhite = board.GetStoneCount(Const::WHITE);
-    std::cout << ((numBlack == numWhite)
-                      ? "引き分け！！"
-                      : ((numBlack > numWhite) ? "○の勝ち！" : "●の勝ち！\n"));
+    cout << ((numBlack == numWhite)
+                 ? "引き分け！！"
+                 : ((numBlack > numWhite) ? "○の勝ち！" : "●の勝ち！\n"));
     char xAscii;
     int y;
     for (int i = 0; i < 60; i++)

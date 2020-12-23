@@ -1,6 +1,7 @@
 #ifndef GAME_DEFINED
 #define GAME_DEFINED
 
+#include <vector>
 #include "board.h"
 #include "search/search.h"
 
@@ -9,6 +10,8 @@ enum PlayerEnum
     HUMAN,
     AI,
 };
+
+void LoadGameRecords(char *file, std::vector<std::vector<uint8>> &moves);
 
 class Game
 {
