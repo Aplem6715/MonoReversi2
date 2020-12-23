@@ -79,7 +79,7 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
         pos = Search(&tree, board.GetOwn(), board.GetOpp());
         board.Put(pos);
         board.Draw();
-        logfile << tree.depth << ","
+        logfile << (int)tree.depth << ","
                 << tree.usedTime << ","
                 << tree.nodeCount << ","
                 << tree.nodeCount / tree.usedTime << ","
@@ -87,33 +87,26 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
     }
 }
 
-void BenchSearching()
+void BenchSearching(vector<unsigned char> depths)
 {
     SearchTree tree;
     vector<vector<uint8>> records;
     ofstream logfile(BENCH_LOG_FILE);
-    unsigned char depth = 4;
 
     std::chrono::system_clock::time_point start, end;
 
     logfile.setf(ios::fixed, ios::floatfield);
     logfile.precision(2);
-    logfile << "探索深度：\t  思考時間：\t  探索ノード数：\t  探索速度：\t  推定CPUスコア：\t\n";
+    logfile << "探索深度,思考時間,探索ノード数,探索速度,推定CPUスコア\n";
     LoadGameRecords(SEARCH_BENCH_FILE, records);
 
     for (vector<uint8> moves : records)
     {
-        depth = 4;
-        do
+        for (unsigned char depth : depths)
         {
             InitTree(&tree, depth);
-
-            start = std::chrono::system_clock::now();
             Bench1Game(tree, moves, 2, logfile);
-            end = std::chrono::system_clock::now();
-
-            depth += 1;
-        } while (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() < 3 * 2 * 1000 && depth < 20);
+        }
     }
 
     logfile.unsetf(ios::floatfield);

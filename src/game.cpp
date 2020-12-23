@@ -106,11 +106,11 @@ void Game::Start()
     // AIの初期化
     if (player[Const::WHITE] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::WHITE], 6);
+        InitTree(&tree[Const::WHITE], 5);
     }
     if (player[Const::BLACK] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::BLACK], 6);
+        InitTree(&tree[Const::BLACK], 5);
     }
 
     board.Reset();
