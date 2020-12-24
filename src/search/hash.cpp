@@ -1,7 +1,9 @@
 ﻿#include "hash.h"
 #include "../bit_operation.h"
 #include <random>
+#include <stdlib.h>
 
+#define HASH_TABLE_SIZE (1 << 27)
 // RawHash[8行x2色][列内8石のパターン]
 uint64 RawHash[8 * 2][1 << 8];
 
@@ -19,6 +21,18 @@ void InitHash()
             } while (CountBits(RawHash[i][j]) < MIN_RAWHASH_BIT);
         }
     }
+}
+
+void InitHashTable(HashTable &table)
+{
+    table.size = HASH_TABLE_SIZE;
+    table.data = (HashData *)malloc(sizeof(HashData) * table.size);
+}
+
+void FreeHashTable(HashTable &table)
+{
+    free(table.data);
+    table.size = 0;
 }
 
 uint64 GetHashCode(uint64 own, uint64 opp)
