@@ -66,6 +66,7 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
     board.Draw();
     for (int i = 0; i < nbPut; i++)
     {
+        ResetTree(&tree);
         if (board.IsFinished())
         {
             break;
@@ -122,7 +123,6 @@ void BenchSearching(vector<unsigned char> depths)
         for (unsigned char depth : depths)
         {
             ConfigTree(&tree, depth);
-            ResetTree(&tree);
             Bench1Game(tree, moves, 2, logfile);
         }
         logfile << "\n";
