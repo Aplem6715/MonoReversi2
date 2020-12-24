@@ -2,13 +2,26 @@
 #include "search.h"
 #include "../bit_operation.h"
 #include "eval.h"
+#include "hash.h"
 
 void InitTree(SearchTree *tree, unsigned char depth)
 {
+    tree->table = (HashTable *)malloc(sizeof(HashTable));
+    if (tree->table == NULL)
+    {
+        printf("ハッシュテーブルのメモリ確保失敗\n");
+        return;
+    }
+
+    InitHashTable(tree->table);
     tree->depth = depth;
 }
 
-void DeleteTree(SearchTree *tree) {}
+void DeleteTree(SearchTree *tree)
+{
+    FreeHashTable(tree->table);
+    free(tree->table);
+}
 
 uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
 {
@@ -47,12 +60,37 @@ void PVS(SearchTree *tree);
 
 float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed)
 {
-    uint64 mob, pos, rev;
+    uint64 mob, pos, rev, hashCode;
+    HashHitState hashState;
+    float score, maxScore, lower;
 
     tree->nodeCount++;
     if (depth <= 0)
     {
         return EvalPosTable(own, opp);
+    }
+
+    HashData *hashData = GetHashData(tree->table, own, opp, depth, &hashCode, &hashState);
+    if (hashState == HASH_HIT)
+    {
+        if (hashData->upper <= alpha)
+            return hashData->upper;
+        if (hashData->lower >= beta)
+            return hashData->lower;
+        if (hashData->lower == hashData->upper)
+            return hashData->upper;
+
+        alpha = maxf(alpha, hashData->lower);
+        beta = minf(beta, hashData->upper);
+    }
+    else if (hashData != NULL)
+    {
+        // 新規データを登録
+        hashData->own = own;
+        hashData->opp = opp;
+        hashData->depth = depth;
+        hashData->lower = -Const::MAX_VALUE;
+        hashData->upper = Const::MAX_VALUE;
     }
 
     mob = CalcMobility(own, opp);
@@ -80,11 +118,13 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
         else
         {
             // 手番を入れ替えて探索続行
-            alpha = maxf(alpha, -AlphaBeta(tree, opp, own, -beta, -alpha, depth - 1, true));
+            maxScore = -AlphaBeta(tree, opp, own, -beta, -alpha, depth, true);
         }
     }
     else
     {
+        maxScore = -Const::MAX_VALUE;
+        lower = alpha;
         // 打つ手がある時
         while (mob != 0)
         {
@@ -94,15 +134,36 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
             rev = CalcFlip(own, opp, pos);
 
             // 子ノードを探索
-            alpha = maxf(alpha, -AlphaBeta(tree, opp ^ rev, own ^ rev ^ pos, -beta, -alpha, depth - 1, false));
+            score = -AlphaBeta(tree, opp ^ rev, own ^ rev ^ pos, -beta, -lower, depth - 1, false);
 
-            // 上限突破したら
-            if (alpha >= beta)
+            if (score > maxScore)
             {
-                // カット
-                return alpha;
+                maxScore = score;
+
+                // 上限突破したら
+                if (score >= beta)
+                {
+                    // 探索終了（カット）
+                    break;
+                }
+                else if (maxScore > lower)
+                {
+                    lower = maxScore;
+                }
             }
         }
     }
-    return alpha;
+
+    if (hashData != NULL)
+    {
+        if (maxScore < beta)
+        {
+            hashData->upper = maxScore;
+        }
+        if (maxScore > alpha)
+        {
+            hashData->lower = maxScore;
+        }
+    }
+    return maxScore;
 }

@@ -50,4 +50,9 @@ inline int min(const int x1, const int x2)
     return x1 < x2 ? x1 : x2;
 }
 
+inline float minf(const float x1, const float x2)
+{
+    return x1 < x2 ? x1 : x2;
+}
+
 #endif

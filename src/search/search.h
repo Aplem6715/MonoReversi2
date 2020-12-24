@@ -4,10 +4,12 @@
 #define WIN_VALUE (1000000)
 
 #include <chrono>
+#include "hash.h"
 #include "../const.h"
 
 typedef struct SearchTree
 {
+    HashTable *table;
     unsigned char depth;
     size_t nodeCount;
     double usedTime;
