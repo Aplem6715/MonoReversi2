@@ -32,7 +32,9 @@ void InitHashTable(HashTable *table)
         printf("ハッシュデータ配列のメモリ確保失敗\n");
         return;
     }
-    assert(table->size % 2 == 0);
+    // 2の冪乗サイズにすることでモジュロ演算をビットマスクに省略
+    // indexを求めるとき，2の冪乗サイズで次式が同じ値を返す (code % size == code & (size-1))
+    assert(CountBits(table->size) == 1);
 }
 
 void FreeHashTable(HashTable *table)
@@ -41,6 +43,27 @@ void FreeHashTable(HashTable *table)
     table->size = 0;
 }
 
+void ResetHashTable(HashTable *table)
+{
+    for (size_t i = 0; i < table->size; i++)
+    {
+        table->data[i].own = 0;
+        table->data[i].opp = 0;
+        table->data[i].depth = 0;
+        table->data[i].lower = 0.0;
+        table->data[i].upper = 0.0;
+    }
+    ResetHashStatistics(table);
+}
+
+void ResetHashStatistics(HashTable *table)
+{
+    table->nbUsed = 0;
+    table->nbCollide = 0;
+    table->nbHit = 0;
+}
+
+// 乱数ビット列を統合してハッシュコードを取得する
 inline uint64 GetHashCode(uint64 own, uint64 opp)
 {
     uint64 code;
@@ -88,12 +111,12 @@ HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uin
         else if (data->depth > depth)
         {
             *hitState = HASH_DEEPER;
+            // 探索深度が深い場合はハッシュデータの更新をしない
+            return NULL;
         }
         else
         {
             *hitState = HASH_SHALLOWER;
-            // 探索深度が浅い場合はハッシュデータの更新をしない
-            return NULL;
         }
     }
     else
@@ -112,6 +135,7 @@ HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uin
     return data;
 }
 
+/* 未使用（探索関数の中で実装されている機能）
 void HashOverwrite(HashTable *table, uint64 own, uint64 opp, uint8 depth, float lower, float upper, uint64 hashCode)
 {
     uint64 index = hashCode & (table->size - 1);
@@ -138,3 +162,4 @@ void HashPriorityOverwrite(HashTable *table, uint64 own, uint64 opp, uint8 depth
         data->upper = upper;
     }
 }
+*/

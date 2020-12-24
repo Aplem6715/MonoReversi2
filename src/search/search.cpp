@@ -23,6 +23,16 @@ void DeleteTree(SearchTree *tree)
     free(tree->table);
 }
 
+void ConfigTree(SearchTree *tree, unsigned char depth)
+{
+    tree->depth = depth;
+}
+
+void ResetTree(SearchTree *tree)
+{
+    ResetHashTable(tree->table);
+}
+
 uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
 {
     float score, maxScore = -Const::MAX_VALUE;
