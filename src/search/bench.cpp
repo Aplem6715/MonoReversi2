@@ -82,6 +82,9 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
                 << tree.usedTime << ","
                 << tree.nodeCount << ","
                 << tree.nodeCount / tree.usedTime << ","
+                << tree.table->nbUsed << ","
+                << tree.table->nbHit << ","
+                << tree.table->nbCollide << ","
                 << tree.score << ","
                 << xAscii << y << "\n";
     }
@@ -91,15 +94,21 @@ void BenchSearching(vector<unsigned char> depths)
 {
     SearchTree tree;
     vector<vector<uint8>> records;
-    ofstream logfile(BENCH_LOG_FILE);
+    string logFileName;
+
+    cout << "ベンチマーク: ログファイルのファイル名を入力してください\n";
+    cin >> logFileName;
+
+    ofstream logfile(BENCH_LOG_DIR + logFileName + ".csv");
 
     std::chrono::system_clock::time_point start, end;
 
     logfile.setf(ios::fixed, ios::floatfield);
     logfile.precision(2);
-    logfile << "探索深度,思考時間,探索ノード数,探索速度,推定CPUスコア,着手位置\n";
+    logfile << "探索深度,思考時間,探索ノード数,探索速度,ハッシュ記録数,ハッシュヒット数,ハッシュ衝突数,推定CPUスコア,着手位置\n";
     LoadGameRecords(SEARCH_BENCH_FILE, records);
 
+    InitTree(&tree, 0);
     for (vector<uint8> moves : records)
     {
         for (uint8 move : moves)
@@ -112,7 +121,8 @@ void BenchSearching(vector<unsigned char> depths)
         logfile << "\n";
         for (unsigned char depth : depths)
         {
-            InitTree(&tree, depth);
+            ConfigTree(&tree, depth);
+            ResetTree(&tree);
             Bench1Game(tree, moves, 2, logfile);
         }
         logfile << "\n";

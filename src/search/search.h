@@ -18,6 +18,8 @@ typedef struct SearchTree
 
 void InitTree(SearchTree *tree, unsigned char depth);
 void DeleteTree(SearchTree *tree);
+void ConfigTree(SearchTree *tree, unsigned char depth);
+void ResetTree(SearchTree *tree);
 uint64 Search(SearchTree *tree, uint64 own, uint64 opp);
 void PVS(SearchTree *tree);
 
