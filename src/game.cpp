@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <chrono>
 #include <thread>
+#include <assert.h>
 
 #include "game.h"
 //#include "ai/mcts.h"
@@ -42,11 +43,11 @@ Game::Game(PlayerEnum white, PlayerEnum black)
     // AIの初期化
     if (player[Const::WHITE] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::WHITE], 5);
+        InitTree(&tree[Const::WHITE], 5, 1, 4);
     }
     if (player[Const::BLACK] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::BLACK], 5);
+        InitTree(&tree[Const::BLACK], 5, 1, 4);
     }
     Reset();
 }

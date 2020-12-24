@@ -37,7 +37,7 @@ typedef struct HashTable
 } HashTable;
 
 #define HASH_SEED (160510)
-#define MIN_RAWHASH_BIT (16)
+#define MIN_RAWHASH_BIT (8)
 
 // ハッシュキー生成用の乱数ビット列を初期化
 void InitHash();

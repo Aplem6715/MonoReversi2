@@ -1,6 +1,7 @@
 ﻿
 #include <fstream>
 #include <iostream>
+#include <string>
 
 #include "bench.h"
 #include "../board.h"
@@ -79,19 +80,31 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
         board.Put(pos);
         board.Draw();
         CalcPosAscii(CalcPosIndex(pos), xAscii, y);
-        logfile << (int)tree.depth << ","
-                << tree.usedTime << ","
-                << tree.nodeCount << ","
-                << tree.nodeCount / tree.usedTime << ","
-                << tree.table->nbUsed << ","
-                << tree.table->nbHit << ","
-                << tree.table->nbCollide << ","
-                << tree.score << ","
-                << xAscii << y << "\n";
+
+        {
+            logfile << (int)tree.depth << ","
+                    << tree.usedTime << ","
+                    << tree.nodeCount << ","
+                    << tree.nodeCount / tree.usedTime << ",";
+        }
+        if (tree.useHash)
+        {
+            logfile << tree.table->nbUsed << ","
+                    << tree.table->nbHit << ","
+                    << tree.table->nbCollide << ",";
+        }
+        else
+        {
+            logfile << ",,,";
+        }
+        {
+            logfile << tree.score << ","
+                    << xAscii << y << "\n";
+        }
     }
 }
 
-void BenchSearching(vector<unsigned char> depths)
+void BenchSearching(vector<unsigned char> depths, unsigned char useHash, unsigned char hashDepth)
 {
     SearchTree tree;
     vector<vector<uint8>> records;
@@ -102,14 +115,15 @@ void BenchSearching(vector<unsigned char> depths)
 
     ofstream logfile(BENCH_LOG_DIR + logFileName + ".csv");
 
-    std::chrono::system_clock::time_point start, end;
+    chrono::system_clock::time_point start, end;
 
     logfile.setf(ios::fixed, ios::floatfield);
     logfile.precision(2);
     logfile << "探索深度,思考時間,探索ノード数,探索速度,ハッシュ記録数,ハッシュヒット数,ハッシュ衝突数,推定CPUスコア,着手位置\n";
     LoadGameRecords(SEARCH_BENCH_FILE, records);
 
-    InitTree(&tree, 0);
+    //57699
+    InitTree(&tree, 0, useHash, hashDepth);
     for (vector<uint8> moves : records)
     {
         for (uint8 move : moves)
