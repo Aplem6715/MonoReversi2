@@ -3,7 +3,7 @@
 #include <random>
 #include <stdlib.h>
 
-#define HASH_TABLE_SIZE (1 << 27)
+#define HASH_TABLE_SIZE (1 << 24)
 // RawHash[8行x2色][列内8石のパターン]
 uint64 RawHash[8 * 2][1 << 8];
 
@@ -23,23 +23,29 @@ void InitHash()
     }
 }
 
-void InitHashTable(HashTable &table)
+void InitHashTable(HashTable *table)
 {
-    table.size = HASH_TABLE_SIZE;
-    table.data = (HashData *)malloc(sizeof(HashData) * table.size);
+    table->size = HASH_TABLE_SIZE;
+    table->data = (HashData *)calloc(table->size, sizeof(HashData));
+    if (table->data == NULL)
+    {
+        printf("ハッシュテーブルのメモリ確保失敗\n");
+        return;
+    }
+    assert(table->size % 2 == 0);
 }
 
-void FreeHashTable(HashTable &table)
+void FreeHashTable(HashTable *table)
 {
-    free(table.data);
-    table.size = 0;
+    free(table->data);
+    table->size = 0;
 }
 
-uint64 GetHashCode(uint64 own, uint64 opp)
+inline uint64 GetHashCode(uint64 own, uint64 opp)
 {
     uint64 code;
 
-    // 64bit -> 8x8bit
+    // own: 64bit -> 8x8bit
     const uint8 *cursor = (uint8 *)(&own);
     code = RawHash[0][cursor[0]];
     code ^= RawHash[1][cursor[1]];
@@ -50,7 +56,7 @@ uint64 GetHashCode(uint64 own, uint64 opp)
     code ^= RawHash[6][cursor[6]];
     code ^= RawHash[7][cursor[7]];
 
-    // 64bit -> 8x8bit
+    // opp: 64bit -> 8x8bit
     cursor = (uint8 *)(&opp);
     code ^= RawHash[8][cursor[0]];
     code ^= RawHash[9][cursor[1]];
@@ -62,4 +68,70 @@ uint64 GetHashCode(uint64 own, uint64 opp)
     code ^= RawHash[15][cursor[7]];
 
     return code;
+}
+
+HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uint64 *hashCode, HashHitState *hitState)
+{
+    // ハッシュコード取得
+    *hashCode = GetHashCode(own, opp);
+    // サイズでモジュロ演算(code % size)
+    uint64 index = *hashCode & (table->size - 1);
+    HashData *data = &table->data[index];
+
+    if (data->own == own && data->opp == opp)
+    {
+        if (data->depth == depth)
+        {
+            table->nbHit++;
+            *hitState = HASH_HIT;
+            return data;
+        }
+        else if (data->depth > depth)
+        {
+            *hitState = HASH_DEEPER;
+        }
+        else
+        {
+            *hitState = HASH_SHALLOWER;
+        }
+    }
+    else
+    {
+        if (data->own == 0 && data->opp == 0)
+        {
+            *hitState = HASH_EMPTY;
+        }
+        else
+        {
+            *hitState = HASH_DEFFERENT;
+        }
+    }
+    return NULL;
+}
+
+void HashOverwrite(HashTable *table, uint64 own, uint64 opp, uint8 depth, float lower, float upper, uint64 hashCode)
+{
+    uint64 index = hashCode & (table->size - 1);
+    HashData *data = &table->data[index];
+
+    data->own = own;
+    data->opp = opp;
+    data->depth = depth;
+    data->lower = lower;
+    data->upper = upper;
+}
+
+void HashPriorityOverwrite(HashTable *table, uint64 own, uint64 opp, uint8 depth, float lower, float upper, uint64 hashCode)
+{
+    uint64 index = hashCode & (table->size - 1);
+    HashData *data = &table->data[index];
+
+    if (depth > data->depth)
+    {
+        data->own = own;
+        data->opp = opp;
+        data->depth = depth;
+        data->lower = lower;
+        data->upper = upper;
+    }
 }
