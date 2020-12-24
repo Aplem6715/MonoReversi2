@@ -4,23 +4,31 @@
 #include "eval.h"
 #include "hash.h"
 
-void InitTree(SearchTree *tree, unsigned char depth)
+void InitTree(SearchTree *tree, unsigned char depth, unsigned char useHash, unsigned char hashDepth)
 {
-    tree->table = (HashTable *)malloc(sizeof(HashTable));
-    if (tree->table == NULL)
-    {
-        printf("ハッシュテーブルのメモリ確保失敗\n");
-        return;
-    }
-
-    InitHashTable(tree->table);
     tree->depth = depth;
+    tree->useHash = useHash;
+    tree->hashDepth = hashDepth;
+    if (useHash)
+    {
+        tree->table = (HashTable *)malloc(sizeof(HashTable));
+        if (tree->table == NULL)
+        {
+            printf("ハッシュテーブルのメモリ確保失敗\n");
+            return;
+        }
+
+        InitHashTable(tree->table);
+    }
 }
 
 void DeleteTree(SearchTree *tree)
 {
-    FreeHashTable(tree->table);
-    free(tree->table);
+    if (tree->useHash)
+    {
+        FreeHashTable(tree->table);
+        free(tree->table);
+    }
 }
 
 void ConfigTree(SearchTree *tree, unsigned char depth)
@@ -30,7 +38,8 @@ void ConfigTree(SearchTree *tree, unsigned char depth)
 
 void ResetTree(SearchTree *tree)
 {
-    ResetHashTable(tree->table);
+    if (tree->useHash)
+        ResetHashTable(tree->table);
 }
 
 uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
@@ -72,6 +81,7 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
 {
     uint64 mob, pos, rev, hashCode;
     HashHitState hashState;
+    HashData *hashData = NULL;
     float score, maxScore, lower;
 
     tree->nodeCount++;
@@ -80,27 +90,30 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
         return EvalPosTable(own, opp);
     }
 
-    HashData *hashData = GetHashData(tree->table, own, opp, depth, &hashCode, &hashState);
-    if (hashState == HASH_HIT)
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        if (hashData->upper <= alpha)
-            return hashData->upper;
-        if (hashData->lower >= beta)
-            return hashData->lower;
-        if (hashData->lower == hashData->upper)
-            return hashData->upper;
+        hashData = GetHashData(tree->table, own, opp, depth, &hashCode, &hashState);
+        if (hashState == HASH_HIT)
+        {
+            if (hashData->upper <= alpha)
+                return hashData->upper;
+            if (hashData->lower >= beta)
+                return hashData->lower;
+            if (hashData->lower == hashData->upper)
+                return hashData->upper;
 
-        alpha = maxf(alpha, hashData->lower);
-        beta = minf(beta, hashData->upper);
-    }
-    else if (hashData != NULL)
-    {
-        // 新規データを登録
-        hashData->own = own;
-        hashData->opp = opp;
-        hashData->depth = depth;
-        hashData->lower = -Const::MAX_VALUE;
-        hashData->upper = Const::MAX_VALUE;
+            alpha = maxf(alpha, hashData->lower);
+            beta = minf(beta, hashData->upper);
+        }
+        else if (hashData != NULL)
+        {
+            // 新規データを登録
+            hashData->own = own;
+            hashData->opp = opp;
+            hashData->depth = depth;
+            hashData->lower = -Const::MAX_VALUE;
+            hashData->upper = Const::MAX_VALUE;
+        }
     }
 
     mob = CalcMobility(own, opp);
@@ -164,7 +177,7 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
         }
     }
 
-    if (hashData != NULL)
+    if (tree->useHash == 1 && hashData != NULL)
     {
         if (maxScore < beta)
         {

@@ -2,6 +2,7 @@
 #include "../bit_operation.h"
 #include <random>
 #include <stdlib.h>
+#include <assert.h>
 
 #define HASH_TABLE_SIZE (1 << 24)
 // RawHash[8行x2色][列内8石のパターン]

@@ -13,7 +13,7 @@ int main()
 
     std::vector<unsigned char> depths = {4, 6, 8};
 
-    BenchSearching(depths);
+    BenchSearching(depths, 1, 2);
 
     return 1;
 }

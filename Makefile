@@ -20,12 +20,13 @@ OBJS=\
 	$(OUTDIR)\main.obj\
 	$(AI_OUTDIR)\mcts.obj\
 	$(AI_OUTDIR)\node.obj\
-	$(AI_OUTDIR)\model.obj\
 	$(SEARCH_OUTDIR)\eval.obj\
 	$(SEARCH_OUTDIR)\ab_node.obj\
 	$(SEARCH_OUTDIR)\bench.obj\
 	$(SEARCH_OUTDIR)\hash.obj\
 	$(SEARCH_OUTDIR)\search.obj
+# $(AI_OUTDIR)\dnn_io.obj
+# $(AI_OUTDIR)\model.obj
 
 
 all: $(OUTDIR)\$(TARGET).exe
