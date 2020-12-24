@@ -38,10 +38,31 @@ Game::Game(PlayerEnum white, PlayerEnum black)
 {
     this->player[Const::WHITE] = white;
     this->player[Const::BLACK] = black;
+
+    // AIの初期化
+    if (player[Const::WHITE] == PlayerEnum::AI)
+    {
+        InitTree(&tree[Const::WHITE], 5);
+    }
+    if (player[Const::BLACK] == PlayerEnum::AI)
+    {
+        InitTree(&tree[Const::BLACK], 5);
+    }
     Reset();
 }
 
-Game::~Game() {}
+Game::~Game()
+{
+    // AIの初期化
+    if (player[Const::WHITE] == PlayerEnum::AI)
+    {
+        DeleteTree(&tree[Const::WHITE]);
+    }
+    if (player[Const::BLACK] == PlayerEnum::AI)
+    {
+        DeleteTree(&tree[Const::BLACK]);
+    }
+}
 
 uint64 WaitPosHumanInput()
 {
@@ -111,16 +132,6 @@ void Game::Start()
     uint64 input;
     turn = 0;
     Reset();
-
-    // AIの初期化
-    if (player[Const::WHITE] == PlayerEnum::AI)
-    {
-        InitTree(&tree[Const::WHITE], 5);
-    }
-    if (player[Const::BLACK] == PlayerEnum::AI)
-    {
-        InitTree(&tree[Const::BLACK], 5);
-    }
 
     while (!board.IsFinished())
     {

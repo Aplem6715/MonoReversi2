@@ -29,7 +29,7 @@ void InitHashTable(HashTable *table)
     table->data = (HashData *)calloc(table->size, sizeof(HashData));
     if (table->data == NULL)
     {
-        printf("ハッシュテーブルのメモリ確保失敗\n");
+        printf("ハッシュデータ配列のメモリ確保失敗\n");
         return;
     }
     assert(table->size % 2 == 0);
@@ -84,7 +84,6 @@ HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uin
         {
             table->nbHit++;
             *hitState = HASH_HIT;
-            return data;
         }
         else if (data->depth > depth)
         {
@@ -93,6 +92,8 @@ HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uin
         else
         {
             *hitState = HASH_SHALLOWER;
+            // 探索深度が浅い場合はハッシュデータの更新をしない
+            return NULL;
         }
     }
     else
@@ -100,13 +101,15 @@ HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uin
         if (data->own == 0 && data->opp == 0)
         {
             *hitState = HASH_EMPTY;
+            table->nbUsed++;
         }
         else
         {
+            table->nbCollide++;
             *hitState = HASH_DEFFERENT;
         }
     }
-    return NULL;
+    return data;
 }
 
 void HashOverwrite(HashTable *table, uint64 own, uint64 opp, uint8 depth, float lower, float upper, uint64 hashCode)
