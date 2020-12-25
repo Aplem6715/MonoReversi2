@@ -81,6 +81,7 @@ void PVS(SearchTree *tree);
 
 float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed)
 {
+    uint8 bestMove;
     uint64 pos, hashCode;
     MoveList moveList;
     Move *move;
@@ -115,6 +116,8 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
             hashData->own = own;
             hashData->opp = opp;
             hashData->depth = depth;
+            hashData->bestMove = NOMOVE_INDEX;
+            hashData->bestMove = NOMOVE_INDEX;
             hashData->lower = -Const::MAX_VALUE;
             hashData->upper = Const::MAX_VALUE;
         }
@@ -128,6 +131,7 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
         // 2連続パスなら終了
         if (passed == 1)
         {
+            bestMove = NOMOVE_INDEX;
             // 勝敗判定
             if (CountBits(own) > CountBits(opp))
             {
@@ -146,6 +150,7 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
         {
             // 手番を入れ替えて探索続行
             maxScore = -AlphaBeta(tree, opp, own, -beta, -alpha, depth, true);
+            bestMove = PASS_INDEX;
         }
     }
     else
@@ -168,6 +173,7 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
             if (score > maxScore)
             {
                 maxScore = score;
+                bestMove = move->posIdx;
 
                 // 上限突破したら
                 if (score >= beta)
@@ -185,6 +191,11 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
 
     if (tree->useHash == 1 && hashData != NULL)
     {
+        if (bestMove != hashData->bestMove)
+        {
+            hashData->secondMove = hashData->bestMove;
+            hashData->bestMove = bestMove;
+        }
         if (maxScore < beta)
         {
             hashData->upper = maxScore;

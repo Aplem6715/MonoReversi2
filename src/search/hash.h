@@ -4,6 +4,9 @@
 typedef unsigned long long uint64;
 typedef unsigned char uint8;
 
+#define NOMOVE_INDEX 64
+#define PASS_INDEX 65
+
 // ハッシュデータ検索の際の検索結果
 enum HashHitState
 {
@@ -15,11 +18,12 @@ enum HashHitState
 };
 
 // ハッシュテーブルに格納されるデータ
-// 8x2 + 1 + 4x2 = 25[byte]
+// 8x2 + 1 + 1*2 + 4x2 = 27[byte]
 typedef struct HashData
 {
     uint64 own, opp;
     uint8 depth;
+    uint8 bestMove, secondMove;
     float lower, upper;
 } HashData;
 

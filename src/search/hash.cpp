@@ -51,6 +51,8 @@ void ResetHashTable(HashTable *table)
         table->data[i].own = 0;
         table->data[i].opp = 0;
         table->data[i].depth = 0;
+        table->data[i].bestMove = NOMOVE_INDEX;
+        table->data[i].bestMove = NOMOVE_INDEX;
         table->data[i].lower = 0.0;
         table->data[i].upper = 0.0;
     }
