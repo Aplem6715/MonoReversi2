@@ -3,10 +3,12 @@
 #include "../bit_operation.h"
 #include "eval.h"
 #include "hash.h"
+#include "moves.h"
 
-void InitTree(SearchTree *tree, unsigned char depth, unsigned char useHash, unsigned char hashDepth)
+void InitTree(SearchTree *tree, unsigned char depth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth)
 {
     tree->depth = depth;
+    tree->orderDepth = orderDepth;
     tree->useHash = useHash;
     tree->hashDepth = hashDepth;
     if (useHash)
@@ -79,7 +81,9 @@ void PVS(SearchTree *tree);
 
 float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed)
 {
-    uint64 mob, pos, rev, hashCode;
+    uint64 pos, hashCode;
+    MoveList moveList;
+    Move *move;
     HashHitState hashState;
     HashData *hashData = NULL;
     float score, maxScore, lower;
@@ -116,10 +120,10 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
         }
     }
 
-    mob = CalcMobility(own, opp);
+    CreateMoveList(&moveList, own, opp);
 
     // 手があるか
-    if (mob == 0)
+    if (moveList.nbMoves <= 0)
     {
         // 2連続パスなら終了
         if (passed == 1)
@@ -146,18 +150,20 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
     }
     else
     {
+        if (depth >= tree->orderDepth)
+        {
+            SortMoveList(&moveList);
+        }
         maxScore = -Const::MAX_VALUE;
         lower = alpha;
-        // 打つ手がある時
-        while (mob != 0)
+        // 打つ手がある時, 良い手から並べ替えつつループ
+        for (move = moveList.moves->next; move != NULL; move = move->next)
         {
             // 着手位置・反転位置を取得
-            pos = GetLSB(mob);
-            mob ^= pos;
-            rev = CalcFlip(own, opp, pos);
+            pos = CalcPosBit(move->posIdx);
 
             // 子ノードを探索
-            score = -AlphaBeta(tree, opp ^ rev, own ^ rev ^ pos, -beta, -lower, depth - 1, false);
+            score = -AlphaBeta(tree, opp ^ move->flip, own ^ move->flip ^ pos, -beta, -lower, depth - 1, false);
 
             if (score > maxScore)
             {

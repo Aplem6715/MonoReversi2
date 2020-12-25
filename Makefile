@@ -24,6 +24,7 @@ OBJS=\
 	$(SEARCH_OUTDIR)\ab_node.obj\
 	$(SEARCH_OUTDIR)\bench.obj\
 	$(SEARCH_OUTDIR)\hash.obj\
+	$(SEARCH_OUTDIR)\moves.obj\
 	$(SEARCH_OUTDIR)\search.obj
 # $(AI_OUTDIR)\dnn_io.obj
 # $(AI_OUTDIR)\model.obj
