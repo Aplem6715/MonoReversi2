@@ -2,6 +2,7 @@
 #include <assert.h>
 #include "moves.h"
 #include "eval.h"
+#include "search.h"
 #include "../bit_operation.h"
 
 void CreateMoveList(MoveList *moveList, uint64 own, uint64 opp)
@@ -24,16 +25,24 @@ void CreateMoveList(MoveList *moveList, uint64 own, uint64 opp)
         move++;
     }
     prev->next = NULL;
-    moveList->nbMoves = move - moveList->moves - 1;
+    moveList->nbMoves = (uint8)(move - moveList->moves - 1);
 
     assert(moveList->nbMoves == CountBits(CalcMobility(own, opp)));
 }
 
-void EvaluateMove(Move *move, uint64 own, uint64 opp, const HashData *hashData)
+void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, float alpha, const HashData *hashData)
 {
     if (move->flip == opp)
     {
         move->score = (1 << 30);
+    }
+    else if (move->posIdx == hashData->bestMove)
+    {
+        move->score = (1 << 29);
+    }
+    else if (move->posIdx == hashData->secondMove)
+    {
+        move->score = (1 << 28);
     }
     else
     {
@@ -41,17 +50,20 @@ void EvaluateMove(Move *move, uint64 own, uint64 opp, const HashData *hashData)
         move->score = (int)VALUE_TABLE[move->posIdx];
 
         // 相手の着手位置が多いとマイナス，少ないとプラス
-        uint64 next_mob = CalcMobility(opp ^ move->flip, own ^ move->flip ^ CalcPosBit(move->posIdx));
+        uint64 posBit = CalcPosBit(move->posIdx);
+        uint64 next_mob = CalcMobility(opp ^ move->flip, own ^ move->flip ^ posBit);
         move->score += (36 - (CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 15);
+
+        move->score += ((int)(Const::MAX_VALUE - AlphaBeta(tree, opp ^ move->flip, own ^ move->flip ^ posBit, -Const::MAX_VALUE, -alpha, 1, 0)) * (1 << 15));
     }
 }
 
-void EvaluateMoveList(MoveList *movelist, uint64 own, uint64 opp, const HashData *hashData)
+void EvaluateMoveList(SearchTree *tree, MoveList *movelist, uint64 own, uint64 opp, float alpha, const HashData *hashData)
 {
     Move *move;
     for (move = movelist->moves->next; move; move = move->next)
     {
-        EvaluateMove(move, own, opp, hashData);
+        EvaluateMove(tree, move, own, opp, alpha, hashData);
     }
 }
 
