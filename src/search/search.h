@@ -12,13 +12,14 @@ typedef struct SearchTree
     HashTable *table;
     size_t nodeCount;
     unsigned char depth;
+    unsigned char orderDepth;
     unsigned char hashDepth;
     unsigned char useHash;
     double usedTime;
     float score;
 } SearchTree;
 
-void InitTree(SearchTree *tree, unsigned char depth, unsigned char useHash, unsigned char hashDepth);
+void InitTree(SearchTree *tree, unsigned char depth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth);
 void DeleteTree(SearchTree *tree);
 void ConfigTree(SearchTree *tree, unsigned char depth);
 void ResetTree(SearchTree *tree);
