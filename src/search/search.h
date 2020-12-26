@@ -19,6 +19,8 @@ typedef struct SearchTree
     float score;
 } SearchTree;
 
+typedef float (*SearchFunc_t)(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed);
+
 void InitTree(SearchTree *tree, unsigned char depth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth);
 void DeleteTree(SearchTree *tree);
 void ConfigTree(SearchTree *tree, unsigned char depth);
@@ -26,6 +28,7 @@ void ResetTree(SearchTree *tree);
 uint64 Search(SearchTree *tree, uint64 own, uint64 opp);
 void PVS(SearchTree *tree);
 
+float AlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed);
 float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed);
 
 #endif

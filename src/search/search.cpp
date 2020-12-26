@@ -4,6 +4,7 @@
 #include "eval.h"
 #include "hash.h"
 #include "moves.h"
+#include <assert.h>
 
 void InitTree(SearchTree *tree, unsigned char depth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth)
 {
@@ -79,10 +80,141 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
 
 void PVS(SearchTree *tree);
 
+// TODO: ordering しないときはMove列挙せずにfdeptwhile(mob)するように
+
+float AlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed)
+{
+
+    assert(depth <= tree->orderDepth);
+
+    uint64 mob, pos, rev, hashCode;
+    uint8 bestMove;
+    HashHitState hashState;
+    HashData *hashData = NULL;
+    float score, maxScore, lower;
+
+    tree->nodeCount++;
+    if (depth <= 0)
+    {
+        return EvalPosTable(own, opp);
+    }
+
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    {
+        hashData = GetHashData(tree->table, own, opp, depth, &hashCode, &hashState);
+        if (hashState == HASH_HIT)
+        {
+            if (hashData->upper <= alpha)
+                return hashData->upper;
+            if (hashData->lower >= beta)
+                return hashData->lower;
+            if (hashData->lower == hashData->upper)
+                return hashData->upper;
+
+            alpha = maxf(alpha, hashData->lower);
+            beta = minf(beta, hashData->upper);
+        }
+        else if (hashData != NULL)
+        {
+            // 新規データを登録
+            hashData->own = own;
+            hashData->opp = opp;
+            hashData->depth = depth;
+            hashData->bestMove = NOMOVE_INDEX;
+            hashData->bestMove = NOMOVE_INDEX;
+            hashData->lower = -Const::MAX_VALUE;
+            hashData->upper = Const::MAX_VALUE;
+        }
+    }
+
+    mob = CalcMobility(own, opp);
+
+    // 手があるか
+    if (mob == 0)
+    {
+        // 2連続パスなら終了
+        if (passed == 1)
+        {
+            bestMove = NOMOVE_INDEX;
+            // 勝敗判定
+            if (CountBits(own) > CountBits(opp))
+            {
+                return WIN_VALUE;
+            }
+            else if (CountBits(own) < CountBits(opp))
+            {
+                return -WIN_VALUE;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+        else
+        {
+            // 手番を入れ替えて探索続行
+            maxScore = -AlphaBeta(tree, opp, own, -beta, -alpha, depth, true);
+            bestMove = PASS_INDEX;
+        }
+    }
+    else
+    {
+        maxScore = -Const::MAX_VALUE;
+        lower = alpha;
+        // 打つ手がある時
+        while (mob != 0)
+        {
+            // 着手位置・反転位置を取得
+            pos = GetLSB(mob);
+            mob ^= pos;
+            rev = CalcFlip(own, opp, pos);
+
+            // 子ノードを探索
+            score = -AlphaBeta(tree, opp ^ rev, own ^ rev ^ pos, -beta, -lower, depth - 1, false);
+
+            if (score > maxScore)
+            {
+                maxScore = score;
+                bestMove = CalcPosIndex(pos);
+
+                // 上限突破したら
+                if (score >= beta)
+                {
+                    // 探索終了（カット）
+                    break;
+                }
+                else if (maxScore > lower)
+                {
+                    lower = maxScore;
+                }
+            }
+        }
+    }
+
+    if (tree->useHash == 1 && hashData != NULL)
+    {
+        if (bestMove != hashData->bestMove)
+        {
+            hashData->secondMove = hashData->bestMove;
+            hashData->bestMove = bestMove;
+        }
+        if (maxScore < beta)
+        {
+            hashData->upper = maxScore;
+        }
+        if (maxScore > alpha)
+        {
+            hashData->lower = maxScore;
+        }
+    }
+    return maxScore;
+}
+
 float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed)
 {
     uint8 bestMove;
     uint64 pos, hashCode;
+    SearchFunc_t NextSearch;
     MoveList moveList;
     Move *move;
     HashHitState hashState;
@@ -158,6 +290,11 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
         if (depth >= tree->orderDepth)
         {
             SortMoveList(&moveList);
+            NextSearch = AlphaBeta;
+        }
+        else
+        {
+            NextSearch = AlphaBetaDeep;
         }
         maxScore = -Const::MAX_VALUE;
         lower = alpha;
@@ -168,7 +305,7 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
             pos = CalcPosBit(move->posIdx);
 
             // 子ノードを探索
-            score = -AlphaBeta(tree, opp ^ move->flip, own ^ move->flip ^ pos, -beta, -lower, depth - 1, false);
+            score = -NextSearch(tree, opp ^ move->flip, own ^ move->flip ^ pos, -beta, -lower, depth - 1, false);
 
             if (score > maxScore)
             {
