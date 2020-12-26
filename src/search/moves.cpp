@@ -52,9 +52,9 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, float al
         // 相手の着手位置が多いとマイナス，少ないとプラス
         uint64 posBit = CalcPosBit(move->posIdx);
         uint64 next_mob = CalcMobility(opp ^ move->flip, own ^ move->flip ^ posBit);
-        move->score += (36 - (CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 15);
+        move->score += (-(CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 12);
 
-        move->score += ((int)(Const::MAX_VALUE - AlphaBeta(tree, opp ^ move->flip, own ^ move->flip ^ posBit, -Const::MAX_VALUE, -alpha, 1, 0)) * (1 << 15));
+        move->score += ((int)(-AlphaBeta(tree, opp ^ move->flip, own ^ move->flip ^ posBit, -Const::MAX_VALUE, -alpha, 1, 0)) * (1 << 15));
     }
 }
 

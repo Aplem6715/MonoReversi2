@@ -11,9 +11,9 @@ int main()
     //Game game = Game(PlayerEnum::AI, PlayerEnum::HUMAN);
     //game.Start();
 
-    std::vector<unsigned char> depths = {4, 6, 8};
+    std::vector<unsigned char> depths = {4, 6, 8, 10};
 
-    BenchSearching(depths, 1, 2, 7);
+    BenchSearching(depths, 1, 2, 100);
 
     return 1;
 }
