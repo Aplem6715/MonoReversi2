@@ -56,8 +56,11 @@ void ResetHashStatistics(HashTable *table);
 //inline uint64 GetHashCode(uint64 own, uint64 opp);
 
 // ハッシュテーブル内を検索
-HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uint64 *hashCode, HashHitState *hitState);
+HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uint64 *hashCode);
 
+bool CutWithHash(HashData *hashData, float *alpha, float *beta, float *score);
+
+void SaveHashData(HashTable *table, uint64 hashCode, uint64 own, uint64 opp, uint8 bestMove, uint8 depth, float alpha, float beta, float maxScore);
 /* 未使用（探索関数の中で実装されている機能）
 void HashOverwrite(HashTable *table, uint64 own, uint64 opp, uint8 depth, float lower, float upper, uint64 hashCode);
 void HashPriorityOverwrite(HashTable *table, uint64 own, uint64 opp, uint8 depth, float lower, float upper, uint64 hashCode);

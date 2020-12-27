@@ -96,7 +96,7 @@ inline uint64 GetHashCode(uint64 own, uint64 opp)
     return code;
 }
 
-HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uint64 *hashCode, HashHitState *hitState)
+HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uint64 *hashCode)
 {
     // ハッシュコード取得
     *hashCode = GetHashCode(own, opp);
@@ -109,33 +109,92 @@ HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uin
         if (data->depth == depth)
         {
             table->nbHit++;
-            *hitState = HASH_HIT;
+            return data;
         }
-        else if (data->depth > depth)
-        {
-            *hitState = HASH_DEEPER;
-            // 探索深度が深い場合はハッシュデータの更新をしない
-            return NULL;
-        }
-        else
-        {
-            *hitState = HASH_SHALLOWER;
-        }
+    }
+    return NULL;
+}
+
+bool CutWithHash(HashData *hashData, float *alpha, float *beta, float *score)
+{
+    assert(hashData != NULL);
+    if (hashData->upper <= *alpha)
+    {
+        *score = hashData->upper;
+        return true;
+    }
+    if (hashData->lower >= *beta)
+    {
+        *score = hashData->lower;
+        return true;
+    }
+    if (hashData->lower == hashData->upper)
+    {
+        *score = hashData->upper;
+        return true;
+    }
+
+    *alpha = maxf(*alpha, hashData->lower);
+    *beta = minf(*beta, hashData->upper);
+    return false;
+}
+
+void SaveNewData(HashData *data, const uint64 own, const uint64 opp, const uint8 bestMove, const uint8 depth, const float alpha, const float beta, const float maxScore)
+{
+    if (maxScore < beta)
+        data->upper = maxScore;
+    else
+        data->upper = Const::MAX_VALUE;
+
+    if (maxScore > alpha)
+        data->lower = maxScore;
+    else
+        data->lower = -Const::MAX_VALUE;
+
+    if (maxScore > alpha || maxScore == -Const::MAX_VALUE)
+        data->bestMove = bestMove;
+    else
+        data->bestMove = NOMOVE_INDEX;
+
+    data->own = own;
+    data->opp = opp;
+    data->secondMove = NOMOVE_INDEX;
+    data->depth = depth;
+}
+
+void UpdateData(HashData *data, const uint64 own, const uint64 opp, const uint8 bestMove, const uint8 depth, const float alpha, const float beta, const float maxScore)
+{
+    if (maxScore < beta && maxScore < data->upper)
+        data->upper = maxScore;
+
+    if (maxScore > alpha && maxScore > data->lower)
+        data->lower = maxScore;
+
+    if ((maxScore > alpha || maxScore == -Const::MAX_VALUE) && data->bestMove != bestMove)
+    {
+        data->secondMove = data->bestMove;
+        data->bestMove = bestMove;
+    }
+}
+
+void SaveHashData(HashTable *table, uint64 hashCode, uint64 own, uint64 opp, uint8 bestMove, uint8 depth, float alpha, float beta, float maxScore)
+{
+    uint64 index = hashCode & (table->size - 1);
+    HashData *hashData = &table->data[index];
+    if ((hashData->own | hashData->opp) == 0)
+    {
+        SaveNewData(hashData, own, opp, bestMove, depth, alpha, beta, maxScore);
+        table->nbUsed++;
+    }
+    else if (hashData->own == own && hashData->opp == opp)
+    {
+        if (hashData->depth <= depth)
+            UpdateData(hashData, own, opp, bestMove, depth, alpha, beta, maxScore);
     }
     else
     {
-        if (data->own == 0 && data->opp == 0)
-        {
-            *hitState = HASH_EMPTY;
-            table->nbUsed++;
-        }
-        else
-        {
-            table->nbCollide++;
-            *hitState = HASH_DEFFERENT;
-        }
+        table->nbCollide++;
     }
-    return data;
 }
 
 /* 未使用（探索関数の中で実装されている機能）

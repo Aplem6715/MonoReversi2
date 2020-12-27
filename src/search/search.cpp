@@ -45,17 +45,43 @@ void ResetTree(SearchTree *tree)
         ResetHashTable(tree->table);
 }
 
+float WinJudge(const uint64 own, const uint64 opp)
+{
+    if (CountBits(own) > CountBits(opp))
+    {
+        return WIN_VALUE;
+    }
+    else if (CountBits(own) < CountBits(opp))
+    {
+        return -WIN_VALUE;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
 uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
 {
     float score, maxScore = -Const::MAX_VALUE;
     uint64 bestPos, pos, mob, rev;
+    SearchFunc_t SearchFunc;
 
     std::chrono::system_clock::time_point start, end;
     start = std::chrono::system_clock::now();
     tree->nodeCount = 0;
 
-    mob = CalcMobility(own, opp);
+    // オーダリングが不要な探索では探索関数を変える
+    if (tree->depth > tree->orderDepth)
+    {
+        SearchFunc = AlphaBeta;
+    }
+    else
+    {
+        SearchFunc = AlphaBetaDeep;
+    }
 
+    mob = CalcMobility(own, opp);
     while (mob != 0)
     {
         pos = GetLSB(mob);
@@ -80,8 +106,6 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
 
 void PVS(SearchTree *tree);
 
-// TODO: ordering しないときはMove列挙せずにfdeptwhile(mob)するように
-
 float AlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed)
 {
 
@@ -89,7 +113,6 @@ float AlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float
 
     uint64 mob, pos, rev, hashCode;
     uint8 bestMove;
-    HashHitState hashState;
     HashData *hashData = NULL;
     float score, maxScore, lower;
 
@@ -101,30 +124,9 @@ float AlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        hashData = GetHashData(tree->table, own, opp, depth, &hashCode, &hashState);
-        if (hashState == HASH_HIT)
-        {
-            if (hashData->upper <= alpha)
-                return hashData->upper;
-            if (hashData->lower >= beta)
-                return hashData->lower;
-            if (hashData->lower == hashData->upper)
-                return hashData->upper;
-
-            alpha = maxf(alpha, hashData->lower);
-            beta = minf(beta, hashData->upper);
-        }
-        else if (hashData != NULL)
-        {
-            // 新規データを登録
-            hashData->own = own;
-            hashData->opp = opp;
-            hashData->depth = depth;
-            hashData->bestMove = NOMOVE_INDEX;
-            hashData->bestMove = NOMOVE_INDEX;
-            hashData->lower = -Const::MAX_VALUE;
-            hashData->upper = Const::MAX_VALUE;
-        }
+        hashData = GetHashData(tree->table, own, opp, depth, &hashCode);
+        if (hashData != NULL && CutWithHash(hashData, &alpha, &beta, &score))
+            return score;
     }
 
     mob = CalcMobility(own, opp);
@@ -137,24 +139,13 @@ float AlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float
         {
             bestMove = NOMOVE_INDEX;
             // 勝敗判定
-            if (CountBits(own) > CountBits(opp))
-            {
-                return WIN_VALUE;
-            }
-            else if (CountBits(own) < CountBits(opp))
-            {
-                return -WIN_VALUE;
-            }
-            else
-            {
-                return 0;
-            }
+            return WinJudge(own, opp);
         }
         else
         {
             // 手番を入れ替えて探索続行
-            maxScore = -AlphaBeta(tree, opp, own, -beta, -alpha, depth, true);
             bestMove = PASS_INDEX;
+            maxScore = -AlphaBeta(tree, opp, own, -beta, -alpha, depth, true);
         }
     }
     else
@@ -193,19 +184,7 @@ float AlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float
 
     if (tree->useHash == 1 && hashData != NULL)
     {
-        if (bestMove != hashData->bestMove)
-        {
-            hashData->secondMove = hashData->bestMove;
-            hashData->bestMove = bestMove;
-        }
-        if (maxScore < beta)
-        {
-            hashData->upper = maxScore;
-        }
-        if (maxScore > alpha)
-        {
-            hashData->lower = maxScore;
-        }
+        SaveHashData(tree->table, hashCode, own, opp, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -217,7 +196,6 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
     SearchFunc_t NextSearch;
     MoveList moveList;
     Move *move;
-    HashHitState hashState;
     HashData *hashData = NULL;
     float score, maxScore, lower;
 
@@ -229,30 +207,9 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        hashData = GetHashData(tree->table, own, opp, depth, &hashCode, &hashState);
-        if (hashState == HASH_HIT)
-        {
-            if (hashData->upper <= alpha)
-                return hashData->upper;
-            if (hashData->lower >= beta)
-                return hashData->lower;
-            if (hashData->lower == hashData->upper)
-                return hashData->upper;
-
-            alpha = maxf(alpha, hashData->lower);
-            beta = minf(beta, hashData->upper);
-        }
-        else if (hashData != NULL)
-        {
-            // 新規データを登録
-            hashData->own = own;
-            hashData->opp = opp;
-            hashData->depth = depth;
-            hashData->bestMove = NOMOVE_INDEX;
-            hashData->bestMove = NOMOVE_INDEX;
-            hashData->lower = -Const::MAX_VALUE;
-            hashData->upper = Const::MAX_VALUE;
-        }
+        hashData = GetHashData(tree->table, own, opp, depth, &hashCode);
+        if (hashData != NULL && CutWithHash(hashData, &alpha, &beta, &score))
+            return score;
     }
 
     CreateMoveList(&moveList, own, opp);
@@ -265,18 +222,7 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
         {
             bestMove = NOMOVE_INDEX;
             // 勝敗判定
-            if (CountBits(own) > CountBits(opp))
-            {
-                return WIN_VALUE;
-            }
-            else if (CountBits(own) < CountBits(opp))
-            {
-                return -WIN_VALUE;
-            }
-            else
-            {
-                return 0;
-            }
+            return WinJudge(own, opp);
         }
         else
         {
@@ -326,21 +272,9 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
         }
     }
 
-    if (tree->useHash == 1 && hashData != NULL)
+    if (tree->useHash == 1)
     {
-        if (bestMove != hashData->bestMove)
-        {
-            hashData->secondMove = hashData->bestMove;
-            hashData->bestMove = bestMove;
-        }
-        if (maxScore < beta)
-        {
-            hashData->upper = maxScore;
-        }
-        if (maxScore > alpha)
-        {
-            hashData->lower = maxScore;
-        }
+        SaveHashData(tree->table, hashCode, own, opp, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
