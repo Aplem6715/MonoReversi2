@@ -18,8 +18,6 @@ OBJS=\
 	$(OUTDIR)\board.obj\
 	$(OUTDIR)\game.obj\
 	$(OUTDIR)\main.obj\
-	$(AI_OUTDIR)\mcts.obj\
-	$(AI_OUTDIR)\node.obj\
 	$(SEARCH_OUTDIR)\eval.obj\
 	$(SEARCH_OUTDIR)\ab_node.obj\
 	$(SEARCH_OUTDIR)\bench.obj\
