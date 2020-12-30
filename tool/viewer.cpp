@@ -9,7 +9,7 @@ int main()
     {
         cin >> black >> white >> mob;
 
-        uint64 cursor = 0x8000000000000000;
+        uint64 cursor = 0x0000000000000001;
         printf("＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋\n");
         printf("｜　｜ A｜ B｜ C｜ D｜ E｜ F｜ G｜ H｜\n");
         for (int y = 0; y < 17; y++)
@@ -63,7 +63,7 @@ int main()
                     }
                     if (x % 2 == 1)
                     {
-                        cursor >>= 1;
+                        cursor <<= 1;
                     }
                 }
             }

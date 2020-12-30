@@ -132,6 +132,8 @@ uint8 CalcPosIndex(uint64 pos)
 {
     uint64 cursor = 0x0000000000000001;
     int idx = 0;
+    if (pos == 0)
+        return 64;
     while ((pos & cursor) == 0)
     {
         cursor <<= 1;
@@ -147,7 +149,7 @@ uint8 CalcPosIndex(const char *ascii)
 
 uint64 CalcPosBit(unsigned char posIdx)
 {
-    return 0x0000000000000001 << posIdx;
+    return (uint64)0x0000000000000001 << posIdx;
 }
 
 void CalcPosAscii(unsigned char posIdx, char &x, int &y)

@@ -31,8 +31,8 @@ uint8 Board::GetTurnColor() { return turn; }
 
 void Board::Reset()
 {
-    black = 0x0000001008000000;
-    white = 0x0000000810000000;
+    black = 0x0000000810000000;
+    white = 0x0000001008000000;
     turn = Const::BLACK;
     nbPlayed = 0;
 }
@@ -65,7 +65,7 @@ uint64 Board::MoveRandom()
     uint64 mob = GetMobility();
     if (mob == 0)
         return 0;
-    uint64 pos = 0x8000000000000000;
+    uint64 pos = 0x0000000000000001;
     uint8 nbMobs = CountBits(mob);
     uint8 target = rand() % nbMobs + 1;
     int ignored = 0;
@@ -79,7 +79,7 @@ uint64 Board::MoveRandom()
                 break;
             }
         }
-        pos >>= 1;
+        pos <<= 1;
     }
     Put(pos);
     return pos;
@@ -129,7 +129,7 @@ void Board::Skip()
 
 void Board::Draw()
 {
-    uint64 cursor = 0x8000000000000000;
+    uint64 cursor = 0x0000000000000001;
     uint64 mobility = GetMobility();
     printf("＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋\n");
     printf("｜　｜ A｜ B｜ C｜ D｜ E｜ F｜ G｜ H｜\n");
@@ -184,7 +184,7 @@ void Board::Draw()
                 }
                 if (x % 2 == 1)
                 {
-                    cursor >>= 1;
+                    cursor <<= 1;
                 }
             }
         }

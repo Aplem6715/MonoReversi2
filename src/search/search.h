@@ -6,10 +6,12 @@
 #include <chrono>
 #include "hash.h"
 #include "../const.h"
+#include "../ai/eval.h"
 
 typedef struct SearchTree
 {
     HashTable *table;
+    Evaluator eval[1];
     size_t nodeCount;
     unsigned char depth;
     unsigned char orderDepth;

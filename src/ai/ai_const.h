@@ -13,6 +13,7 @@
 #define POW3_8 6561
 #define POW3_9 19683
 #define POW3_10 59049
+#define POW3_11 177147
 
 // 座標インデックス
 #define A1 63
