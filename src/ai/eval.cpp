@@ -1,0 +1,208 @@
+﻿#include "eval.h"
+#include "ai_const.h"
+#include "../bit_operation.h"
+
+typedef struct PosToFeature
+{
+    int nbFeature;
+    struct
+    {
+        unsigned short feat;
+        unsigned short idx;
+    } feature[7];
+} PosToFeature;
+
+// 各座標と対応するパターンとその３進インデックス
+static const PosToFeature Pos2Feat[] = {
+    /*A1*/ {5, {{FEAT_DIAG8_2, POW0_0}, {FEAT_EDGEX_1, POW0_0}, {FEAT_EDGEX_4, POW0_0}, {FEAT_CORNR_1, POW0_0}, {FEAT_BMRAN_1, POW0_0}}},
+    /*B1*/ {5, {{FEAT_LINE2_4, POW0_0}, {FEAT_DIAG7_2, POW0_0}, {FEAT_EDGEX_1, POW3_1}, {FEAT_CORNR_1, POW3_1}, {FEAT_BMRAN_1, POW3_1}}},
+    /*C1*/ {5, {{FEAT_LINE3_4, POW0_0}, {FEAT_DIAG6_2, POW0_0}, {FEAT_EDGEX_1, POW3_2}, {FEAT_CORNR_1, POW3_2}, {FEAT_BMRAN_1, POW3_2}}},
+    /*D1*/ {6, {{FEAT_LINE4_4, POW0_0}, {FEAT_DIAG4_1, POW0_0}, {FEAT_DIAG5_2, POW0_0}, {FEAT_EDGEX_1, POW3_3}, {FEAT_BMRAN_1, POW3_3}, {FEAT_BMRAN_2, POW0_0}}},
+    /*E1*/ {6, {{FEAT_LINE4_2, POW0_0}, {FEAT_DIAG4_2, POW0_0}, {FEAT_DIAG5_1, POW0_0}, {FEAT_EDGEX_1, POW3_4}, {FEAT_BMRAN_1, POW3_4}, {FEAT_BMRAN_2, POW3_1}}},
+    /*F1*/ {5, {{FEAT_LINE3_2, POW0_0}, {FEAT_DIAG6_1, POW0_0}, {FEAT_EDGEX_1, POW3_5}, {FEAT_CORNR_2, POW0_0}, {FEAT_BMRAN_2, POW3_2}}},
+    /*G1*/ {5, {{FEAT_LINE2_2, POW0_0}, {FEAT_DIAG7_1, POW0_0}, {FEAT_EDGEX_1, POW3_6}, {FEAT_CORNR_2, POW3_1}, {FEAT_BMRAN_2, POW3_3}}},
+    /*H1*/ {5, {{FEAT_DIAG8_1, POW0_0}, {FEAT_EDGEX_1, POW3_7}, {FEAT_EDGEX_2, POW0_0}, {FEAT_CORNR_2, POW3_2}, {FEAT_BMRAN_2, POW3_4}}},
+    //
+    /*A2*/ {5, {{FEAT_LINE2_1, POW0_0}, {FEAT_DIAG7_4, POW0_0}, {FEAT_EDGEX_4, POW3_1}, {FEAT_CORNR_1, POW3_3}, {FEAT_BMRAN_1, POW3_5}}},
+    /*B2*/ {7, {{FEAT_LINE2_1, POW3_1}, {FEAT_LINE2_4, POW3_1}, {FEAT_DIAG8_2, POW3_1}, {FEAT_EDGEX_1, POW3_8}, {FEAT_EDGEX_4, POW3_2}, {FEAT_CORNR_1, POW3_4}, {FEAT_BMRAN_1, POW3_6}}},
+    /*C2*/ {5, {{FEAT_LINE2_1, POW3_2}, {FEAT_LINE3_4, POW3_1}, {FEAT_DIAG4_1, POW3_1}, {FEAT_DIAG7_2, POW3_1}, {FEAT_CORNR_1, POW3_5}}},
+    /*D2*/ {4, {{FEAT_LINE2_1, POW3_3}, {FEAT_LINE4_4, POW3_1}, {FEAT_DIAG5_1, POW3_1}, {FEAT_DIAG6_2, POW3_1}}},
+    /*E2*/ {4, {{FEAT_LINE2_1, POW3_4}, {FEAT_LINE4_2, POW3_1}, {FEAT_DIAG5_2, POW3_1}, {FEAT_DIAG6_1, POW3_1}}},
+    /*F2*/ {5, {{FEAT_LINE2_1, POW3_5}, {FEAT_LINE3_2, POW3_1}, {FEAT_DIAG4_2, POW3_1}, {FEAT_DIAG7_1, POW3_1}, {FEAT_CORNR_2, POW3_3}}},
+    /*G2*/ {7, {{FEAT_LINE2_1, POW3_6}, {FEAT_LINE2_2, POW3_1}, {FEAT_DIAG8_1, POW3_1}, {FEAT_EDGEX_1, POW3_9}, {FEAT_EDGEX_2, POW3_1}, {FEAT_CORNR_2, POW3_4}, {FEAT_BMRAN_2, POW3_5}}},
+    /*H2*/ {5, {{FEAT_LINE2_1, POW3_7}, {FEAT_DIAG7_3, POW0_0}, {FEAT_EDGEX_2, POW3_2}, {FEAT_CORNR_2, POW3_5}, {FEAT_BMRAN_2, POW3_6}}},
+    //
+    /*A3*/ {5, {{FEAT_LINE3_1, POW0_0}, {FEAT_DIAG6_4, POW0_0}, {FEAT_EDGEX_4, POW3_3}, {FEAT_CORNR_1, POW3_6}, {FEAT_BMRAN_1, POW3_7}}},
+    /*B3*/ {5, {{FEAT_LINE3_1, POW3_1}, {FEAT_LINE2_4, POW3_2}, {FEAT_DIAG4_1, POW3_2}, {FEAT_DIAG7_4, POW3_1}, {FEAT_CORNR_1, POW3_7}}},
+    /*C3*/ {5, {{FEAT_LINE3_1, POW3_2}, {FEAT_LINE3_4, POW3_2}, {FEAT_DIAG5_1, POW3_2}, {FEAT_DIAG8_2, POW3_2}, {FEAT_CORNR_1, POW3_8}}},
+    /*D3*/ {4, {{FEAT_LINE3_1, POW3_3}, {FEAT_LINE4_4, POW3_2}, {FEAT_DIAG6_1, POW3_2}, {FEAT_DIAG7_2, POW3_2}}},
+    /*E3*/ {4, {{FEAT_LINE3_1, POW3_4}, {FEAT_LINE4_2, POW3_2}, {FEAT_DIAG6_2, POW3_2}, {FEAT_DIAG7_1, POW3_2}}},
+    /*F3*/ {5, {{FEAT_LINE3_1, POW3_5}, {FEAT_LINE3_2, POW3_2}, {FEAT_DIAG5_2, POW3_2}, {FEAT_DIAG8_1, POW3_2}, {FEAT_CORNR_2, POW3_6}}},
+    /*G3*/ {5, {{FEAT_LINE3_1, POW3_6}, {FEAT_LINE2_2, POW3_2}, {FEAT_DIAG4_2, POW3_2}, {FEAT_DIAG7_3, POW3_1}, {FEAT_CORNR_2, POW3_7}}},
+    /*H3*/ {5, {{FEAT_LINE3_1, POW3_7}, {FEAT_DIAG6_3, POW0_0}, {FEAT_EDGEX_2, POW3_3}, {FEAT_CORNR_2, POW3_8}, {FEAT_BMRAN_2, POW3_7}}},
+    //
+    /*A4*/ {6, {{FEAT_LINE4_1, POW0_0}, {FEAT_DIAG4_1, POW3_3}, {FEAT_DIAG5_4, POW0_0}, {FEAT_EDGEX_4, POW3_4}, {FEAT_BMRAN_1, POW3_8}, {FEAT_BMRAN_4, POW0_0}}},
+    /*B4*/ {4, {{FEAT_LINE4_1, POW3_1}, {FEAT_LINE2_4, POW3_3}, {FEAT_DIAG5_1, POW3_3}, {FEAT_DIAG6_4, POW3_1}}},
+    /*C4*/ {4, {{FEAT_LINE4_1, POW3_2}, {FEAT_LINE3_4, POW3_3}, {FEAT_DIAG6_1, POW3_3}, {FEAT_DIAG7_4, POW3_2}}},
+    /*D4*/ {4, {{FEAT_LINE4_1, POW3_3}, {FEAT_LINE4_4, POW3_3}, {FEAT_DIAG7_1, POW3_3}, {FEAT_DIAG8_2, POW3_3}}},
+    /*E4*/ {4, {{FEAT_LINE4_1, POW3_4}, {FEAT_LINE4_2, POW3_3}, {FEAT_DIAG7_2, POW3_3}, {FEAT_DIAG8_1, POW3_3}}},
+    /*F4*/ {4, {{FEAT_LINE4_1, POW3_5}, {FEAT_LINE3_2, POW3_3}, {FEAT_DIAG6_2, POW3_3}, {FEAT_DIAG7_3, POW3_2}}},
+    /*G4*/ {4, {{FEAT_LINE4_1, POW3_6}, {FEAT_LINE2_2, POW3_3}, {FEAT_DIAG5_2, POW3_3}, {FEAT_DIAG6_3, POW3_1}}},
+    /*H4*/ {6, {{FEAT_LINE4_1, POW3_7}, {FEAT_DIAG4_2, POW3_3}, {FEAT_DIAG5_3, POW0_0}, {FEAT_EDGEX_2, POW3_4}, {FEAT_BMRAN_2, POW3_8}, {FEAT_BMRAN_3, POW0_0}}},
+    //
+    /*A5*/ {6, {{FEAT_LINE4_3, POW0_0}, {FEAT_DIAG4_4, POW0_0}, {FEAT_DIAG5_1, POW3_4}, {FEAT_EDGEX_4, POW3_5}, {FEAT_BMRAN_1, POW3_9}, {FEAT_BMRAN_4, POW3_1}}},
+    /*B5*/ {4, {{FEAT_LINE4_3, POW3_1}, {FEAT_LINE2_4, POW3_4}, {FEAT_DIAG5_4, POW3_1}, {FEAT_DIAG6_1, POW3_4}}},
+    /*C5*/ {4, {{FEAT_LINE4_3, POW3_2}, {FEAT_LINE3_4, POW3_4}, {FEAT_DIAG6_4, POW3_2}, {FEAT_DIAG7_1, POW3_4}}},
+    /*D5*/ {4, {{FEAT_LINE4_3, POW3_3}, {FEAT_LINE4_4, POW3_4}, {FEAT_DIAG7_4, POW3_3}, {FEAT_DIAG8_1, POW3_4}}},
+    /*E5*/ {4, {{FEAT_LINE4_3, POW3_4}, {FEAT_LINE4_2, POW3_4}, {FEAT_DIAG7_3, POW3_3}, {FEAT_DIAG8_2, POW3_4}}},
+    /*F5*/ {4, {{FEAT_LINE4_3, POW3_5}, {FEAT_LINE3_2, POW3_4}, {FEAT_DIAG6_3, POW3_2}, {FEAT_DIAG7_2, POW3_4}}},
+    /*G5*/ {4, {{FEAT_LINE4_3, POW3_6}, {FEAT_LINE2_2, POW3_4}, {FEAT_DIAG5_3, POW3_1}, {FEAT_DIAG6_2, POW3_4}}},
+    /*H5*/ {6, {{FEAT_LINE4_3, POW3_7}, {FEAT_DIAG4_3, POW0_0}, {FEAT_DIAG5_2, POW3_4}, {FEAT_EDGEX_2, POW3_5}, {FEAT_BMRAN_2, POW3_9}, {FEAT_BMRAN_3, POW3_1}}},
+    //
+    /*A6*/ {5, {{FEAT_LINE3_3, POW0_0}, {FEAT_DIAG6_1, POW3_5}, {FEAT_EDGEX_4, POW3_6}, {FEAT_CORNR_3, POW0_0}, {FEAT_BMRAN_4, POW3_2}}},
+    /*B6*/ {5, {{FEAT_LINE3_3, POW3_1}, {FEAT_LINE2_4, POW3_5}, {FEAT_DIAG4_4, POW3_1}, {FEAT_DIAG7_1, POW3_5}, {FEAT_CORNR_3, POW3_1}}},
+    /*C6*/ {5, {{FEAT_LINE3_3, POW3_2}, {FEAT_LINE3_4, POW3_5}, {FEAT_DIAG5_4, POW3_2}, {FEAT_DIAG8_1, POW3_5}, {FEAT_CORNR_3, POW3_2}}},
+    /*D6*/ {4, {{FEAT_LINE3_3, POW3_3}, {FEAT_LINE4_4, POW3_5}, {FEAT_DIAG6_4, POW3_3}, {FEAT_DIAG7_3, POW3_4}}},
+    /*E6*/ {4, {{FEAT_LINE3_3, POW3_4}, {FEAT_LINE4_2, POW3_5}, {FEAT_DIAG6_3, POW3_3}, {FEAT_DIAG7_4, POW3_4}}},
+    /*F6*/ {5, {{FEAT_LINE3_3, POW3_5}, {FEAT_LINE3_2, POW3_5}, {FEAT_DIAG5_3, POW3_2}, {FEAT_DIAG8_2, POW3_5}, {FEAT_CORNR_4, POW0_0}}},
+    /*G6*/ {5, {{FEAT_LINE3_3, POW3_6}, {FEAT_LINE2_2, POW3_5}, {FEAT_DIAG4_3, POW3_1}, {FEAT_DIAG7_2, POW3_5}, {FEAT_CORNR_4, POW3_1}}},
+    /*H6*/ {5, {{FEAT_LINE3_3, POW3_7}, {FEAT_DIAG6_2, POW3_5}, {FEAT_EDGEX_2, POW3_6}, {FEAT_CORNR_4, POW3_2}, {FEAT_BMRAN_3, POW3_2}}},
+    //
+    /*A7*/ {5, {{FEAT_LINE2_3, POW0_0}, {FEAT_DIAG7_1, POW3_6}, {FEAT_EDGEX_4, POW3_7}, {FEAT_CORNR_3, POW3_3}, {FEAT_BMRAN_4, POW3_3}}},
+    /*B7*/ {7, {{FEAT_LINE2_3, POW3_1}, {FEAT_LINE2_4, POW3_6}, {FEAT_DIAG8_1, POW3_6}, {FEAT_EDGEX_3, POW0_0}, {FEAT_EDGEX_4, POW3_8}, {FEAT_CORNR_3, POW3_4}, {FEAT_BMRAN_4, POW3_4}}},
+    /*C7*/ {5, {{FEAT_LINE2_3, POW3_2}, {FEAT_LINE3_4, POW3_6}, {FEAT_DIAG4_4, POW3_2}, {FEAT_DIAG7_3, POW3_5}, {FEAT_CORNR_3, POW3_5}}},
+    /*D7*/ {4, {{FEAT_LINE2_3, POW3_3}, {FEAT_LINE4_4, POW3_6}, {FEAT_DIAG5_4, POW3_3}, {FEAT_DIAG6_3, POW3_4}}},
+    /*E7*/ {4, {{FEAT_LINE2_3, POW3_4}, {FEAT_LINE4_2, POW3_6}, {FEAT_DIAG5_3, POW3_3}, {FEAT_DIAG6_4, POW3_4}}},
+    /*F7*/ {5, {{FEAT_LINE2_3, POW3_5}, {FEAT_LINE3_2, POW3_6}, {FEAT_DIAG4_3, POW3_2}, {FEAT_DIAG7_4, POW3_5}, {FEAT_CORNR_4, POW3_3}}},
+    /*G7*/ {7, {{FEAT_LINE2_3, POW3_6}, {FEAT_LINE2_2, POW3_6}, {FEAT_DIAG8_2, POW3_6}, {FEAT_EDGEX_2, POW3_7}, {FEAT_EDGEX_3, POW3_1}, {FEAT_CORNR_4, POW3_4}, {FEAT_BMRAN_3, POW3_3}}},
+    /*H7*/ {5, {{FEAT_LINE2_3, POW3_7}, {FEAT_DIAG7_2, POW3_6}, {FEAT_EDGEX_2, POW3_8}, {FEAT_CORNR_4, POW3_5}, {FEAT_BMRAN_3, POW3_4}}},
+    //
+    /*A8*/ {5, {{FEAT_DIAG8_1, POW3_7}, {FEAT_EDGEX_3, POW3_2}, {FEAT_EDGEX_4, POW3_9}, {FEAT_CORNR_3, POW3_6}, {FEAT_BMRAN_4, POW3_5}}},
+    /*B8*/ {5, {{FEAT_LINE2_4, POW3_7}, {FEAT_DIAG7_3, POW3_6}, {FEAT_EDGEX_3, POW3_3}, {FEAT_CORNR_3, POW3_7}, {FEAT_BMRAN_4, POW3_6}}},
+    /*C8*/ {5, {{FEAT_LINE3_4, POW3_7}, {FEAT_DIAG6_3, POW3_5}, {FEAT_EDGEX_3, POW3_4}, {FEAT_CORNR_3, POW3_8}, {FEAT_BMRAN_4, POW3_7}}},
+    /*D8*/ {6, {{FEAT_LINE4_4, POW3_7}, {FEAT_DIAG4_4, POW3_3}, {FEAT_DIAG5_3, POW3_4}, {FEAT_EDGEX_3, POW3_5}, {FEAT_BMRAN_3, POW3_5}, {FEAT_BMRAN_4, POW3_8}}},
+    /*E8*/ {6, {{FEAT_LINE4_2, POW3_7}, {FEAT_DIAG4_3, POW3_3}, {FEAT_DIAG5_4, POW3_4}, {FEAT_EDGEX_3, POW3_6}, {FEAT_BMRAN_3, POW3_6}, {FEAT_BMRAN_4, POW3_9}}},
+    /*F8*/ {5, {{FEAT_LINE3_2, POW3_7}, {FEAT_DIAG6_4, POW3_5}, {FEAT_EDGEX_3, POW3_7}, {FEAT_CORNR_4, POW3_6}, {FEAT_BMRAN_3, POW3_7}}},
+    /*G8*/ {5, {{FEAT_LINE2_2, POW3_7}, {FEAT_DIAG7_4, POW3_6}, {FEAT_EDGEX_3, POW3_8}, {FEAT_CORNR_4, POW3_7}, {FEAT_BMRAN_3, POW3_8}}},
+    /*H8*/ {5, {{FEAT_DIAG8_2, POW3_7}, {FEAT_EDGEX_2, POW3_9}, {FEAT_EDGEX_3, POW3_9}, {FEAT_CORNR_4, POW3_8}, {FEAT_BMRAN_3, POW3_9}}},
+};
+
+void UpdateEval(Evaluator *eval, uint8 pos, uint64 flip)
+{
+    const PosToFeature *pos2f = &(Pos2Feat[pos]);
+    int nbFeat = pos2f->nbFeature;
+    int i;
+    uint8 flipIdx;
+    if (eval->isOwn)
+    {
+        // 着手箇所について
+        // 関連するすべての特徴のインデックスを戻す
+        for (i = 0; i < nbFeat; i++)
+        {
+            // 0(empty) -> 1(own)
+            eval->FeatureStates[pos2f->feature[i].feat] += pos2f->feature[i].idx;
+        }
+
+        // 反転箇所について
+        for (flipIdx = CalcPosIndex(flip); flip; flipIdx = NextIndex(&flip))
+        {
+            pos2f = &(Pos2Feat[flipIdx]);
+            nbFeat = pos2f->nbFeature;
+            // 関連するすべての特徴のインデックスを戻す
+            for (i = 0; i < nbFeat; i++)
+            {
+                // 2(opp) -> 1(own)
+                eval->FeatureStates[pos2f->feature[i].feat] -= pos2f->feature[i].idx;
+            }
+        }
+    }
+    else
+    {
+        // 着手箇所について
+        // 関連するすべての特徴のインデックスを戻す
+        for (i = 0; i < nbFeat; i++)
+        {
+            // 0(empty) -> 2(opp)
+            eval->FeatureStates[pos2f->feature[i].feat] += 2 * pos2f->feature[i].idx;
+        }
+
+        // 反転箇所について
+        for (flipIdx = CalcPosIndex(flip); flip; flipIdx = NextIndex(&flip))
+        {
+            pos2f = &(Pos2Feat[flipIdx]);
+            nbFeat = pos2f->nbFeature;
+            // 関連するすべての特徴のインデックスを戻す
+            for (i = 0; i < nbFeat; i++)
+            {
+                // 1(own) -> 2(opp)
+                eval->FeatureStates[pos2f->feature[i].feat] += pos2f->feature[i].idx;
+            }
+        }
+    }
+}
+
+void UndoEval(Evaluator *eval, uint8 pos, uint64 flip)
+{
+    const PosToFeature *pos2f = &(Pos2Feat[pos]);
+    int nbFeat = pos2f->nbFeature;
+    int i;
+    uint8 flipIdx;
+    if (eval->isOwn)
+    {
+        // 着手箇所について
+        // 関連するすべての特徴のインデックスを戻す
+        for (i = 0; i < nbFeat; i++)
+        {
+            // 1(own) -> 0(empty)
+            eval->FeatureStates[pos2f->feature[i].feat] -= pos2f->feature[i].idx;
+        }
+
+        // 反転箇所について
+        for (flipIdx = CalcPosIndex(flip); flip; flipIdx = NextIndex(&flip))
+        {
+            pos2f = &(Pos2Feat[flipIdx]);
+            nbFeat = pos2f->nbFeature;
+            // 関連するすべての特徴のインデックスを戻す
+            for (i = 0; i < nbFeat; i++)
+            {
+                // 1(own) -> 2(opp)
+                eval->FeatureStates[pos2f->feature[i].feat] += pos2f->feature[i].idx;
+            }
+        }
+    }
+    else
+    {
+        // 着手箇所について
+        // 関連するすべての特徴のインデックスを戻す
+        for (i = 0; i < nbFeat; i++)
+        {
+            // 2(opp) -> 0(empty)
+            eval->FeatureStates[pos2f->feature[i].feat] -= 2 * pos2f->feature[i].idx;
+        }
+
+        // 反転箇所について
+        for (flipIdx = CalcPosIndex(flip); flip; flipIdx = NextIndex(&flip))
+        {
+            pos2f = &(Pos2Feat[flipIdx]);
+            nbFeat = pos2f->nbFeature;
+            // 関連するすべての特徴のインデックスを戻す
+            for (i = 0; i < nbFeat; i++)
+            {
+                // 2(opp) -> 1(own)
+                eval->FeatureStates[pos2f->feature[i].feat] -= pos2f->feature[i].idx;
+            }
+        }
+    }
+}
+
+float EvalPosTable(uint64 own, uint64 opp)
+{
+    int i = 0;
+    float score = 0;
+    for (i = 0; i < Const::BOARD_SIZE * Const::BOARD_SIZE; i++)
+    {
+        score += ((own >> i) & 1) * VALUE_TABLE[i];
+        score -= ((opp >> i) & 1) * VALUE_TABLE[i];
+    }
+    return score;
+}

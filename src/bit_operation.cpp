@@ -130,11 +130,11 @@ int CountBits(uint64 stone)
 
 uint8 CalcPosIndex(uint64 pos)
 {
-    uint64 cursor = 0x8000000000000000;
+    uint64 cursor = 0x0000000000000001;
     int idx = 0;
     while ((pos & cursor) == 0)
     {
-        cursor >>= 1;
+        cursor <<= 1;
         idx++;
     }
     return idx;
@@ -142,16 +142,16 @@ uint8 CalcPosIndex(uint64 pos)
 
 uint8 CalcPosIndex(const char *ascii)
 {
-    return (ascii[0] - 'A') + (ascii[1] - '1') * 8;
+    return 63 - ((ascii[0] - 'A') + (ascii[1] - '1') * 8);
 }
 
 uint64 CalcPosBit(unsigned char posIdx)
 {
-    return 0x8000000000000000 >> posIdx;
+    return 0x0000000000000001 << posIdx;
 }
 
 void CalcPosAscii(unsigned char posIdx, char &x, int &y)
 {
-    x = 'A' + posIdx % 8;
-    y = posIdx / 8 + 1;
+    x = 'A' + (8 - (posIdx % 8));
+    y = 8 - (posIdx / 8);
 }

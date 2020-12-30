@@ -23,6 +23,11 @@ inline uint64 GetLSB(uint64 bits)
 {
     return (-bits & bits);
 }
+inline uint8 NextIndex(uint64 *bits)
+{
+    *bits &= *bits - 1;
+    return CalcPosIndex(*bits);
+}
 #pragma warning(pop)
 
 inline int max(const int x1, const int x2)
