@@ -37,7 +37,7 @@ void Board::Reset()
     nbPlayed = 0;
 }
 
-void Board::Put(uint64 pos)
+uint64 Board::Put(uint64 pos)
 {
     uint64 flip;
     if (turn == Const::BLACK)
@@ -58,9 +58,10 @@ void Board::Put(uint64 pos)
     history[nbPlayed].flip = flip;
     nbPlayed++;
     turn ^= 1;
+    return flip;
 }
 
-uint64 Board::MoveRandom()
+uint64 Board::GetRandomPosMoveable()
 {
     uint64 mob = GetMobility();
     if (mob == 0)
@@ -81,7 +82,6 @@ uint64 Board::MoveRandom()
         }
         pos <<= 1;
     }
-    Put(pos);
     return pos;
 }
 

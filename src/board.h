@@ -32,8 +32,8 @@ public:
     uint64 GetMobility();
     uint8 GetTurnColor();
     void Reset();
-    void Put(uint64 pos);
-    uint64 MoveRandom();
+    uint64 Put(uint64 pos);
+    uint64 GetRandomPosMoveable();
     void Undo();
     void UndoUntilColorChange();
     void Skip();

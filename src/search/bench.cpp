@@ -26,11 +26,12 @@ void MakeBench(int nbGames, uint8 nbRandomTurn)
         board.Reset();
         for (turn = 0; turn < nbRandomTurn; turn++)
         {
-            pos = board.MoveRandom();
+            pos = board.GetRandomPosMoveable();
             if (pos == 0)
             {
                 break;
             }
+            board.Put(pos);
             moves[turn] = CalcPosIndex(pos);
         }
 
