@@ -15,6 +15,18 @@
             "environment": [],
             "externalConsole": true,
             "preLaunchTask": "make"
+        },
+        {
+            "name": "デバッグLearn",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build\\learn.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "preLaunchTask": "make-learn"
         }
     ]
 }

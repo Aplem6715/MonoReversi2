@@ -1,14 +1,17 @@
 
 TARGET=MonoReversi
+LEARN_TARGET=learn
 LINK=link.exe
 
 OUTDIR=.\build
 AI_OUTDIR=.\build\ai
 SEARCH_OUTDIR=.\build\search
+LEARN_OUTDIR=.\build\learning
 
 SRC_DIR=.\src
 AI_SRC_DIR=.\src\ai
 SEARCH_DIR=.\src\search
+LEARN_DIR=.\src\learning
 
 INCLUDE_PATH=.\src
 
@@ -19,19 +22,30 @@ OBJS=\
 	$(OUTDIR)\game.obj\
 	$(OUTDIR)\main.obj\
 	$(AI_OUTDIR)\eval.obj\
-	$(SEARCH_OUTDIR)\ab_node.obj\
 	$(SEARCH_OUTDIR)\bench.obj\
 	$(SEARCH_OUTDIR)\hash.obj\
 	$(SEARCH_OUTDIR)\moves.obj\
 	$(SEARCH_OUTDIR)\search.obj
-# $(AI_OUTDIR)\dnn_io.obj
-# $(AI_OUTDIR)\model.obj
+
+
+LEARN_OBJS=\
+	$(OUTDIR)\const.obj\
+	$(OUTDIR)\bit_operation.obj\
+	$(OUTDIR)\board.obj\
+	$(AI_OUTDIR)\eval.obj\
+	$(SEARCH_OUTDIR)\hash.obj\
+	$(SEARCH_OUTDIR)\moves.obj\
+	$(SEARCH_OUTDIR)\search.obj\
+	$(LEARN_OUTDIR)\model.obj\
+	$(LEARN_OUTDIR)\learner.obj
 
 
 all: $(OUTDIR)\$(TARGET).exe
 
 clean:
-	-@erase /Q $(OUTDIR)\* $(AI_OUTDIR)\* $(SEARCH_OUTDIR)\*
+	-@erase /Q $(OUTDIR)\* $(AI_OUTDIR)\* $(SEARCH_OUTDIR)\* $(LEARN_OUTDIR)\*
+
+learn: $(OUTDIR)\$(LEARN_TARGET).exe
 
 $(OUTDIR):
 	@if not exist $(OUTDIR) mkdir $(OUTDIR)
@@ -42,6 +56,8 @@ $(AI_OUTDIR):
 $(SEARCH_OUTDIR):
 	@if not exist $(SEARCH_OUTDIR) mkdir $(SEARCH_OUTDIR)
 
+$(LEARN_OUTDIR):
+	@if not exist $(LEARN_OUTDIR) mkdir $(LEARN_OUTDIR)
 
 CFLAGS=\
 	/nologo\
@@ -68,9 +84,19 @@ LINK_FLAGS=\
 	/out:"$(OUTDIR)\$(TARGET).exe"\
 	/DEBUG
 
+LEARN_LINK_FLAGS=\
+	/nologo\
+	/subsystem:console\
+	/pdb:"$(OUTDIR)\$(LEARN_TARGET).pdb"\
+	/out:"$(OUTDIR)\$(LEARN_TARGET).exe"\
+	/DEBUG
+
 
 $(OUTDIR)\$(TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(SEARCH_OUTDIR) $(OBJS)
 	$(LINK) $(LINK_FLAGS) $(OBJS)
+
+$(OUTDIR)\$(LEARN_TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(SEARCH_OUTDIR) $(LEARN_OUTDIR) $(LEARN_OBJS)
+	$(LINK) $(LEARN_LINK_FLAGS) $(LEARN_OBJS)
 
 {$(SRC_DIR)}.cpp{$(OUTDIR)}.obj:
 	$(CPP) $(CFLAGS) /Fo"$(OUTDIR)\\" /Fd"$(OUTDIR)\\" $<
@@ -80,3 +106,6 @@ $(OUTDIR)\$(TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(SEARCH_OUTDIR) $(OBJS)
 	
 {$(SEARCH_DIR)}.cpp{$(SEARCH_OUTDIR)}.obj:
 	$(CPP) $(CFLAGS) /Fo"$(SEARCH_OUTDIR)\\" /Fd"$(SEARCH_OUTDIR)\\" $<
+
+{$(LEARN_DIR)}.cpp{$(LEARN_OUTDIR)}.obj:
+	$(CPP) $(CFLAGS) /Fo"$(LEARN_OUTDIR)\\" /Fd"$(LEARN_OUTDIR)\\" $<

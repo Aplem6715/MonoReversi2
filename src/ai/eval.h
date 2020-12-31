@@ -92,7 +92,6 @@ const float VALUE_TABLE[] = {
 
 typedef struct Evaluator
 {
-
     unsigned short FeatureStates[FEAT_NUM];
     unsigned char isOwn;
 } Evaluator;

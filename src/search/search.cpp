@@ -5,12 +5,13 @@
 #include "moves.h"
 #include <assert.h>
 
-void InitTree(SearchTree *tree, unsigned char depth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth)
+void InitTree(SearchTree *tree, unsigned char depth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth, ValueModel *model)
 {
     tree->depth = depth;
     tree->orderDepth = orderDepth;
     tree->useHash = useHash;
     tree->hashDepth = hashDepth;
+    tree->model = model;
     if (useHash)
     {
         tree->table = (HashTable *)malloc(sizeof(HashTable));

@@ -4,12 +4,14 @@
 #include "../const.h"
 #include "../ai/eval.h"
 
-typedef struct GameData
+#define RESULT_UNSETTLED -100
+
+typedef struct GameRecord
 {
     uint16 featStats[FEAT_NUM];
-    uint8 selected;
     uint8 nbEmpty;
+    uint8 color;
     signed char resultForBlack;
-} GameData;
+} GameRecord;
 
 #endif

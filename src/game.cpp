@@ -43,11 +43,11 @@ Game::Game(PlayerEnum white, PlayerEnum black)
     // AIの初期化
     if (player[Const::WHITE] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::WHITE], 5, 2, 1, 2);
+        InitTree(&tree[Const::WHITE], 5, 2, 1, 2, NULL);
     }
     if (player[Const::BLACK] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::BLACK], 5, 2, 1, 2);
+        InitTree(&tree[Const::BLACK], 5, 2, 1, 2, NULL);
     }
     Reset();
 }

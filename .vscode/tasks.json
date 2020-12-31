@@ -13,6 +13,18 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "shell",
+            "label": "make-learn",
+            "command": "nmake.exe",
+            "args": [
+                "learn"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build"
         }
     ]
 }

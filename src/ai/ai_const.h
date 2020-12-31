@@ -5,8 +5,8 @@
 #define NB_PUT_1PHASE 4
 #define PHASE(nbEmpty) (nbEmpty / NB_PUT_1PHASE)
 
-#define VALUE_HIDDEN_UNITS1 128
-#define VALUE_HIDDEN_UNITS2 64
+#define VALUE_HIDDEN_UNITS1 16
+#define VALUE_HIDDEN_UNITS2 8
 
 #define POW0_0 0
 #define POW3_0 1
