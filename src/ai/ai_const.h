@@ -1,6 +1,13 @@
 ﻿#ifndef AI_CONST_DEFINED
 #define AI_CONST_DEFINED
 
+#define NB_PHASE 15
+#define NB_PUT_1PHASE 4
+#define PHASE(nbEmpty) (nbEmpty / NB_PUT_1PHASE)
+
+#define VALUE_HIDDEN_UNITS1 128
+#define VALUE_HIDDEN_UNITS2 64
+
 #define POW0_0 0
 #define POW3_0 1
 #define POW3_1 3

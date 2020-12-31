@@ -88,8 +88,7 @@ static const PosToFeature Pos2Feat[] = {
     /*H8*/ {5, {{FEAT_DIAG8_2, POW3_7}, {FEAT_EDGEX_2, POW3_9}, {FEAT_EDGEX_3, POW3_9}, {FEAT_CORNR_3, POW3_8}, {FEAT_BMRAN_3, POW3_9}}},
 };
 
-/*
-uint32 FeatMaxIndex[] = {
+static const uint32 FeatMaxIndex[] = {
     POW3_9, POW3_9, POW3_9, POW3_9,     // LINE2
     POW3_9, POW3_9, POW3_9, POW3_9,     // LINE3
     POW3_9, POW3_9, POW3_9, POW3_9,     // LINE4
@@ -101,7 +100,7 @@ uint32 FeatMaxIndex[] = {
     POW3_11, POW3_11, POW3_11, POW3_11, // EDGEX
     POW3_10, POW3_10, POW3_10, POW3_10, // CORNR
     POW3_11, POW3_11, POW3_11, POW3_11  // BMRAN
-};*/
+};
 
 //static const uint16 DEBUG_TARGET_FEAT = 3;
 
