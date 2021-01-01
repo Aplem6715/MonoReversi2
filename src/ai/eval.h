@@ -61,21 +61,26 @@
 #define FEAT_EDGEX_2 31
 #define FEAT_EDGEX_3 32
 #define FEAT_EDGEX_4 33
+#define FEAT_EDGEX_5 34
+#define FEAT_EDGEX_6 35
+#define FEAT_EDGEX_7 36
+#define FEAT_EDGEX_8 37
 
 // 3^10 x 4 = 236,196
-#define FEAT_CORNR_1 34
-#define FEAT_CORNR_2 35
-#define FEAT_CORNR_3 36
-#define FEAT_CORNR_4 37
+#define FEAT_CORNR_1 38
+#define FEAT_CORNR_2 39
+#define FEAT_CORNR_3 40
+#define FEAT_CORNR_4 41
 
 // 3^11 x 4 = 708,588
-#define FEAT_BMRAN_1 38
-#define FEAT_BMRAN_2 39
-#define FEAT_BMRAN_3 40
-#define FEAT_BMRAN_4 41
-#define FEAT_NUM 42
+#define FEAT_BMRAN_1 42
+#define FEAT_BMRAN_2 43
+#define FEAT_BMRAN_3 44
+#define FEAT_BMRAN_4 45
+#define FEAT_NUM 46
 
-#define FEAT_NB_COMBINATION 1967814
+//#define FEAT_NB_COMBINATION 1967814
+#define FEAT_NB_COMBINATION 489402
 
 extern const uint32 FeatMaxIndex[];
 

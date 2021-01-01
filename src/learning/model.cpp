@@ -27,6 +27,7 @@ ValueModel::ValueModel(net_phase mode)
             << fc(VALUE_HIDDEN_UNITS1, VALUE_HIDDEN_UNITS2) << relu()
             << fc(VALUE_HIDDEN_UNITS2, 1) << linear(1);
         this->nets.push_back(net);
+        cout << "MLP Net phase" << i << " initialized!\n";
     }
 
     std::ofstream ofs("graph_net_example.txt");

@@ -72,6 +72,7 @@ CFLAGS=\
 	/USE_AVX\
 	/USE_AVX2\
 	/USE_CUDA\
+	/USE_OPENCL\
 	/bigobj\
 	/EHsc\
 	/I$(INCLUDE_PATH)
