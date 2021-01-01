@@ -5,6 +5,8 @@
 #include "moves.h"
 #include <assert.h>
 
+#include "../learning/learn_eval.h"
+
 void InitTree(SearchTree *tree, unsigned char depth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth, ValueModel *model)
 {
     tree->depth = depth;
@@ -71,6 +73,7 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
     std::chrono::system_clock::time_point start, end;
     start = std::chrono::system_clock::now();
     tree->nodeCount = 0;
+    tree->nbEmpty = (uint8)CountBits(~(own | opp));
 
     // 評価パターンの初期化
     InitEval(tree->eval, own, opp);
@@ -130,7 +133,8 @@ float AlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float
     tree->nodeCount++;
     if (depth <= 0)
     {
-        return EvalPosTable(own, opp);
+        //return EvalPosTable(own, opp);
+        return EvalTinyDnn(tree, tree->nbEmpty);
     }
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
@@ -174,12 +178,14 @@ float AlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float
             mob ^= pos;
             rev = CalcFlip(own, opp, pos);
 
+            tree->nbEmpty--;
             UpdateEval(tree->eval, posIdx, rev);
             {
                 // 子ノードを探索
                 score = -AlphaBetaDeep(tree, opp ^ rev, own ^ rev ^ pos, -beta, -lower, depth - 1, false);
             }
             UndoEval(tree->eval, posIdx, rev);
+            tree->nbEmpty++;
 
             if (score > maxScore)
             {
@@ -220,7 +226,8 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
     tree->nodeCount++;
     if (depth <= 0)
     {
-        return EvalPosTable(own, opp);
+        //return EvalPosTable(own, opp);
+        return EvalTinyDnn(tree, tree->nbEmpty);
     }
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
@@ -270,12 +277,14 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
             // 着手位置・反転位置を取得
             pos = CalcPosBit(move->posIdx);
 
+            tree->nbEmpty--;
             UpdateEval(tree->eval, move->posIdx, move->flip);
             {
                 // 子ノードを探索
                 score = -NextSearch(tree, opp ^ move->flip, own ^ move->flip ^ pos, -beta, -lower, depth - 1, false);
             }
             UndoEval(tree->eval, move->posIdx, move->flip);
+            tree->nbEmpty++;
 
             if (score > maxScore)
             {

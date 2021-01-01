@@ -1,17 +1,17 @@
 
-TARGET=MonoReversi
-LEARN_TARGET=learn
-LINK=link.exe
+TARGET			=MonoReversi
+LEARN_TARGET	=learn
+LINK			=link.exe
 
-OUTDIR=.\build
-AI_OUTDIR=.\build\ai
-SEARCH_OUTDIR=.\build\search
-LEARN_OUTDIR=.\build\learning
+OUTDIR			=.\build
+AI_OUTDIR		=.\build\ai
+SEARCH_OUTDIR	=.\build\search
+LEARN_OUTDIR	=.\build\learning
 
-SRC_DIR=.\src
-AI_SRC_DIR=.\src\ai
-SEARCH_DIR=.\src\search
-LEARN_DIR=.\src\learning
+SRC_DIR		=.\src
+AI_SRC_DIR	=.\src\ai
+SEARCH_DIR	=.\src\search
+LEARN_DIR	=.\src\learning
 
 INCLUDE_PATH=.\src
 
@@ -32,38 +32,19 @@ LEARN_OBJS=\
 	$(OUTDIR)\const.obj\
 	$(OUTDIR)\bit_operation.obj\
 	$(OUTDIR)\board.obj\
-	$(AI_OUTDIR)\eval.obj\
+	$(LEARN_OUTDIR)\model.obj\
+	$(LEARN_OUTDIR)\learn_eval.obj\
+	$(LEARN_OUTDIR)\learner.obj\
 	$(SEARCH_OUTDIR)\hash.obj\
 	$(SEARCH_OUTDIR)\moves.obj\
 	$(SEARCH_OUTDIR)\search.obj\
-	$(LEARN_OUTDIR)\model.obj\
-	$(LEARN_OUTDIR)\learner.obj
+	$(AI_OUTDIR)\eval.obj
 
-
-all: $(OUTDIR)\$(TARGET).exe
-
-clean:
-	-@erase /Q $(OUTDIR)\* $(AI_OUTDIR)\* $(SEARCH_OUTDIR)\* $(LEARN_OUTDIR)\*
-
-learn: $(OUTDIR)\$(LEARN_TARGET).exe
-
-$(OUTDIR):
-	@if not exist $(OUTDIR) mkdir $(OUTDIR)
-
-$(AI_OUTDIR):
-	@if not exist $(AI_OUTDIR) mkdir $(AI_OUTDIR)
-
-$(SEARCH_OUTDIR):
-	@if not exist $(SEARCH_OUTDIR) mkdir $(SEARCH_OUTDIR)
-
-$(LEARN_OUTDIR):
-	@if not exist $(LEARN_OUTDIR) mkdir $(LEARN_OUTDIR)
-
+	
 CFLAGS=\
 	/nologo\
 	/W3\
 	/c\
-	/Zi\
 	/D_WIN32_WINNT=0x0600\
 	/DUNICODE\
 	/D_UNICODE\
@@ -75,8 +56,16 @@ CFLAGS=\
 	/USE_OPENCL\
 	/bigobj\
 	/EHsc\
-	/I$(INCLUDE_PATH)
+	/I$(INCLUDE_PATH)\
 	# /USE_SERIALIZER\ #
+
+CFLAGS_DEBUG=\
+	/Zi
+
+CFLAGS_RELEASE=\
+	/Ox\
+	/arch:AVX2
+
 
 LINK_FLAGS=\
 	/nologo\
@@ -91,6 +80,49 @@ LEARN_LINK_FLAGS=\
 	/pdb:"$(OUTDIR)\$(LEARN_TARGET).pdb"\
 	/out:"$(OUTDIR)\$(LEARN_TARGET).exe"\
 	/DEBUG
+
+
+.PHONY: debug
+debug: $(macroname, CFLAGS, $(CFLAGS) $(CFLAGS_RELEASE))
+debug: all
+
+.PHONY: release
+release: $(macroname, CFLAGS, $(CFLAGS) $(CFLAGS_RELEASE))
+release: all
+
+all: $(OUTDIR)\$(TARGET).exe
+
+
+
+.PHONY: learn_debug
+learn_debug: $(macroname, CFLAGS, $(CFLAGS) $(CFLAGS_RELEASE))
+learn_debug: learn
+
+.PHONY: learn_release
+learn_release: $(macroname, CFLAGS, $(CFLAGS) $(CFLAGS_RELEASE))
+learn_release: learn
+
+learn: $(OUTDIR)\$(LEARN_TARGET).exe
+
+
+
+.PHONY: clean
+clean:
+	-@erase /Q $(OUTDIR)\* $(AI_OUTDIR)\* $(SEARCH_OUTDIR)\* $(LEARN_OUTDIR)\*
+
+
+
+$(OUTDIR):
+	@if not exist $(OUTDIR) mkdir $(OUTDIR)
+
+$(AI_OUTDIR):
+	@if not exist $(AI_OUTDIR) mkdir $(AI_OUTDIR)
+
+$(SEARCH_OUTDIR):
+	@if not exist $(SEARCH_OUTDIR) mkdir $(SEARCH_OUTDIR)
+
+$(LEARN_OUTDIR):
+	@if not exist $(LEARN_OUTDIR) mkdir $(LEARN_OUTDIR)
 
 
 $(OUTDIR)\$(TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(SEARCH_OUTDIR) $(OBJS)

@@ -22,7 +22,7 @@ static const int TRAIN_NB_VERSUS = 100;
 static const uint8 VERSUS_RANDOM_TURNS = 8;
 
 static const int nbTrainCycles = 1000;
-static const int nbGameOneCycle = 1024;
+static const int nbGameOneCycle = 32; //1024;
 static const string modelFolder = "resources/model/";
 static const string modelName = "model_";
 static const string logFileName = "log/self_play.log";
@@ -102,7 +102,14 @@ bool PlayOneGame(vector<GameRecord> &gameRecords, SearchTree tree[2], uint8 rand
         // レコード終端から，リザルトが未確定のレコードに対してリザルトを設定
         for (auto i = gameRecords.end(); i->resultForBlack == RESULT_UNSETTLED; i--)
         {
-            i->resultForBlack = stoneDiff;
+            if (i->color == Const::BLACK)
+            {
+                i->resultForBlack = stoneDiff;
+            }
+            else
+            {
+                i->resultForBlack = -stoneDiff;
+            }
         }
     }
 

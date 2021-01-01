@@ -20,7 +20,7 @@ private:
     vector<network<sequential>> nets;
 
 public:
-    ValueModel(net_phase mode = net_phase::train);
+    ValueModel();
     ~ValueModel(){};
 
     float predict(uint16 features[], uint8 nbEmpty);

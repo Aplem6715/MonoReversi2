@@ -1,5 +1,5 @@
-﻿#ifndef GAME_DATA_DEFINED
-#define GAME_DATA_DEFINED
+﻿#ifndef GAME_RECORD_DEFINED
+#define GAME_RECORD_DEFINED
 
 #include "../const.h"
 #include "../ai/eval.h"

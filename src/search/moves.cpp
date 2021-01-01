@@ -3,7 +3,6 @@
 #include "moves.h"
 #include "search.h"
 #include "../bit_operation.h"
-#include "../ai/eval.h"
 
 void CreateMoveList(MoveList *moveList, uint64 own, uint64 opp)
 {

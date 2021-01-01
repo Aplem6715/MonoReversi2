@@ -1,6 +1,5 @@
 ﻿#include "model.h"
 #include "bit_operation.h"
-#include "../ai/eval.h"
 #include "../ai/ai_const.h"
 #include <vector>
 
@@ -18,7 +17,7 @@ void MakeInput(vec_t &input, const uint16 features[])
     }
 }
 
-ValueModel::ValueModel(net_phase mode)
+ValueModel::ValueModel()
 {
     for (int i = 0; i < NB_PHASE; i++)
     {
@@ -45,7 +44,7 @@ float ValueModel::predict(uint16 features[], uint8 nbEmpty)
 
     MakeInput(inputs[0], features);
 
-    //DEBUG
+    /*DEBUG
     for (int i = 0; i < FEAT_NUM; i++)
     {
         uint32 idx = 0;
@@ -58,7 +57,7 @@ float ValueModel::predict(uint16 features[], uint8 nbEmpty)
             }
         }
         idxShift += FeatMaxIndex[i];
-    } //DEBUG
+    } DEBUG*/
 
     output = nets[PHASE(nbEmpty)].predict(inputs)[0][0];
     return output;

@@ -18,6 +18,7 @@ typedef struct SearchTree
     unsigned char orderDepth;
     unsigned char hashDepth;
     unsigned char useHash;
+    unsigned char nbEmpty;
     double usedTime;
     float score;
     // 外部ライブラリを使用して評価を行うか（大会で外部ライブラリの使用が禁止されている場合用）
@@ -27,7 +28,7 @@ typedef struct SearchTree
 
 typedef float (*SearchFunc_t)(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed);
 
-void InitTree(SearchTree *tree, unsigned char depth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth, ValueModel* model);
+void InitTree(SearchTree *tree, unsigned char depth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth, ValueModel *model);
 void DeleteTree(SearchTree *tree);
 void ConfigTree(SearchTree *tree, unsigned char depth);
 void ResetTree(SearchTree *tree);
