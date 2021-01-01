@@ -27,6 +27,18 @@
             "environment": [],
             "externalConsole": true,
             "preLaunchTask": "make-learn"
+        },
+        {
+            "name": "Learn",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build\\learn.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "preLaunchTask": "make-learn_release"
         }
     ]
 }

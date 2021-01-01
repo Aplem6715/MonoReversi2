@@ -31,7 +31,7 @@ static random_device rnd;
 static mt19937 mt(rnd());
 static uniform_real_distribution<double> rnd_prob(0.0, 1.0);
 
-bool PlayOneGame(vector<GameRecord> &gameRecords, SearchTree tree[2], uint8 randomTurns, double randMoveRatio, bool useRecording)
+bool PlayOneGame(vector<GameRecord> &gameRecords, SearchTree tree[2], uint8 colorSwapped, uint8 randomTurns, double randMoveRatio, bool useRecording)
 {
     uint64 input, flip;
     int nbEmpty = 60;
@@ -61,7 +61,7 @@ bool PlayOneGame(vector<GameRecord> &gameRecords, SearchTree tree[2], uint8 rand
         else
         {
             // AIが着手位置を決める
-            input = Search(&tree[board.GetTurnColor()], board.GetOwn(), board.GetOpp());
+            input = Search(&tree[board.GetTurnColor() ^ colorSwapped], board.GetOwn(), board.GetOpp());
         }
 
         // 入力位置のインデックスを取得
@@ -126,8 +126,11 @@ void SelfPlay(uint8 searchDepth)
     int winCount;
     double winRatio;
 
-    InitTree(&trees[0], searchDepth, 100, 1, 6, &trainModel);
-    InitTree(&trees[1], searchDepth, 100, 1, 6, &prevModel);
+    InitTree(&trees[0], searchDepth, 100, 1, 6); // 旧
+    InitTree(&trees[1], searchDepth, 100, 1, 6); // 新
+
+    prevModel.CopyWeightsTo(trees[0].eval->nets);  // 旧
+    trainModel.CopyWeightsTo(trees[1].eval->nets); // 新
 
     int nbCycles = 0;
     while (true)
@@ -136,17 +139,29 @@ void SelfPlay(uint8 searchDepth)
         for (int gameCnt = 0; gameCnt < nbGameOneCycle; gameCnt++)
         {
             cout << "Cycle: " << nbCycles << "\tPlaying: " << gameCnt << "\n";
-            PlayOneGame(gameRecords, trees, TRAIN_RANDOM_TURNS, TRAIN_RANDOM_RATIO, true);
+            PlayOneGame(gameRecords, trees, 0, TRAIN_RANDOM_TURNS, TRAIN_RANDOM_RATIO, true);
         }
 
         // 試合結果から学習
         trainModel.train(gameRecords);
 
+        // 学習済みWeightを新しい用ツリーに上書き登録
+        trainModel.CopyWeightsTo(trees[1].eval->nets);
+
         // 新旧モデルで対戦
         winCount = 0;
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
-            if (PlayOneGame(gameRecords, trees, VERSUS_RANDOM_TURNS, 0, false))
+            if (PlayOneGame(gameRecords, trees, 0, VERSUS_RANDOM_TURNS, 0, false))
+            {
+                // 勝ったら加算
+                winCount++;
+            }
+        }
+        // 白黒入れ替えて
+        for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
+        {
+            if (!PlayOneGame(gameRecords, trees, 1, VERSUS_RANDOM_TURNS, 0, false))
             {
                 // 勝ったら加算
                 winCount++;
@@ -165,6 +180,9 @@ void SelfPlay(uint8 searchDepth)
 
             trainModel.Save(modelDir);
             prevModel.Load(modelDir);
+
+            // 旧ツリーに新Weightを上書きコピー
+            trainModel.CopyWeightsTo(trees[0].eval->nets);
             logFile << "Model Updated!!!";
         }
 

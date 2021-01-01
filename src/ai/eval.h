@@ -3,6 +3,10 @@
 
 #include "../const.h"
 
+#define NB_PHASE 4
+#define NB_PUT_1PHASE 15
+#define PHASE(nbEmpty) (nbEmpty / NB_PUT_1PHASE)
+
 // パターン種類
 #define NB_FEATURE_TYPES (11)
 // 4回転分
@@ -81,7 +85,12 @@
 #define FEAT_NUM 46
 
 //#define FEAT_NB_COMBINATION 1967814
-#define FEAT_NB_COMBINATION 489402
+// 32-16: 1ネット約120[MB]
+#define FEAT_NB_COMBINATION 163134
+#define VALUE_HIDDEN_UNITS1 32
+#define VALUE_HIDDEN_UNITS2 16
+
+#define NB_LAYERS 3
 
 extern const uint32 FeatMaxIndex[];
 
@@ -96,16 +105,25 @@ const float VALUE_TABLE[] = {
     120, -20, 20, 5, 5, 20, -20, 120,   //
 };
 
+typedef struct Weights
+{
+    float *weights;
+    float *bias;
+    size_t nbConnect;
+} Weights;
+
 typedef struct Evaluator
 {
     unsigned short FeatureStates[FEAT_NUM];
     unsigned char isOwn;
+    Weights nets[NB_PHASE][NB_LAYERS];
 } Evaluator;
 
 void InitEval(Evaluator *eval, uint64 own, uint64 opp);
 void UpdateEval(Evaluator *eval, uint8 pos, uint64 flip);
 void UndoEval(Evaluator *eval, uint8 pos, uint64 flip);
 void UpdateEvalPass(Evaluator *eval);
+void SetWeights(Evaluator *eval, Weights *weights[NB_PHASE]);
 
 float EvalPosTable(uint64 own, uint64 opp);
 

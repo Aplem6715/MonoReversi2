@@ -7,13 +7,21 @@
 
 #include "../learning/learn_eval.h"
 
-void InitTree(SearchTree *tree, unsigned char depth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth, ValueModel *model)
+void InitTree(SearchTree *tree, unsigned char depth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth)
 {
     tree->depth = depth;
     tree->orderDepth = orderDepth;
     tree->useHash = useHash;
     tree->hashDepth = hashDepth;
-    tree->model = model;
+    for (int phase = 0; phase < NB_PHASE; phase++)
+    {
+        for (int layer = 0; layer < NB_LAYERS; layer++)
+        {
+            tree->eval->nets[phase][layer].bias = NULL;
+            tree->eval->nets[phase][layer].weights = NULL;
+            tree->eval->nets[phase][layer].nbConnect = 0;
+        }
+    }
     if (useHash)
     {
         tree->table = (HashTable *)malloc(sizeof(HashTable));

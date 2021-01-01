@@ -2,6 +2,8 @@
 #include "bit_operation.h"
 #include "../ai/ai_const.h"
 #include <vector>
+#include <stdlib.h>
+#include <chrono>
 
 using namespace std;
 using namespace tiny_dnn::layers;
@@ -70,21 +72,65 @@ float ValueModel::predict(uint16 features[], uint8 nbEmpty)
 void ValueModel::train(const std::vector<GameRecord> &gameRecords)
 {
     adam opt;
-    vector<tensor_t> input(NB_PHASE, tensor_t(gameRecords.size(), vec_t(FEAT_NUM)));
-    vector<tensor_t> desiredOut(NB_PHASE, tensor_t(gameRecords.size()));
+    vector<tensor_t> input(NB_PHASE);
+    vector<tensor_t> desiredOut(NB_PHASE);
+    chrono::system_clock::time_point start, end;
+
     size_t batchSize = 32;
-    int epochs = 10;
+    int epochs = 3;
 
     for (int i = 0; i < gameRecords.size(); i++)
     {
         int phase = PHASE(gameRecords[i].nbEmpty);
-        MakeInput(input[phase][i], gameRecords[i].featStats);
-        desiredOut[phase][i][0] = gameRecords[i].resultForBlack;
+
+        vec_t featStats(FEAT_NB_COMBINATION);
+        MakeInput(featStats, gameRecords[i].featStats);
+        input[phase].push_back(featStats);
+
+        vec_t outTmp(1);
+        outTmp[0] = gameRecords[i].resultForBlack;
+        desiredOut[phase].push_back(outTmp);
     }
+
+    /*DEBUG
+    for (int phase = 0; phase < NB_PHASE; phase++)
+    {
+        for (int i = 0; i < input[phase].size(); i++)
+        {
+            float sum = 0;
+            for (int j = 0; j < input[phase][i].size(); j++)
+            {
+                sum += input[phase][i][j];
+            }
+            if (sum != FEAT_NUM)
+            {
+                cerr << "不正な入力Tensor\n";
+                assert(0);
+            }
+            else
+            {
+                sum = 0;
+            }
+        }
+    }
+    DEBUG*/
 
     for (int phase = 0; phase < NB_PHASE; phase++)
     {
-        nets[phase].fit<mse>(opt, input[phase], desiredOut[phase], batchSize, epochs);
+        int epoch = 0;
+        start = chrono::system_clock::now();
+        nets[phase].fit<mse>(
+            opt, input[phase], desiredOut[phase], batchSize, epochs, []() {},
+            [&]() {
+                cout << "learning epoch: " << epoch << '\r';
+                epoch++;
+            });
+        end = chrono::system_clock::now();
+        double elapsed = (double)chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        cout << "phase" << phase
+             << "  loss: " << nets[phase].get_loss<mse>(input[phase], desiredOut[phase]) / input[phase].size()
+             << "  time: " << elapsed / 1000 << "[s]"
+             << '\n';
     }
 }
 
@@ -101,5 +147,56 @@ void ValueModel::Load(string loadDir)
     for (int phase = 0; phase < NB_PHASE; phase++)
     {
         nets[phase].load(loadDir + "phase" + to_string(phase));
+    }
+}
+
+void ConvertWeights(vector<vec_t *> layerW, Weights *weights)
+{
+    vec_t *weight = layerW[0];
+    vec_t *bias = NULL;
+    size_t nbConnects = weight->size();
+
+    if (layerW.size() == 2)
+    {
+        bias = layerW[1];
+    }
+
+    if (weights->nbConnect != weight->size())
+    {
+        if (weights->bias != NULL)
+        {
+            free(weights->bias);
+        }
+        if (weights->weights != NULL)
+        {
+            free(weights->weights);
+        }
+        if (bias)
+        {
+            weights->bias = (float *)malloc(sizeof(Weights) * nbConnects);
+        }
+        weights->weights = (float *)malloc(sizeof(Weights) * nbConnects);
+        weights->nbConnect = nbConnects;
+    }
+
+    for (size_t i = 0; i < nbConnects; i++)
+    {
+        weights->weights[i] = (*weight)[i];
+        if (bias)
+        {
+            weights->bias[i] = (*bias)[i];
+        }
+    }
+}
+
+void ValueModel::CopyWeightsTo(Weights weights[NB_PHASE][NB_LAYERS])
+{
+    for (int phase = 0; phase < NB_PHASE; phase++)
+    {
+        for (int layer = 0; layer < 3; layer++)
+        {
+            vector<vec_t *> layerW = nets[phase][layer * 2]->weights();
+            ConvertWeights(layerW, &weights[phase][layer]);
+        }
     }
 }

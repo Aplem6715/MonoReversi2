@@ -1,7 +1,7 @@
 digraph "graph" {
   node [ shape=record ];
   "fully-connected0" [
-    label= "fully-connected|{{in|<in0>489402x1x1(data)|<in1>489402x32x1(weight)}|{out|<out0>32x1x1(data)}}"
+    label= "fully-connected|{{in|<in0>163134x1x1(data)|<in1>163134x32x1(weight)}|{out|<out0>32x1x1(data)}}"
   ];
   "fully-connected0":out0 -> "relu-activation0":in0;
   "relu-activation0" [
