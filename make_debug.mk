@@ -22,6 +22,7 @@ OBJS=\
 	$(OUTDIR)\game.obj\
 	$(OUTDIR)\main.obj\
 	$(AI_OUTDIR)\eval.obj\
+	$(LEARN_OUTDIR)\nnet.obj\
 	$(SEARCH_OUTDIR)\bench.obj\
 	$(SEARCH_OUTDIR)\hash.obj\
 	$(SEARCH_OUTDIR)\moves.obj\
@@ -32,13 +33,13 @@ LEARN_OBJS=\
 	$(OUTDIR)\const.obj\
 	$(OUTDIR)\bit_operation.obj\
 	$(OUTDIR)\board.obj\
-	$(LEARN_OUTDIR)\model.obj\
-	$(LEARN_OUTDIR)\learn_eval.obj\
-	$(LEARN_OUTDIR)\learner.obj\
 	$(SEARCH_OUTDIR)\hash.obj\
 	$(SEARCH_OUTDIR)\moves.obj\
 	$(SEARCH_OUTDIR)\search.obj\
-	$(AI_OUTDIR)\eval.obj
+	$(AI_OUTDIR)\eval.obj\
+	$(LEARN_OUTDIR)\nnet.obj\
+	$(LEARN_OUTDIR)\learn_eval.obj\
+	$(LEARN_OUTDIR)\learner.obj
 
 	
 CFLAGS=\
@@ -56,6 +57,7 @@ CFLAGS=\
 	/USE_OPENCL\
 	/bigobj\
 	/EHsc\
+	/DLEARN_MODE\
 	/I$(INCLUDE_PATH)\
 	/Zi
 	# /USE_SERIALIZER\ #

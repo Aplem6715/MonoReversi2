@@ -150,6 +150,7 @@ void ValueModel::Load(string loadDir)
     }
 }
 
+
 void ConvertWeights(vector<vec_t *> layerW, Weights *weights)
 {
     vec_t *weight = layerW[0];

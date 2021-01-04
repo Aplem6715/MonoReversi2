@@ -1,7 +1,10 @@
-#include "model.h"
+
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "../board.h"
 #include "../bit_operation.h"
 #include "../search/search.h"
+#include "nnet.h"
 #include <string>
 #include <assert.h>
 #include <random>
@@ -17,12 +20,12 @@ static const uint8 TRAIN_RANDOM_TURNS = 4;
 // ランダム行動割合（１試合に1回くらい）
 static const double TRAIN_RANDOM_RATIO = 1.0 / 60.0;
 
-// 学習結果確認の対戦回数（１色で１００試合＝全体で２００）
-static const int TRAIN_NB_VERSUS = 100;
+// 学習結果確認の対戦回数（１色で50試合＝全体で100）
+static const int TRAIN_NB_VERSUS = 50;
 static const uint8 VERSUS_RANDOM_TURNS = 8;
 
 static const int nbTrainCycles = 1000;
-static const int nbGameOneCycle = 32; //1024;
+static const int nbGameOneCycle = 256; //1024;
 static const string modelFolder = "resources/model/";
 static const string modelName = "model_";
 static const string logFileName = "log/self_play.log";
@@ -31,16 +34,17 @@ static random_device rnd;
 static mt19937 mt(rnd());
 static uniform_real_distribution<double> rnd_prob(0.0, 1.0);
 
-bool PlayOneGame(vector<GameRecord> &gameRecords, SearchTree tree[2], uint8 colorSwapped, uint8 randomTurns, double randMoveRatio, bool useRecording)
+bool PlayOneGame(vector<FeatureRecord> &gameRecords, SearchTree tree[2], uint8 colorSwapped, uint8 randomTurns, double randMoveRatio, bool useRecording)
 {
     uint64 input, flip;
     int nbEmpty = 60;
+    int filledResultIdx = 0;
     Board board;
     Evaluator eval[1];
-    GameRecord record;
+    FeatureRecord record;
 
     board.Reset();
-    InitEval(eval, board.GetBlack(), board.GetWhite());
+    ReloadEval(eval, board.GetBlack(), board.GetWhite());
     while (!board.IsFinished())
     {
         //board.Draw();
@@ -82,7 +86,7 @@ bool PlayOneGame(vector<GameRecord> &gameRecords, SearchTree tree[2], uint8 colo
                 record.featStats[featIdx] = eval->FeatureStates[featIdx];
             }
             record.nbEmpty = nbEmpty;
-            record.resultForBlack = RESULT_UNSETTLED;
+            record.stoneDiff = RESULT_UNSETTLED;
             record.color = board.GetTurnColor();
 
             // レコードを追加
@@ -92,7 +96,7 @@ bool PlayOneGame(vector<GameRecord> &gameRecords, SearchTree tree[2], uint8 colo
     } //end of loop:　while (!board.IsFinished())
 
     // 勝敗を表示
-    board.Draw();
+    //board.Draw();
     int numBlack = board.GetStoneCount(Const::BLACK);
     int numWhite = board.GetStoneCount(Const::WHITE);
     signed char stoneDiff = numBlack - numWhite;
@@ -100,15 +104,15 @@ bool PlayOneGame(vector<GameRecord> &gameRecords, SearchTree tree[2], uint8 colo
     if (useRecording)
     {
         // レコード終端から，リザルトが未確定のレコードに対してリザルトを設定
-        for (auto i = gameRecords.end(); i->resultForBlack == RESULT_UNSETTLED; i--)
+        for (; filledResultIdx < gameRecords.size(); filledResultIdx++)
         {
-            if (i->color == Const::BLACK)
+            if (gameRecords[filledResultIdx].color == Const::BLACK)
             {
-                i->resultForBlack = stoneDiff;
+                gameRecords[filledResultIdx].stoneDiff = stoneDiff;
             }
             else
             {
-                i->resultForBlack = -stoneDiff;
+                gameRecords[filledResultIdx].stoneDiff = -stoneDiff;
             }
         }
     }
@@ -118,41 +122,38 @@ bool PlayOneGame(vector<GameRecord> &gameRecords, SearchTree tree[2], uint8 colo
 
 void SelfPlay(uint8 searchDepth)
 {
-    vector<GameRecord> gameRecords;
-    SearchTree trees[2];
-    ValueModel prevModel;
-    ValueModel trainModel;
-    ofstream logFile(logFileName);
-    int winCount;
-    double winRatio;
 
+    SearchTree trees[2];
     InitTree(&trees[0], searchDepth, 100, 1, 6); // 旧
     InitTree(&trees[1], searchDepth, 100, 1, 6); // 新
+    InitWeight(trees[0].eval->net);
+    InitWeight(trees[1].eval->net);
 
-    prevModel.CopyWeightsTo(trees[0].eval->nets);  // 旧
-    trainModel.CopyWeightsTo(trees[1].eval->nets); // 新
-
+    vector<FeatureRecord> featRecords;
+    ofstream logFile;
+    int winCount;
+    double winRatio;
     int nbCycles = 0;
-    while (true)
+    logFile.open(logFileName, ios::app);
+    logFile.seekp(ios::beg);
+
+    for (nbCycles = 0; nbCycles < nbTrainCycles; nbCycles++)
     {
         // 指定回数分の試合を実行
         for (int gameCnt = 0; gameCnt < nbGameOneCycle; gameCnt++)
         {
-            cout << "Cycle: " << nbCycles << "\tPlaying: " << gameCnt << "\n";
-            PlayOneGame(gameRecords, trees, 0, TRAIN_RANDOM_TURNS, TRAIN_RANDOM_RATIO, true);
+            cout << "Cycle: " << nbCycles << "\tPlaying: " << gameCnt << "\r";
+            PlayOneGame(featRecords, trees, 0, TRAIN_RANDOM_TURNS, TRAIN_RANDOM_RATIO, true);
         }
 
         // 試合結果から学習
-        trainModel.train(gameRecords);
-
-        // 学習済みWeightを新しい用ツリーに上書き登録
-        trainModel.CopyWeightsTo(trees[1].eval->nets);
+        Train(trees[1].eval->net, featRecords.data(), featRecords.size());
 
         // 新旧モデルで対戦
         winCount = 0;
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
-            if (PlayOneGame(gameRecords, trees, 0, VERSUS_RANDOM_TURNS, 0, false))
+            if (PlayOneGame(featRecords, trees, 0, VERSUS_RANDOM_TURNS, 0, false))
             {
                 // 勝ったら加算
                 winCount++;
@@ -161,7 +162,7 @@ void SelfPlay(uint8 searchDepth)
         // 白黒入れ替えて
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
-            if (!PlayOneGame(gameRecords, trees, 1, VERSUS_RANDOM_TURNS, 0, false))
+            if (!PlayOneGame(featRecords, trees, 1, VERSUS_RANDOM_TURNS, 0, false))
             {
                 // 勝ったら加算
                 winCount++;
@@ -169,29 +170,163 @@ void SelfPlay(uint8 searchDepth)
         }
 
         // 対戦結果を保存
-        winRatio = winCount / (double)TRAIN_NB_VERSUS;
-        logFile << "VS Result " << nbCycles << "\t Win Ratio:" << setprecision(2) << winRatio * 100 << "%\t";
+        winRatio = winCount / (double)(2 * TRAIN_NB_VERSUS);
+        logFile << "VS Result " << nbCycles << "\t Win Ratio:" << setprecision(4) << winRatio * 100 << "%\t";
+        cout << "VS Result " << nbCycles << "\t Win Ratio:" << setprecision(4) << winRatio * 100 << "%\t";
 
         // 対戦結果に応じてモデルを更新
-        if (winRatio >= 0.55)
+        if (winRatio >= 0.60)
         {
             string modelDir = modelFolder + modelName + to_string(nbCycles) + "/";
             _mkdir(modelDir.c_str());
 
-            trainModel.Save(modelDir);
-            prevModel.Load(modelDir);
+            SaveNets(trees[1].eval->net, modelDir.c_str());
 
             // 旧ツリーに新Weightを上書きコピー
-            trainModel.CopyWeightsTo(trees[0].eval->nets);
+            for (int phase = 0; phase < NB_PHASE; phase++)
+            {
+                trees[0].eval->net[phase] = trees[1].eval->net[phase];
+            }
             logFile << "Model Updated!!!";
+            cout << "Model Updated!!!";
         }
 
-        nbCycles++;
-        logFile << "\n";
+        cout << "\n";
+        logFile << endl;
+        logFile.flush();
+    }
+    logFile.close();
+}
+
+uint8 move88ToIndex(uint8 move88)
+{
+    return move88 / 10 - 1 + (move88 % 10 - 1) * 8;
+}
+
+void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
+{
+    uint64 input, flip;
+    int nbEmpty = 60;
+    int nbMoves = 0;
+    Board board;
+    Evaluator eval[1];
+    FeatureRecord record;
+    size_t appendBegin = featRecords.size();
+
+    board.Reset();
+    ReloadEval(eval, board.GetBlack(), board.GetWhite());
+    while (!board.IsFinished())
+    {
+        //board.Draw();
+        // 置ける場所がなかったらスキップ
+        if (board.GetMobility() == 0)
+        {
+            UpdateEvalPass(eval);
+            board.Skip();
+            continue;
+        }
+
+        // 入力位置のインデックスを取得
+        uint8 posIdx = move88ToIndex(wthor.moves88[nbMoves]);
+        nbMoves++;
+        input = CalcPosBit(posIdx);
+        // 合法手判定
+        assert(board.IsLegal(input));
+
+        // 実際に着手
+        flip = board.Put(input);
+        nbEmpty--;
+        UpdateEval(eval, posIdx, flip);
+
+        // レコード設定
+        for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
+        {
+            record.featStats[featIdx] = eval->FeatureStates[featIdx];
+        }
+        record.nbEmpty = nbEmpty;
+        record.stoneDiff = RESULT_UNSETTLED;
+        record.color = board.GetTurnColor();
+
+        // レコードを追加
+        featRecords.push_back(record);
+
+    } //end of loop:　while (!board.IsFinished())
+
+    // 勝敗を表示
+    //board.Draw();
+    int numBlack = board.GetStoneCount(Const::BLACK);
+    int numWhite = board.GetStoneCount(Const::WHITE);
+    signed char stoneDiff = numBlack - numWhite;
+
+    // レコード終端から，リザルトが未確定のレコードに対してリザルトを設定
+    for (; appendBegin < featRecords.size(); appendBegin++)
+    {
+        if (featRecords[appendBegin].color == Const::BLACK)
+        {
+            featRecords[appendBegin].stoneDiff = stoneDiff;
+        }
+        else
+        {
+            featRecords[appendBegin].stoneDiff = -stoneDiff;
+        }
+    }
+}
+
+void LearnFromRecords(Evaluator *eval, string recordFileName)
+{
+    vector<FeatureRecord> featRecords;
+    WthorHeaderWTB header;
+    WthorWTB wthorData;
+
+    uint32 loaded = 0;
+    int cycles = 0;
+    int converted;
+    size_t readSuccsess;
+    FILE *fp = fopen(recordFileName.c_str(), "rb");
+
+    fread(&header, sizeof(WthorHeaderWTB), 1, fp);
+
+    while (loaded < header.nbRecords)
+    {
+        featRecords.clear();
+        for (converted = 0; converted < nbGameOneCycle; converted++)
+        {
+            // 1試合分のデータを読み込む
+            readSuccsess = fread(&wthorData, sizeof(wthorData), 1, fp);
+            if (readSuccsess < 1)
+                break;
+
+            loaded++;
+            // データを変換
+            ConverWthor2Feat(featRecords, wthorData);
+        }
+        cout << "Cycle: " << cycles << "  Loaded: " << loaded << endl;
+        // 試合結果から学習
+        Train(eval->net, featRecords.data(), featRecords.size());
+        cycles++;
     }
 }
 
 int main()
 {
-    SelfPlay(4);
+    string recordDir = "./resources/record/WTH_2001-2015/";
+    SearchTree tree;
+    int startYear = 2001, endYear = 2015;
+    int year;
+    int epochs = 5;
+
+    InitTree(&tree, 4, 100, 1, 6); // 旧
+    InitWeight(tree.eval->net);
+
+    for (int epoch = 0; epoch < epochs; epoch++)
+    {
+        for (year = startYear; year <= endYear; year++)
+        {
+            //SelfPlay(2);
+            LearnFromRecords(tree.eval, recordDir + "WTH_" + to_string(year) + ".wtb");
+            string modelDir = modelFolder + modelName + to_string(year) + "-epoch" + to_string(epoch) + "/";
+            _mkdir(modelDir.c_str());
+            SaveNets(tree.eval->net, modelDir.c_str());
+        }
+    }
 }

@@ -1,5 +1,8 @@
 
 build/*
+resources/model/*
+resources/record/*
+tool/GGFToWThor/
 
 # external lib
 tiny_dnn/

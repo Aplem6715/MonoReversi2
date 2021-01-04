@@ -1,6 +1,7 @@
 ﻿#include "eval.h"
 #include "ai_const.h"
 #include "../bit_operation.h"
+#include "../learning/nnet.h"
 #include <assert.h>
 
 typedef struct PosToFeature
@@ -105,8 +106,14 @@ static const uint32 FeatMaxIndex[] = {
 };
 
 //static const uint16 DEBUG_TARGET_FEAT = 3;
+static const char modelFolder[] = "resources/model/model_10/";
 
-void InitEval(Evaluator *eval, uint64 own, uint64 opp)
+void InitEval(Evaluator *eval)
+{
+    LoadNets(eval->net, modelFolder);
+}
+
+void ReloadEval(Evaluator *eval, uint64 own, uint64 opp)
 {
     const PosToFeature *pos2f;
     uint8 pos;
@@ -115,6 +122,7 @@ void InitEval(Evaluator *eval, uint64 own, uint64 opp)
 
     // 自分の手番
     eval->isOwn = 1;
+    eval->nbEmpty = CountBits(~(own | opp));
     for (i = 0; i < FEAT_NUM; i++)
     {
         eval->FeatureStates[i] = 0;
@@ -204,6 +212,7 @@ void UpdateEval(Evaluator *eval, uint8 pos, uint64 flip)
         }
     }
     eval->isOwn ^= 1;
+    eval->nbEmpty--;
 }
 
 void UndoEval(Evaluator *eval, uint8 pos, uint64 flip)
@@ -214,6 +223,7 @@ void UndoEval(Evaluator *eval, uint8 pos, uint64 flip)
     uint8 flipIdx;
 
     eval->isOwn ^= 1;
+    eval->nbEmpty++;
     if (eval->isOwn)
     {
         // 着手箇所について
@@ -269,6 +279,18 @@ void UndoEval(Evaluator *eval, uint8 pos, uint64 flip)
 void UpdateEvalPass(Evaluator *eval)
 {
     eval->isOwn ^= 1;
+}
+
+float EvalNNet(Evaluator *eval)
+{
+    if (eval->isOwn)
+    {
+        return minf(0.5, maxf(-0.5, Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates)));
+    }
+    else
+    {
+        return minf(0.5, maxf(-0.5, -Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates)));
+    }
 }
 
 float EvalPosTable(uint64 own, uint64 opp)

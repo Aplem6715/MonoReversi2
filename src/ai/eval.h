@@ -2,6 +2,7 @@
 #define EVAL_DEFINED
 
 #include "../const.h"
+#include "../learning/nnet.h"
 
 #define NB_PHASE 4
 #define NB_PUT_1PHASE 15
@@ -84,14 +85,6 @@
 
 #define FEAT_NUM 46
 
-//#define FEAT_NB_COMBINATION 1967814
-// 32-16: 1ネット約120[MB]
-#define FEAT_NB_COMBINATION 163134
-#define VALUE_HIDDEN_UNITS1 32
-#define VALUE_HIDDEN_UNITS2 16
-
-#define NB_LAYERS 3
-
 extern const uint32 FeatMaxIndex[];
 
 const float VALUE_TABLE[] = {
@@ -105,26 +98,22 @@ const float VALUE_TABLE[] = {
     120, -20, 20, 5, 5, 20, -20, 120,   //
 };
 
-typedef struct Weights
-{
-    float *weights;
-    float *bias;
-    size_t nbConnect;
-} Weights;
-
 typedef struct Evaluator
 {
     unsigned short FeatureStates[FEAT_NUM];
-    unsigned char isOwn;
-    Weights nets[NB_PHASE][NB_LAYERS];
+    uint8 isOwn;
+    uint8 nbEmpty;
+    NNet *net;
 } Evaluator;
 
-void InitEval(Evaluator *eval, uint64 own, uint64 opp);
+void InitEval(Evaluator *eval);
+void ReloadEval(Evaluator *eval, uint64 own, uint64 opp);
 void UpdateEval(Evaluator *eval, uint8 pos, uint64 flip);
 void UndoEval(Evaluator *eval, uint8 pos, uint64 flip);
 void UpdateEvalPass(Evaluator *eval);
-void SetWeights(Evaluator *eval, Weights *weights[NB_PHASE]);
+//void SetWeights(Evaluator *eval, Weight *weights[NB_PHASE]);
 
+float EvalNNet(Evaluator *eval);
 float EvalPosTable(uint64 own, uint64 opp);
 
 #endif

@@ -3,6 +3,7 @@
 #include "../bit_operation.h"
 #include "hash.h"
 #include "moves.h"
+#include "../learning/nnet.h"
 #include <assert.h>
 
 #include "../learning/learn_eval.h"
@@ -13,15 +14,10 @@ void InitTree(SearchTree *tree, unsigned char depth, unsigned char orderDepth, u
     tree->orderDepth = orderDepth;
     tree->useHash = useHash;
     tree->hashDepth = hashDepth;
-    for (int phase = 0; phase < NB_PHASE; phase++)
-    {
-        for (int layer = 0; layer < NB_LAYERS; layer++)
-        {
-            tree->eval->nets[phase][layer].bias = NULL;
-            tree->eval->nets[phase][layer].weights = NULL;
-            tree->eval->nets[phase][layer].nbConnect = 0;
-        }
-    }
+
+    tree->eval->net = (NNet *)malloc(sizeof(NNet) * NB_PHASE);
+    InitEval(tree->eval);
+
     if (useHash)
     {
         tree->table = (HashTable *)malloc(sizeof(HashTable));
@@ -84,7 +80,7 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
     tree->nbEmpty = (uint8)CountBits(~(own | opp));
 
     // 評価パターンの初期化
-    InitEval(tree->eval, own, opp);
+    ReloadEval(tree->eval, own, opp);
 
     // オーダリングが不要な探索では探索関数を変える
     if (tree->depth > tree->orderDepth)
@@ -142,7 +138,8 @@ float AlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float
     if (depth <= 0)
     {
         //return EvalPosTable(own, opp);
-        return EvalTinyDnn(tree, tree->nbEmpty);
+        //return EvalTinyDnn(tree, tree->nbEmpty);
+        return EvalNNet(tree->eval);
     }
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
@@ -235,7 +232,7 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
     if (depth <= 0)
     {
         //return EvalPosTable(own, opp);
-        return EvalTinyDnn(tree, tree->nbEmpty);
+        return EvalNNet(tree->eval);
     }
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
