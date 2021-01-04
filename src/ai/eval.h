@@ -10,10 +10,6 @@
 
 // パターン種類
 #define NB_FEATURE_TYPES (11)
-// 4回転分
-#define NB_ROTATE (4)
-// 全部で44パターン
-#define NB_FEATURES (NB_FEATURE_TYPES * NB_ROTATE)
 
 // 3^9 x 4 = 78,732
 #define FEAT_LINE2_1 0 //3^9
