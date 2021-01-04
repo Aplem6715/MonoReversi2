@@ -106,14 +106,14 @@ static const uint32 FeatMaxIndex[] = {
 };
 
 //static const uint16 DEBUG_TARGET_FEAT = 3;
-static const char modelFolder[] = "resources/model/model_10/";
+static const char modelFolder[] = "resources/model/model_2005-epoch3/";
 
 void InitEval(Evaluator *eval)
 {
     LoadNets(eval->net, modelFolder);
 }
 
-void ReloadEval(Evaluator *eval, uint64 own, uint64 opp)
+void ReloadEval(Evaluator *eval, uint64 own, uint64 opp, uint8 isOwnTurn)
 {
     const PosToFeature *pos2f;
     uint8 pos;
@@ -121,7 +121,7 @@ void ReloadEval(Evaluator *eval, uint64 own, uint64 opp)
     int i;
 
     // 自分の手番
-    eval->isOwn = 1;
+    eval->isOwn = isOwnTurn;
     eval->nbEmpty = CountBits(~(own | opp));
     for (i = 0; i < FEAT_NUM; i++)
     {
@@ -285,11 +285,11 @@ float EvalNNet(Evaluator *eval)
 {
     if (eval->isOwn)
     {
-        return minf(0.5, maxf(-0.5, Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates)));
+        return minf(0.5, maxf(-0.5, -Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates)));
     }
     else
     {
-        return minf(0.5, maxf(-0.5, -Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates)));
+        return minf(0.5, maxf(-0.5, Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates)));
     }
 }
 

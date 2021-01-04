@@ -34,24 +34,26 @@ static random_device rnd;
 static mt19937 mt(rnd());
 static uniform_real_distribution<double> rnd_prob(0.0, 1.0);
 
-bool PlayOneGame(vector<FeatureRecord> &gameRecords, SearchTree tree[2], uint8 colorSwapped, uint8 randomTurns, double randMoveRatio, bool useRecording)
+bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 colorSwapped, uint8 randomTurns, double randMoveRatio, bool useRecording)
 {
     uint64 input, flip;
     int nbEmpty = 60;
-    int filledResultIdx = 0;
     Board board;
-    Evaluator eval[1];
+    Evaluator eval[2];
     FeatureRecord record;
+    size_t topOfAddition = featRecords.size();
 
     board.Reset();
-    ReloadEval(eval, board.GetBlack(), board.GetWhite());
+    ReloadEval(&eval[0], board.GetBlack(), board.GetWhite(), 1);
+    ReloadEval(&eval[1], board.GetWhite(), board.GetBlack(), 0);
     while (!board.IsFinished())
     {
         //board.Draw();
         // 置ける場所がなかったらスキップ
         if (board.GetMobility() == 0)
         {
-            UpdateEvalPass(eval);
+            UpdateEvalPass(&eval[0]);
+            UpdateEvalPass(&eval[1]);
             board.Skip();
             continue;
         }
@@ -76,21 +78,33 @@ bool PlayOneGame(vector<FeatureRecord> &gameRecords, SearchTree tree[2], uint8 c
         // 実際に着手
         flip = board.Put(input);
         nbEmpty--;
-        UpdateEval(eval, posIdx, flip);
+        UpdateEval(&eval[0], posIdx, flip);
+        UpdateEval(&eval[1], posIdx, flip);
 
         if (useRecording)
         {
             // レコード設定
             for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
             {
-                record.featStats[featIdx] = eval->FeatureStates[featIdx];
+                record.featStats[featIdx] = eval[0].FeatureStates[featIdx];
             }
             record.nbEmpty = nbEmpty;
-            record.stoneDiff = RESULT_UNSETTLED;
-            record.color = board.GetTurnColor();
+            record.stoneDiff = 1;
+            record.color = Const::BLACK;
+            // レコードを追加
+            featRecords.push_back(record);
+
+            // レコード設定
+            for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
+            {
+                record.featStats[featIdx] = eval[1].FeatureStates[featIdx];
+            }
+            record.nbEmpty = nbEmpty;
+            record.stoneDiff = -1;
+            record.color = Const::WHITE;
 
             // レコードを追加
-            gameRecords.push_back(record);
+            featRecords.push_back(record);
         }
 
     } //end of loop:　while (!board.IsFinished())
@@ -104,16 +118,13 @@ bool PlayOneGame(vector<FeatureRecord> &gameRecords, SearchTree tree[2], uint8 c
     if (useRecording)
     {
         // レコード終端から，リザルトが未確定のレコードに対してリザルトを設定
-        for (; filledResultIdx < gameRecords.size(); filledResultIdx++)
+        for (; topOfAddition < featRecords.size(); topOfAddition++)
         {
-            if (gameRecords[filledResultIdx].color == Const::BLACK)
-            {
-                gameRecords[filledResultIdx].stoneDiff = stoneDiff;
-            }
-            else
-            {
-                gameRecords[filledResultIdx].stoneDiff = -stoneDiff;
-            }
+            assert(
+                (featRecords[topOfAddition].color == Const::BLACK && featRecords[topOfAddition].stoneDiff > 0) || // Black
+                (featRecords[topOfAddition].color == Const::WHITE && featRecords[topOfAddition].stoneDiff < 0)    // White
+            );
+            featRecords[topOfAddition].stoneDiff *= stoneDiff;
         }
     }
 
@@ -209,19 +220,21 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
     int nbEmpty = 60;
     int nbMoves = 0;
     Board board;
-    Evaluator eval[1];
+    Evaluator eval[2];
     FeatureRecord record;
-    size_t appendBegin = featRecords.size();
+    size_t topOfAddition = featRecords.size();
 
     board.Reset();
-    ReloadEval(eval, board.GetBlack(), board.GetWhite());
+    ReloadEval(&eval[0], board.GetBlack(), board.GetWhite(), 1);
+    ReloadEval(&eval[1], board.GetWhite(), board.GetBlack(), 0);
     while (!board.IsFinished())
     {
         //board.Draw();
         // 置ける場所がなかったらスキップ
         if (board.GetMobility() == 0)
         {
-            UpdateEvalPass(eval);
+            UpdateEvalPass(&eval[0]);
+            UpdateEvalPass(&eval[1]);
             board.Skip();
             continue;
         }
@@ -236,16 +249,28 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         // 実際に着手
         flip = board.Put(input);
         nbEmpty--;
-        UpdateEval(eval, posIdx, flip);
+        UpdateEval(&eval[0], posIdx, flip);
+        UpdateEval(&eval[1], posIdx, flip);
 
-        // レコード設定
+        // 黒用レコード設定
         for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
         {
-            record.featStats[featIdx] = eval->FeatureStates[featIdx];
+            record.featStats[featIdx] = eval[0].FeatureStates[featIdx];
         }
         record.nbEmpty = nbEmpty;
-        record.stoneDiff = RESULT_UNSETTLED;
-        record.color = board.GetTurnColor();
+        record.stoneDiff = 1;
+        record.color = Const::BLACK;
+        // レコードを追加
+        featRecords.push_back(record);
+
+        // 白用レコード設定
+        for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
+        {
+            record.featStats[featIdx] = eval[1].FeatureStates[featIdx];
+        }
+        record.nbEmpty = nbEmpty;
+        record.stoneDiff = -1;
+        record.color = Const::WHITE;
 
         // レコードを追加
         featRecords.push_back(record);
@@ -259,16 +284,13 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
     signed char stoneDiff = numBlack - numWhite;
 
     // レコード終端から，リザルトが未確定のレコードに対してリザルトを設定
-    for (; appendBegin < featRecords.size(); appendBegin++)
+    for (; topOfAddition < featRecords.size(); topOfAddition++)
     {
-        if (featRecords[appendBegin].color == Const::BLACK)
-        {
-            featRecords[appendBegin].stoneDiff = stoneDiff;
-        }
-        else
-        {
-            featRecords[appendBegin].stoneDiff = -stoneDiff;
-        }
+        assert(
+            (featRecords[topOfAddition].color == Const::BLACK && featRecords[topOfAddition].stoneDiff > 0) || // Black
+            (featRecords[topOfAddition].color == Const::WHITE && featRecords[topOfAddition].stoneDiff < 0)    // White
+        );
+        featRecords[topOfAddition].stoneDiff *= stoneDiff;
     }
 }
 

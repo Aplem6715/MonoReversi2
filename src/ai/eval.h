@@ -107,7 +107,7 @@ typedef struct Evaluator
 } Evaluator;
 
 void InitEval(Evaluator *eval);
-void ReloadEval(Evaluator *eval, uint64 own, uint64 opp);
+void ReloadEval(Evaluator *eval, uint64 own, uint64 opp, uint8 isOwnTurn);
 void UpdateEval(Evaluator *eval, uint8 pos, uint64 flip);
 void UndoEval(Evaluator *eval, uint8 pos, uint64 flip);
 void UpdateEvalPass(Evaluator *eval);
