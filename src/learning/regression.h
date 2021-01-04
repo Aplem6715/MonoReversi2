@@ -7,10 +7,16 @@
 #define FEAT_NB_COMBINATION 159246
 #define NB_PHASE 15
 
+#define REGR_NB_FEAT_COMB (FEAT_NB_COMBINATION - POW3_5 * 4)
+
 typedef struct Regressor
 {
     // 重み（EDGEペア統合分のサイズを減らす)
-    float weights[FEAT_NB_COMBINATION - POW3_5 * 4];
+    float weights[REGR_NB_FEAT_COMB];
+#ifdef LEARN_MODE
+    uint32 nbAppear[REGR_NB_FEAT_COMB];
+    float delta[REGR_NB_FEAT_COMB];
+#endif
 } Regressor;
 
 void InitRegressor();
