@@ -25,7 +25,7 @@ static const int TRAIN_NB_VERSUS = 50;
 static const uint8 VERSUS_RANDOM_TURNS = 8;
 
 static const int nbTrainCycles = 1000;
-static const int nbGameOneCycle = 256; //1024;
+static const int nbGameOneCycle = 64; //1024;
 static const string modelFolder = "resources/model/";
 static const string modelName = "model_";
 static const string logFileName = "log/self_play.log";

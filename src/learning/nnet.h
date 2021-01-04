@@ -3,15 +3,12 @@
 
 #include "game_record.h"
 
-//#define FEAT_NB_COMBINATION 1967814
-// 32-16: 1ネット約120[MB]
-
-#define FEAT_NB_COMBINATION 163134
+#define FEAT_NB_COMBINATION 159246
 #define VALUE_HIDDEN_UNITS1 32
 #define VALUE_HIDDEN_UNITS2 16
 
 #define NB_LAYERS 3
-#define NB_PHASE 4
+#define NB_PHASE 15
 /*
 typedef struct Connection
 {
@@ -21,8 +18,7 @@ typedef struct Connection
 #ifdef LEARN_MODE
 typedef struct UnitState
 {
-    float dw_sum;
-    float sum;
+    float sumIn;
     float delta;
 } UnitState;
 #endif
@@ -33,10 +29,18 @@ typedef struct NNet
     float c2[VALUE_HIDDEN_UNITS1 + 1][VALUE_HIDDEN_UNITS2];
     float c3[VALUE_HIDDEN_UNITS2 + 1][1];
 
+    float out1[VALUE_HIDDEN_UNITS1];
+    float out2[VALUE_HIDDEN_UNITS2];
+    float out3[1];
+
 #ifdef LEARN_MODE
-    UnitState state1[FEAT_NB_COMBINATION + 1][VALUE_HIDDEN_UNITS1];
-    UnitState state2[VALUE_HIDDEN_UNITS1 + 1][VALUE_HIDDEN_UNITS2];
-    UnitState state3[VALUE_HIDDEN_UNITS2 + 1][1];
+    float dw1[FEAT_NB_COMBINATION + 1][VALUE_HIDDEN_UNITS1];
+    float dw2[VALUE_HIDDEN_UNITS1 + 1][VALUE_HIDDEN_UNITS2];
+    float dw3[VALUE_HIDDEN_UNITS2 + 1][1];
+
+    UnitState state1[VALUE_HIDDEN_UNITS1];
+    UnitState state2[VALUE_HIDDEN_UNITS2];
+    UnitState state3[1];
 #endif
 } NNet;
 

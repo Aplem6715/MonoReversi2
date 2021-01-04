@@ -4,8 +4,8 @@
 #include "../const.h"
 #include "../learning/nnet.h"
 
-#define NB_PHASE 4
-#define NB_PUT_1PHASE 15
+#define NB_PHASE 15
+#define NB_PUT_1PHASE 4
 #define PHASE(nbEmpty) (nbEmpty / NB_PUT_1PHASE)
 
 // パターン種類

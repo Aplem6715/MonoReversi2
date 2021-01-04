@@ -80,7 +80,7 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
     tree->nbEmpty = (uint8)CountBits(~(own | opp));
 
     // 評価パターンの初期化
-    ReloadEval(tree->eval, own, opp);
+    ReloadEval(tree->eval, own, opp, 1);
 
     // オーダリングが不要な探索では探索関数を変える
     if (tree->depth > tree->orderDepth)

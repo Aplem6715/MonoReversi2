@@ -2,15 +2,28 @@
 #include "../ai/eval.h"
 
 #define _CRT_SECURE_NO_WARNINGS
+#define _USE_MATH_DEFINES
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <assert.h>
 
-#define BATCH_SIZE 32
+#define BATCH_SIZE 16
 #define WEIGHT_SEED 42
 #define HE_COEFF 2.0f
-static const float lr = 0.01f;
+static const float lr = 0.0001f;
+
+float Uniform()
+{
+    return ((float)rand() + 1.0f) / ((float)RAND_MAX + 2.0f);
+}
+
+float rand_normal(float mu, float sigma)
+{
+    float z = sqrtf(-2.0f * logf(Uniform())) * sinf(2.0f * (float)M_PI * Uniform());
+    return mu + sigma * z;
+}
 
 void InitWeight(NNet net[NB_PHASE])
 {
@@ -22,26 +35,32 @@ void InitWeight(NNet net[NB_PHASE])
         {
             for (i = 0; i < FEAT_NB_COMBINATION; i++)
             {
-                net[phase].c1[i][j] = rand() / (1.0f + RAND_MAX) * sqrtf(HE_COEFF / FEAT_NUM);
+                net[phase].c1[i][j] = rand_normal(0, sqrtf(HE_COEFF / FEAT_NUM));
+                net[phase].dw1[i][j] = 0;
             }
             // バイアス
             net[phase].c1[i][j] = 0;
+            net[phase].dw1[i][j] = 0;
         }
         for (j = 0; j < VALUE_HIDDEN_UNITS2; j++)
         {
             for (i = 0; i < VALUE_HIDDEN_UNITS1; i++)
             {
-                net[phase].c2[i][j] = rand() / (1.0f + RAND_MAX) * sqrtf(HE_COEFF / VALUE_HIDDEN_UNITS1);
+                net[phase].c2[i][j] = rand_normal(0, sqrtf(HE_COEFF / VALUE_HIDDEN_UNITS1));
+                net[phase].dw2[i][j] = 0;
             }
             // バイアス
             net[phase].c2[i][j] = 0;
+            net[phase].dw2[i][j] = 0;
         }
         for (i = 0; i < VALUE_HIDDEN_UNITS2; i++)
         {
-            net[phase].c3[i][0] = rand() / (1.0f + RAND_MAX) * sqrtf(HE_COEFF / VALUE_HIDDEN_UNITS2);
+            net[phase].c3[i][0] = rand_normal(0, sqrtf(HE_COEFF / VALUE_HIDDEN_UNITS2));
+            net[phase].dw3[i][0] = 0;
         }
         // バイアス
         net[phase].c3[i][0] = 0;
+        net[phase].dw3[i][0] = 0;
     }
 }
 
@@ -89,15 +108,12 @@ float d_mse(float y, float t)
 
 float forward(NNet *net, const uint16 features[FEAT_NUM], uint8 isTrain)
 {
-    static float holder1[VALUE_HIDDEN_UNITS1];
-    static float holder2[VALUE_HIDDEN_UNITS2];
 
     uint32 shift = 0;
     int unitIdx;
     int prevUnit;
     int featIdx;
     float bias, sum = 0;
-    float output;
 
     // 入力層 -> 中間層１
     for (unitIdx = 0; unitIdx < VALUE_HIDDEN_UNITS1; unitIdx++)
@@ -109,15 +125,15 @@ float forward(NNet *net, const uint16 features[FEAT_NUM], uint8 isTrain)
         {
             sum += net->c1[shift + features[featIdx]][unitIdx] * 1;
             sum += bias;
-#ifdef LEARN_MODE
-            if (isTrain)
-            {
-                net->state1[shift + features[featIdx]][unitIdx].sum = sum;
-            }
-#endif // LEARN_MODE
             shift += FeatMaxIndex[featIdx];
         }
-        holder1[unitIdx] = act(sum);
+#ifdef LEARN_MODE
+        if (isTrain)
+        {
+            net->state1[unitIdx].sumIn = sum;
+        }
+#endif // LEARN_MODE
+        net->out1[unitIdx] = act(sum);
     }
 
     // 中間層1 -> 中間層2
@@ -127,16 +143,16 @@ float forward(NNet *net, const uint16 features[FEAT_NUM], uint8 isTrain)
         bias = net->c2[VALUE_HIDDEN_UNITS1][unitIdx];
         for (prevUnit = 0; prevUnit < VALUE_HIDDEN_UNITS1; prevUnit++)
         {
-            sum += net->c2[prevUnit][unitIdx] * holder1[prevUnit];
+            sum += net->c2[prevUnit][unitIdx] * net->out1[prevUnit];
             sum += bias;
-#ifdef LEARN_MODE
-            if (isTrain)
-            {
-                net->state2[prevUnit][unitIdx].sum = sum;
-            }
-#endif // LEARN_MODE
         }
-        holder2[unitIdx] = act(sum);
+#ifdef LEARN_MODE
+        if (isTrain)
+        {
+            net->state2[unitIdx].sumIn = sum;
+        }
+#endif // LEARN_MODE
+        net->out2[unitIdx] = act(sum);
     }
 
     // 中間層2 -> 出力層
@@ -146,19 +162,19 @@ float forward(NNet *net, const uint16 features[FEAT_NUM], uint8 isTrain)
         bias = net->c3[VALUE_HIDDEN_UNITS2][unitIdx];
         for (prevUnit = 0; prevUnit < VALUE_HIDDEN_UNITS2; prevUnit++)
         {
-            sum += net->c3[prevUnit][unitIdx] * holder2[prevUnit];
+            sum += net->c3[prevUnit][unitIdx] * net->out2[prevUnit];
             sum += bias;
         }
 #ifdef LEARN_MODE
         if (isTrain)
         {
-            net->state3[prevUnit][unitIdx].sum = sum;
+            net->state3[unitIdx].sumIn = sum;
         }
 #endif // LEARN_MODE
-        output = sum;
+        net->out3[0] = sum;
     }
 
-    return output;
+    return net->out3[0];
 }
 
 void backward(NNet *net, const uint16 features[FEAT_NUM], float y, float t)
@@ -168,34 +184,33 @@ void backward(NNet *net, const uint16 features[FEAT_NUM], float y, float t)
     int i;
     int nextUnit;
     float delta_w_sum;
+
+    assert(net->out3[0] == y);
+
     // 出力　-> 中間2
-    net->state3[VALUE_HIDDEN_UNITS2][0].delta = 0;
-    for (i = 0; i < VALUE_HIDDEN_UNITS2; i++)
     {
-        targetStat = &net->state3[i][0];
-        targetStat->delta = -(y - t) * d_act(targetStat->sum);
-        targetStat->dw_sum += targetStat->delta * act(targetStat->sum);
-        net->state3[VALUE_HIDDEN_UNITS2][0].delta += targetStat->delta;
+        targetStat = &net->state3[0];
+        targetStat->delta = -(net->out3[0] - t) * 1; // * d_act(targetStat->sum);間違い？だからコメントアウトしておく
+        // バイアス
+        net->dw3[VALUE_HIDDEN_UNITS2][0] += targetStat->delta;
+        for (i = 0; i < VALUE_HIDDEN_UNITS2; i++)
+        {
+            net->dw3[i][0] += targetStat->delta * net->out2[i];
+        }
     }
-    // バイアス
-    net->state3[VALUE_HIDDEN_UNITS2][0].dw_sum += net->state3[VALUE_HIDDEN_UNITS2][0].delta;
 
     // 中間2 -> 中間1
     for (j = 0; j < VALUE_HIDDEN_UNITS2; j++)
     {
-        net->state2[VALUE_HIDDEN_UNITS1][j].delta = 0;
-        delta_w_sum = net->c3[j][0] * net->state3[j][0].delta;
+        delta_w_sum = net->state3[0].delta * net->c3[j][0];
+        targetStat = &net->state2[j];
+        targetStat->delta = d_act(targetStat->sumIn) * delta_w_sum;
+        // バイアス
+        net->dw2[VALUE_HIDDEN_UNITS1][j] += targetStat->delta;
         for (i = 0; i < VALUE_HIDDEN_UNITS1; i++)
         {
-            // delta_h2_j = f'(i_j) * Sigma[delta_out * w_j]
-            // dE/dw_j = delta
-            targetStat = &net->state2[i][j];
-            targetStat->delta = d_act(targetStat->sum) * delta_w_sum;
-            targetStat->dw_sum += targetStat->delta * act(targetStat->sum);
-            net->state2[VALUE_HIDDEN_UNITS1][j].delta += targetStat->delta;
+            net->dw2[i][j] += targetStat->delta * net->out1[i]; //act(targetStat->sum);
         }
-        // バイアス
-        net->state2[VALUE_HIDDEN_UNITS1][j].dw_sum += net->state2[VALUE_HIDDEN_UNITS1][j].delta;
     }
 
     // 中間1 -> 入力
@@ -207,23 +222,21 @@ void backward(NNet *net, const uint16 features[FEAT_NUM], float y, float t)
         for (nextUnit = 0; nextUnit < VALUE_HIDDEN_UNITS2; nextUnit++)
         {
             // [delta_out * w_j]
-            delta_w_sum += net->c2[j][nextUnit] * net->state2[j][nextUnit].delta;
+            delta_w_sum += net->state2[nextUnit].delta * net->c2[j][nextUnit];
         }
 
         shift = 0;
-        net->state1[FEAT_NB_COMBINATION][j].delta = 0;
+        targetStat = &net->state1[j];
+        targetStat->delta = d_act(targetStat->sumIn) * delta_w_sum;
+        // バイアス
+        net->dw1[FEAT_NB_COMBINATION][j] += targetStat->delta;
         for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
         {
             i = shift + features[featIdx];
             shift += FeatMaxIndex[featIdx];
 
-            targetStat = &net->state1[i][j];
-            targetStat->delta = d_act(targetStat->sum) * delta_w_sum;
-            targetStat->dw_sum += targetStat->delta * act(targetStat->sum);
-            net->state1[FEAT_NB_COMBINATION][j].delta += targetStat->delta;
+            net->dw1[i][j] += targetStat->delta * 1;
         }
-        // バイアス
-        net->state1[FEAT_NB_COMBINATION][j].dw_sum += net->state1[FEAT_NB_COMBINATION][j].delta;
     }
 }
 
@@ -234,34 +247,34 @@ void update_weights(NNet *net, int batchSize)
     {
         for (i = 0; i < FEAT_NB_COMBINATION; i++)
         {
-            net->c1[i][j] += lr * (net->state1[i][j].dw_sum / (float)batchSize);
-            net->state1[i][j].dw_sum = 0;
+            net->c1[i][j] += lr * (net->dw1[i][j] / (float)batchSize);
+            net->dw1[i][j] = 0;
         }
         // バイアス
-        net->c1[FEAT_NB_COMBINATION][j] += lr * (net->state1[FEAT_NB_COMBINATION][j].dw_sum / (float)batchSize);
-        net->state1[FEAT_NB_COMBINATION][j].dw_sum = 0;
+        net->c1[FEAT_NB_COMBINATION][j] += lr * (net->dw1[FEAT_NB_COMBINATION][j] / (float)batchSize);
+        net->dw1[FEAT_NB_COMBINATION][j] = 0;
     }
     for (j = 0; j < VALUE_HIDDEN_UNITS2; j++)
     {
         for (i = 0; i < VALUE_HIDDEN_UNITS1; i++)
         {
-            net->c2[i][j] += lr * (net->state2[i][j].dw_sum / (float)batchSize);
-            net->state2[i][j].dw_sum = 0;
+            net->c2[i][j] += lr * (net->dw2[i][j] / (float)batchSize);
+            net->dw2[i][j] = 0;
         }
         // バイアス
-        net->c2[VALUE_HIDDEN_UNITS1][j] += lr * (net->state2[VALUE_HIDDEN_UNITS1][j].dw_sum / (float)batchSize);
-        net->state2[VALUE_HIDDEN_UNITS1][j].dw_sum = 0;
+        net->c2[VALUE_HIDDEN_UNITS1][j] += lr * (net->dw2[VALUE_HIDDEN_UNITS1][j] / (float)batchSize);
+        net->dw2[VALUE_HIDDEN_UNITS1][j] = 0;
     }
     for (j = 0; j < 1; j++)
     {
         for (i = 0; i < VALUE_HIDDEN_UNITS2; i++)
         {
-            net->c3[i][j] += lr * (net->state3[i][j].dw_sum / (float)batchSize);
-            net->state3[i][j].dw_sum = 0;
+            net->c3[i][j] += lr * (net->dw3[i][j] / (float)batchSize);
+            net->dw3[i][j] = 0;
         }
         // バイアス
-        net->c3[VALUE_HIDDEN_UNITS2][j] += lr * (net->state3[VALUE_HIDDEN_UNITS2][j].dw_sum / (float)batchSize);
-        net->state3[VALUE_HIDDEN_UNITS2][j].dw_sum = 0;
+        net->c3[VALUE_HIDDEN_UNITS2][j] += lr * (net->dw3[VALUE_HIDDEN_UNITS2][j] / (float)batchSize);
+        net->dw3[VALUE_HIDDEN_UNITS2][j] = 0;
     }
 }
 
