@@ -1,7 +1,8 @@
-﻿#include "nnet.h"
+﻿
+#define _CRT_SECURE_NO_WARNINGS
+#include "nnet.h"
 #include "../ai/eval.h"
 
-#define _CRT_SECURE_NO_WARNINGS
 #define _USE_MATH_DEFINES
 #include <string.h>
 #include <stdlib.h>
@@ -306,26 +307,13 @@ void Train(NNet net[NB_PHASE], FeatureRecord *gameRecords, size_t nbRecords)
 {
     double loss;
     int i, phase, batchIdx;
-    int inputSize[NB_PHASE] = {0, 0, 0, 0};
-    int tmpSize[NB_PHASE] = {0, 0, 0, 0};
-    FeatureRecord **inputs[NB_PHASE];
+    vector<FeatureRecord *> inputs[NB_PHASE];
     FeatureRecord *batchInput[BATCH_SIZE];
-    for (i = 0; i < nbRecords; i++)
-    {
-        inputSize[PHASE(gameRecords[i].nbEmpty)]++;
-    }
-
-    for (phase = 0; phase < NB_PHASE; phase++)
-    {
-        inputs[phase] = (FeatureRecord **)malloc(sizeof(FeatureRecord *) * inputSize[phase]);
-    }
-
     // レコードをフェーズごとに振り分け
     for (i = 0; i < nbRecords; i++)
     {
         phase = PHASE(gameRecords[i].nbEmpty);
-        inputs[phase][tmpSize[phase]] = &gameRecords[i];
-        tmpSize[phase]++;
+        inputs[phase].push_back(&gameRecords[i]);
     }
 
     // すべてのフェーズに対して学習
@@ -333,10 +321,10 @@ void Train(NNet net[NB_PHASE], FeatureRecord *gameRecords, size_t nbRecords)
     {
         loss = 0;
         // ミニバッチ学習
-        for (batchIdx = 0; batchIdx < inputSize[phase]; batchIdx += BATCH_SIZE)
+        for (batchIdx = 0; batchIdx < inputs[phase].size(); batchIdx += BATCH_SIZE)
         {
             printf("NN train phase:%d batch:%d      \r", phase, batchIdx / BATCH_SIZE);
-            sampling(inputs[phase], batchInput, inputSize[phase], BATCH_SIZE);
+            sampling(inputs[phase], batchInput, BATCH_SIZE);
             loss += trainBatch(&net[phase], batchInput, BATCH_SIZE);
         }
         printf("NN Loss phase%d: %.3f          \n", phase, loss / (batchIdx / BATCH_SIZE));

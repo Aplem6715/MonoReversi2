@@ -106,7 +106,7 @@ static const uint32 FeatMaxIndex[] = {
 
 //static const uint16 DEBUG_TARGET_FEAT = 3;
 static const char modelFolder[] = "resources/model/model_2003-epoch1/";
-static const char regrFolder[] = "resources/regressor/regr_2015-epoch0/";
+static const char regrFolder[] = "resources/regressor/regr_epoch19_2015/";
 
 void InitEval(Evaluator *eval)
 {
@@ -168,7 +168,7 @@ void UpdateEval(Evaluator *eval, uint8 pos, uint64 flip)
     if (eval->isOwn)
     {
         // 着手箇所について
-        // 関連するすべての特徴のインデックスを戻す
+        // 関連するすべての特徴のインデックスを更新
         for (i = 0; i < nbFeat; i++)
         {
             // 0(empty) -> 1(own)
@@ -181,7 +181,7 @@ void UpdateEval(Evaluator *eval, uint8 pos, uint64 flip)
         {
             pos2f = &(Pos2Feat[flipIdx]);
             nbFeat = pos2f->nbFeature;
-            // 関連するすべての特徴のインデックスを戻す
+            // 関連するすべての特徴のインデックスを更新
             for (i = 0; i < nbFeat; i++)
             {
                 // 2(opp) -> 1(own)

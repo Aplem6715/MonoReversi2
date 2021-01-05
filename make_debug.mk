@@ -33,6 +33,7 @@ OBJS=\
 LEARN_OBJS=\
 	$(OUTDIR)\const.obj\
 	$(OUTDIR)\bit_operation.obj\
+	$(OUTDIR)\game.obj\
 	$(OUTDIR)\board.obj\
 	$(SEARCH_OUTDIR)\hash.obj\
 	$(SEARCH_OUTDIR)\moves.obj\

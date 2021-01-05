@@ -23,9 +23,9 @@ void InitRegressor(Regressor regr[NB_PHASE]);
 float PredRegressor(Regressor *regr, const uint16 features[]);
 
 #ifdef LEARN_MODE
-void TrainRegressor(Regressor regr[NB_PHASE], FeatureRecord *featRecords, FeatureRecord *testRecords, size_t nbRecords, size_t nbTests)
+void TrainRegressor(Regressor regr[NB_PHASE], FeatureRecord *featRecords, FeatureRecord *testRecords, size_t nbRecords, size_t nbTests);
 #endif
-    void SaveRegressor(Regressor regr[NB_PHASE], const char *file);
+void SaveRegressor(Regressor regr[NB_PHASE], const char *file);
 void LoadRegressor(Regressor regr[NB_PHASE], const char *file);
 
 #endif

@@ -34,6 +34,7 @@ LEARN_OBJS=\
 	$(OUTDIR)\const.obj\
 	$(OUTDIR)\bit_operation.obj\
 	$(OUTDIR)\board.obj\
+	$(OUTDIR)\game.obj\
 	$(SEARCH_OUTDIR)\hash.obj\
 	$(SEARCH_OUTDIR)\moves.obj\
 	$(SEARCH_OUTDIR)\search.obj\
@@ -63,7 +64,7 @@ CFLAGS=\
 	/bigobj\
 	/EHsc\
 	/DLEARN_MODE\
-	/DUSE_NN\
+	/DUSE_REGRESSION\
 	/I$(INCLUDE_PATH)
 	# /USE_SERIALIZER\ #
 

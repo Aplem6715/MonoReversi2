@@ -127,10 +127,9 @@ void Board::Skip()
     turn ^= 1;
 }
 
-void Board::Draw()
+void Board::Draw(uint64 black, uint64 white, uint64 mobility)
 {
     uint64 cursor = 0x0000000000000001;
-    uint64 mobility = GetMobility();
     printf("＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋\n");
     printf("｜　｜ A｜ B｜ C｜ D｜ E｜ F｜ G｜ H｜\n");
     for (int y = 0; y < 17; y++)
@@ -190,7 +189,12 @@ void Board::Draw()
         }
         printf("\n");
     }
-    printf("○:%d  ●:%d\n", GetStoneCount(Const::BLACK), GetStoneCount(Const::WHITE));
+    printf("○:%d  ●:%d\n", CountBits(black), CountBits(white));
+}
+
+void Board::Draw()
+{
+    Draw(black, white, GetMobility());
 }
 
 int Board::GetStoneCount(uint8 color)

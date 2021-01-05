@@ -4,7 +4,9 @@
 #include "../board.h"
 #include "../bit_operation.h"
 #include "../search/search.h"
+#include "../game.h"
 #include "nnet.h"
+#include <signal.h>
 #include <string>
 #include <assert.h>
 #include <random>
@@ -34,10 +36,22 @@ static const string modelFolder = "resources/regressor/";
 static const string modelName = "regr_";
 #endif
 static const string logFileName = "log/self_play.log";
+static const string testRecordDir = "./resources/record/WTH_7789/WTH_1982.wtb";
+static const int nbTest = 100;
 
 static random_device rnd;
 static mt19937 mt(rnd());
 static uniform_real_distribution<double> rnd_prob(0.0, 1.0);
+
+volatile sig_atomic_t aborted = false;
+
+void sig_handler(int sig)
+{
+    printf("Handle!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    aborted = true;
+}
+
+void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor);
 
 bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 colorSwapped, uint8 randomTurns, double randMoveRatio, bool useRecording)
 {
@@ -95,6 +109,9 @@ bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 c
             }
             record.nbEmpty = nbEmpty;
             record.stoneDiff = 1;
+            record.own = board.GetBlack();
+            record.opp = board.GetWhite();
+            record.color = Const::BLACK;
             // レコードを追加
             featRecords.push_back(record);
 
@@ -105,6 +122,9 @@ bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 c
             }
             record.nbEmpty = nbEmpty;
             record.stoneDiff = -1;
+            record.own = board.GetWhite();
+            record.opp = board.GetBlack();
+            record.color = Const::WHITE;
 
             // レコードを追加
             featRecords.push_back(record);
@@ -152,6 +172,23 @@ void SelfPlay(uint8 searchDepth)
     logFile.open(logFileName, ios::app);
     logFile.seekp(ios::beg);
 
+    vector<FeatureRecord> testRecords;
+    WthorHeaderWTB testHeader;
+    WthorWTB wthorData;
+    size_t readSuccsess;
+    FILE *tfp = fopen(testRecordDir.c_str(), "rb");
+    fread(&testHeader, sizeof(WthorHeaderWTB), 1, tfp);
+
+    for (nbCycles = 0; nbCycles < nbTest; nbCycles++)
+    {
+        readSuccsess = fread(&wthorData, sizeof(wthorData), 1, tfp);
+        if (readSuccsess < 1)
+        {
+            cout << "テストデータ不足\n";
+        }
+        ConverWthor2Feat(testRecords, wthorData);
+    }
+
     for (nbCycles = 0; nbCycles < nbTrainCycles; nbCycles++)
     {
         // 指定回数分の試合を実行
@@ -165,7 +202,7 @@ void SelfPlay(uint8 searchDepth)
 #ifdef USE_NN
         Train(trees[1].eval->net, featRecords.data(), featRecords.size());
 #elif USE_REGRESSION
-        TrainRegressor(trees[1].eval->regr, featRecords.data(), featRecords.size());
+        TrainRegressor(trees[1].eval->regr, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
 #endif
 
         // 新旧モデルで対戦
@@ -275,6 +312,9 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         }
         record.nbEmpty = nbEmpty;
         record.stoneDiff = 1;
+        record.own = board.GetBlack();
+        record.opp = board.GetWhite();
+        record.color = Const::BLACK;
         // レコードを追加
         featRecords.push_back(record);
 
@@ -285,6 +325,9 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         }
         record.nbEmpty = nbEmpty;
         record.stoneDiff = -1;
+        record.own = board.GetWhite();
+        record.opp = board.GetBlack();
+        record.color = Const::WHITE;
 
         // レコードを追加
         featRecords.push_back(record);
@@ -307,7 +350,9 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
 void LearnFromRecords(Evaluator *eval, string recordFileName)
 {
     vector<FeatureRecord> featRecords;
+    vector<FeatureRecord> testRecords;
     WthorHeaderWTB header;
+    WthorHeaderWTB testHeader;
     WthorWTB wthorData;
 
     uint32 loaded = 0;
@@ -315,10 +360,22 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
     int converted;
     size_t readSuccsess;
     FILE *fp = fopen(recordFileName.c_str(), "rb");
+    FILE *tfp = fopen(testRecordDir.c_str(), "rb");
 
     fread(&header, sizeof(WthorHeaderWTB), 1, fp);
+    fread(&testHeader, sizeof(WthorHeaderWTB), 1, tfp);
 
-    while (loaded < header.nbRecords)
+    for (loaded = 0; loaded < nbTest; loaded++)
+    {
+        readSuccsess = fread(&wthorData, sizeof(wthorData), 1, tfp);
+        if (readSuccsess < 1)
+        {
+            cout << "テストデータ不足\n";
+        }
+        ConverWthor2Feat(testRecords, wthorData);
+    }
+
+    while (loaded < header.nbRecords && !aborted)
     {
         featRecords.clear();
         for (converted = 0; converted < nbGameOneCycle; converted++)
@@ -337,19 +394,28 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
 #ifdef USE_NN
         Train(eval->net, featRecords.data(), featRecords.size());
 #elif USE_REGRESSION
-        TrainRegressor(eval->regr, featRecords.data(), featRecords.size());
+        TrainRegressor(eval->regr, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
 #endif
         cycles++;
     }
+
+    fclose(fp);
+    fclose(tfp);
 }
 
 int main()
 {
+    if (signal(SIGINT, sig_handler) == SIG_ERR)
+    {
+        printf("\ncan't catch SIGINT\n");
+        return 0;
+    }
+
     string recordDir = "./resources/record/WTH_2001-2015/";
     SearchTree tree;
-    int startYear = 2001, endYear = 2015;
+    int startYear = 2001, endYear = 2001;
     int year;
-    int epochs = 5;
+    int epochs = 1;
 
     InitTree(&tree, 4, 100, 1, 6); // 旧
 #ifdef USE_NN
@@ -364,14 +430,27 @@ int main()
         {
             //SelfPlay(2);
             LearnFromRecords(tree.eval, recordDir + "WTH_" + to_string(year) + ".wtb");
-            string modelDir = modelFolder + modelName + to_string(year) + "-epoch" + to_string(epoch) + "/";
+            string modelDir = modelFolder + modelName + "epoch" + to_string(epoch) + "_" + to_string(year) + "/";
             _mkdir(modelDir.c_str());
 #ifdef USE_NN
             SaveNets(tree.eval->net, modelDir.c_str());
 #elif USE_REGRESSION
             SaveRegressor(tree.eval->regr, modelDir.c_str());
 #endif
+            if (aborted)
+            {
+                break;
+            }
+        }
+        if (aborted)
+        {
+            break;
         }
     }
+
+    Game game(PlayerEnum::HUMAN, PlayerEnum::AI);
+    game.GetTree(Const::WHITE)->eval->regr = tree.eval->regr;
+    game.Start();
+
     DeleteTree(&tree);
 }

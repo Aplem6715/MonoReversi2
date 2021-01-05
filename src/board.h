@@ -25,6 +25,8 @@ public:
     Board(/* args */);
     ~Board();
 
+    static void Draw(uint64 black, uint64 white, uint64 mobility);
+
     uint64 GetBlack();
     uint64 GetWhite();
     uint64 GetOwn();

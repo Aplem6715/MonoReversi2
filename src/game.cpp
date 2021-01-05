@@ -35,7 +35,7 @@ void LoadGameRecords(char *file, vector<vector<uint8>> &records)
     }
 }
 
-Game::Game(PlayerEnum white, PlayerEnum black)
+Game::Game(PlayerEnum black, PlayerEnum white)
 {
     this->player[Const::WHITE] = white;
     this->player[Const::BLACK] = black;
@@ -43,11 +43,11 @@ Game::Game(PlayerEnum white, PlayerEnum black)
     // AIの初期化
     if (player[Const::WHITE] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::WHITE], 5, 2, 1, 2);
+        InitTree(&tree[Const::WHITE], 2, 2, 1, 2);
     }
     if (player[Const::BLACK] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::BLACK], 5, 2, 1, 2);
+        InitTree(&tree[Const::BLACK], 2, 2, 1, 2);
     }
     Reset();
 }
@@ -197,4 +197,9 @@ void Game::Start()
     printf("\n");
     getchar();
     getchar();
+}
+
+SearchTree *Game::GetTree(uint8 color)
+{
+    return &tree[color];
 }

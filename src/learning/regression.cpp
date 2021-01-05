@@ -1,21 +1,22 @@
-﻿#include "regression.h"
+﻿
+#define _CRT_SECURE_NO_WARNINGS
+#include "regression.h"
 #include "../ai/eval.h"
 
-#define _CRT_SECURE_NO_WARNINGS
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "../board.h"
+#define BATCH_SIZE 128
 
-#define BATCH_SIZE 64
-
-static const float beta = 0.01f;
+static const float beta = 0.001f;
 
 void InitRegressor(Regressor regr[NB_PHASE])
 {
     int phase, i;
     for (phase = 0; phase < NB_PHASE; phase++)
     {
-        for (i = 0; i < FEAT_NB_COMBINATION; i++)
+        for (i = 0; i < REGR_NB_FEAT_COMB; i++)
         {
             regr[phase].weights[i] = 0;
         }
@@ -39,6 +40,7 @@ float PredRegressor(Regressor *regr, const uint16 features[])
         score += regr->weights[features[featIdx] * POW3_5 + features[featIdx + 1]];
         shift += FeatMaxIndex[featIdx] * FeatMaxIndex[featIdx + 1];
     }
+
     for (; featIdx < FEAT_NUM; featIdx++)
     {
         score += regr->weights[features[featIdx]];
@@ -53,6 +55,7 @@ void IntegrateRegrWeight();
 void UpdateRegrWeights(Regressor *regr)
 {
     int j;
+    float w;
     float alpha;
     for (j = 0; j < REGR_NB_FEAT_COMB; j++)
     {
@@ -60,6 +63,17 @@ void UpdateRegrWeights(Regressor *regr)
         regr->weights[j] += alpha * regr->delta[j];
         regr->nbAppear[j] = 0;
         regr->delta[j] = 0;
+
+        if (regr->weights[j] > 64)
+        {
+            printf("max\n");
+            regr->weights[j] = 64;
+        }
+        if (regr->weights[j] < -64)
+        {
+            printf("min\n");
+            regr->weights[j] = -64;
+        }
     }
 }
 
@@ -105,9 +119,10 @@ void CalcWeightDelta(Regressor *regr, const uint16 features[], float error)
     }
 }
 
-float TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inputSize)
+void TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inputSize)
 {
     int i;
+    static bool debug = false;
     float teacher, output, loss = 0;
 
     ResetRegrState(regr);
@@ -116,6 +131,11 @@ float TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inp
         teacher = inputs[i]->stoneDiff;
         output = PredRegressor(regr, inputs[i]->featStats);
         CalcWeightDelta(regr, inputs[i]->featStats, teacher - output);
+        if (debug)
+        {
+            Board::Draw(inputs[i]->own, inputs[i]->opp, 0);
+            printf("Color: %d,  Score: %f, Pred: %f\n", inputs[i]->color, teacher, output);
+        }
     }
     UpdateRegrWeights(regr);
 }
@@ -123,18 +143,12 @@ float TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inp
 void TrainRegressor(Regressor regr[NB_PHASE], FeatureRecord *featRecords, FeatureRecord *testRecords, size_t nbRecords, size_t nbTests)
 {
     double loss;
-    int i, phase, batchIdx, learndCnt;
-    int inputSize[NB_PHASE] = {0};
+    int i, phase, batchIdx, testCnt;
     int testSize[NB_PHASE] = {0};
-    int tmpSize[NB_PHASE] = {0};
     int testTmpSize[NB_PHASE] = {0};
-    FeatureRecord **inputs[NB_PHASE];
+    vector<FeatureRecord *> inputs[NB_PHASE];
     FeatureRecord **tests[NB_PHASE];
     FeatureRecord *batchInput[BATCH_SIZE];
-    for (i = 0; i < nbRecords; i++)
-    {
-        inputSize[PHASE(featRecords[i].nbEmpty)]++;
-    }
     for (i = 0; i < nbTests; i++)
     {
         testSize[PHASE(testRecords[i].nbEmpty)]++;
@@ -142,7 +156,6 @@ void TrainRegressor(Regressor regr[NB_PHASE], FeatureRecord *featRecords, Featur
 
     for (phase = 0; phase < NB_PHASE; phase++)
     {
-        inputs[phase] = (FeatureRecord **)malloc(sizeof(FeatureRecord *) * inputSize[phase]);
         tests[phase] = (FeatureRecord **)malloc(sizeof(FeatureRecord *) * testSize[phase]);
     }
 
@@ -150,41 +163,40 @@ void TrainRegressor(Regressor regr[NB_PHASE], FeatureRecord *featRecords, Featur
     for (i = 0; i < nbRecords; i++)
     {
         phase = PHASE(featRecords[i].nbEmpty);
-        inputs[phase][tmpSize[phase]] = &featRecords[i];
-        tmpSize[phase]++;
+        inputs[phase].push_back(&featRecords[i]);
     }
     for (i = 0; i < nbTests; i++)
     {
         phase = PHASE(testRecords[i].nbEmpty);
-        inputs[phase][testTmpSize[phase]] = &testRecords[i];
+        tests[phase][testTmpSize[phase]] = &testRecords[i];
         testTmpSize[phase]++;
     }
 
     // すべてのフェーズに対して学習
     for (phase = 0; phase < NB_PHASE; phase++)
     {
-        learndCnt = 0;
         // ミニバッチ学習
-        for (batchIdx = 0; batchIdx < inputSize[phase]; batchIdx += BATCH_SIZE)
+        for (batchIdx = 0; batchIdx < inputs[phase].size(); batchIdx += BATCH_SIZE)
         {
             printf("Regressor train phase:%d batch:%d      \r", phase, batchIdx / BATCH_SIZE);
             // バッチサイズ分ランダムサンプリング
-            sampling(inputs[phase], batchInput, inputSize[phase], BATCH_SIZE);
+            sampling(inputs[phase], batchInput, BATCH_SIZE);
             TreinRegrBatch(&regr[phase], batchInput, BATCH_SIZE);
-            learndCnt += BATCH_SIZE;
         }
 
         loss = 0;
+        testCnt = 0;
         for (i = 0; i < testSize[phase]; i++)
         {
-            loss += fabsf(PredRegressor(&regr[phase], tests[phase][i]->featStats) - tests[phase][i]->stoneDiff);
+            loss += fabsf(tests[phase][i]->stoneDiff - PredRegressor(&regr[phase], tests[phase][i]->featStats));
+            testCnt++;
         }
-        printf("Regressor phase%d  MAE Loss: %.3f          \n", phase, loss / (float)learndCnt);
+        printf("Regressor phase%d  MAE Loss: %.3f          \n", phase, loss / (float)testCnt);
     }
 
     for (phase = 0; phase < NB_PHASE; phase++)
     {
-        free(inputs[phase]);
+        free(tests[phase]);
     }
 }
 #endif

@@ -2,6 +2,8 @@
 #define GAME_RECORD_DEFINED
 
 #include "../const.h"
+#include <vector>
+using namespace std;
 
 #define FEAT_NUM 46
 #define RESULT_UNSETTLED -100
@@ -10,6 +12,8 @@ typedef struct FeatureRecord
 {
     uint16 featStats[FEAT_NUM];
     uint8 nbEmpty;
+    uint64 own, opp;
+    uint8 color;
     signed char stoneDiff;
 } FeatureRecord;
 
@@ -43,6 +47,6 @@ typedef struct WthorWTB
     uint8 moves88[60];
 } WthorWTB;
 
-void sampling(FeatureRecord **records, FeatureRecord **sampledList, int nbRecords, int nbSample);
+void sampling(vector<FeatureRecord *> &records, FeatureRecord **sampledList, int nbSample);
 
 #endif
