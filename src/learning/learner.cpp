@@ -25,9 +25,14 @@ static const int TRAIN_NB_VERSUS = 50;
 static const uint8 VERSUS_RANDOM_TURNS = 8;
 
 static const int nbTrainCycles = 1000;
-static const int nbGameOneCycle = 64; //1024;
+static const int nbGameOneCycle = 256; //1024;
+#ifdef USE_NN
 static const string modelFolder = "resources/model/";
 static const string modelName = "model_";
+#elif USE_REGRESSION
+static const string modelFolder = "resources/regressor/";
+static const string modelName = "regr_";
+#endif
 static const string logFileName = "log/self_play.log";
 
 static random_device rnd;
@@ -90,7 +95,6 @@ bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 c
             }
             record.nbEmpty = nbEmpty;
             record.stoneDiff = 1;
-            record.color = Const::BLACK;
             // レコードを追加
             featRecords.push_back(record);
 
@@ -101,7 +105,6 @@ bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 c
             }
             record.nbEmpty = nbEmpty;
             record.stoneDiff = -1;
-            record.color = Const::WHITE;
 
             // レコードを追加
             featRecords.push_back(record);
@@ -120,10 +123,6 @@ bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 c
         // レコード終端から，リザルトが未確定のレコードに対してリザルトを設定
         for (; topOfAddition < featRecords.size(); topOfAddition++)
         {
-            assert(
-                (featRecords[topOfAddition].color == Const::BLACK && featRecords[topOfAddition].stoneDiff > 0) || // Black
-                (featRecords[topOfAddition].color == Const::WHITE && featRecords[topOfAddition].stoneDiff < 0)    // White
-            );
             featRecords[topOfAddition].stoneDiff *= stoneDiff;
         }
     }
@@ -137,8 +136,13 @@ void SelfPlay(uint8 searchDepth)
     SearchTree trees[2];
     InitTree(&trees[0], searchDepth, 100, 1, 6); // 旧
     InitTree(&trees[1], searchDepth, 100, 1, 6); // 新
+#ifdef USE_NN
     InitWeight(trees[0].eval->net);
     InitWeight(trees[1].eval->net);
+#elif USE_REGRESSION
+    InitRegressor(trees[0].eval->regr);
+    InitRegressor(trees[1].eval->regr);
+#endif
 
     vector<FeatureRecord> featRecords;
     ofstream logFile;
@@ -158,7 +162,11 @@ void SelfPlay(uint8 searchDepth)
         }
 
         // 試合結果から学習
+#ifdef USE_NN
         Train(trees[1].eval->net, featRecords.data(), featRecords.size());
+#elif USE_REGRESSION
+        TrainRegressor(trees[1].eval->regr, featRecords.data(), featRecords.size());
+#endif
 
         // 新旧モデルで対戦
         winCount = 0;
@@ -191,13 +199,21 @@ void SelfPlay(uint8 searchDepth)
             string modelDir = modelFolder + modelName + to_string(nbCycles) + "/";
             _mkdir(modelDir.c_str());
 
+#ifdef USE_NN
             SaveNets(trees[1].eval->net, modelDir.c_str());
-
             // 旧ツリーに新Weightを上書きコピー
             for (int phase = 0; phase < NB_PHASE; phase++)
             {
                 trees[0].eval->net[phase] = trees[1].eval->net[phase];
             }
+#elif USE_REGRESSION
+            SaveRegressor(trees[1].eval->regr, modelDir.c_str());
+            // 旧ツリーに新Weightを上書きコピー
+            for (int phase = 0; phase < NB_PHASE; phase++)
+            {
+                trees[0].eval->regr[phase] = trees[1].eval->regr[phase];
+            }
+#endif
             logFile << "Model Updated!!!";
             cout << "Model Updated!!!";
         }
@@ -259,7 +275,6 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         }
         record.nbEmpty = nbEmpty;
         record.stoneDiff = 1;
-        record.color = Const::BLACK;
         // レコードを追加
         featRecords.push_back(record);
 
@@ -270,7 +285,6 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         }
         record.nbEmpty = nbEmpty;
         record.stoneDiff = -1;
-        record.color = Const::WHITE;
 
         // レコードを追加
         featRecords.push_back(record);
@@ -286,10 +300,6 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
     // レコード終端から，リザルトが未確定のレコードに対してリザルトを設定
     for (; topOfAddition < featRecords.size(); topOfAddition++)
     {
-        assert(
-            (featRecords[topOfAddition].color == Const::BLACK && featRecords[topOfAddition].stoneDiff > 0) || // Black
-            (featRecords[topOfAddition].color == Const::WHITE && featRecords[topOfAddition].stoneDiff < 0)    // White
-        );
         featRecords[topOfAddition].stoneDiff *= stoneDiff;
     }
 }
@@ -324,7 +334,11 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
         }
         cout << "Cycle: " << cycles << "  Loaded: " << loaded << endl;
         // 試合結果から学習
+#ifdef USE_NN
         Train(eval->net, featRecords.data(), featRecords.size());
+#elif USE_REGRESSION
+        TrainRegressor(eval->regr, featRecords.data(), featRecords.size());
+#endif
         cycles++;
     }
 }
@@ -338,7 +352,11 @@ int main()
     int epochs = 5;
 
     InitTree(&tree, 4, 100, 1, 6); // 旧
+#ifdef USE_NN
     InitWeight(tree.eval->net);
+#elif USE_REGRESSION
+    InitRegressor(tree.eval->regr);
+#endif
 
     for (int epoch = 0; epoch < epochs; epoch++)
     {
@@ -348,7 +366,12 @@ int main()
             LearnFromRecords(tree.eval, recordDir + "WTH_" + to_string(year) + ".wtb");
             string modelDir = modelFolder + modelName + to_string(year) + "-epoch" + to_string(epoch) + "/";
             _mkdir(modelDir.c_str());
+#ifdef USE_NN
             SaveNets(tree.eval->net, modelDir.c_str());
+#elif USE_REGRESSION
+            SaveRegressor(tree.eval->regr, modelDir.c_str());
+#endif
         }
     }
+    DeleteTree(&tree);
 }

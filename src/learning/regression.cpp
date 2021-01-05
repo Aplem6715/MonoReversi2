@@ -1,11 +1,14 @@
 ﻿#include "regression.h"
 #include "../ai/eval.h"
+
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #define BATCH_SIZE 64
 
-static const float beta = 0.01;
+static const float beta = 0.01f;
 
 void InitRegressor(Regressor regr[NB_PHASE])
 {
@@ -34,8 +37,7 @@ float PredRegressor(Regressor *regr, const uint16 features[])
     for (; featIdx < FEAT_EDGEX_8; featIdx += 2)
     {
         score += regr->weights[features[featIdx] * POW3_5 + features[featIdx + 1]];
-        shift += POW3_5;
-        shift += POW3_5;
+        shift += FeatMaxIndex[featIdx] * FeatMaxIndex[featIdx + 1];
     }
     for (; featIdx < FEAT_NUM; featIdx++)
     {
@@ -45,6 +47,7 @@ float PredRegressor(Regressor *regr, const uint16 features[])
     return score;
 }
 
+#ifdef LEARN_MODE
 void IntegrateRegrWeight();
 
 void UpdateRegrWeights(Regressor *regr)
@@ -53,8 +56,20 @@ void UpdateRegrWeights(Regressor *regr)
     float alpha;
     for (j = 0; j < REGR_NB_FEAT_COMB; j++)
     {
-        alpha = min(beta / 50.0f, beta / (float)regr->nbAppear[j]);
+        alpha = fminf(beta / 50.0f, beta / (float)regr->nbAppear[j]);
         regr->weights[j] += alpha * regr->delta[j];
+        regr->nbAppear[j] = 0;
+        regr->delta[j] = 0;
+    }
+}
+
+void ResetRegrState(Regressor *regr)
+{
+    int featIdx;
+    for (featIdx = 0; featIdx < REGR_NB_FEAT_COMB; featIdx++)
+    {
+        regr->nbAppear[featIdx] = 0;
+        regr->delta[featIdx] = 0;
     }
 }
 
@@ -72,14 +87,13 @@ void CalcWeightDelta(Regressor *regr, const uint16 features[], float error)
     }
     // EDGEは1,2 3,4 5,6 7,8を統合する
     // (NNでは位置を学習・統合できるが，線形回帰は隣り合ったパターンを認識できないため)
-    for (; featIdx < FEAT_EDGEX_8; featIdx += 2)
+    for (; featIdx <= FEAT_EDGEX_8; featIdx += 2)
     {
         feat = shift + features[featIdx] * POW3_5 + features[featIdx + 1];
         regr->nbAppear[feat]++;
         regr->delta[feat] += error;
 
-        shift += POW3_5;
-        shift += POW3_5;
+        shift += FeatMaxIndex[featIdx] * FeatMaxIndex[featIdx + 1];
     }
     for (; featIdx < FEAT_NUM; featIdx++)
     {
@@ -95,45 +109,41 @@ float TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inp
 {
     int i;
     float teacher, output, loss = 0;
+
+    ResetRegrState(regr);
     for (i = 0; i < inputSize; i++)
     {
         teacher = inputs[i]->stoneDiff;
         output = PredRegressor(regr, inputs[i]->featStats);
         CalcWeightDelta(regr, inputs[i]->featStats, teacher - output);
-        loss += fabs(teacher - output);
     }
     UpdateRegrWeights(regr);
-    return loss / inputSize;
 }
 
-void sampling(FeatureRecord **records, FeatureRecord **sampledList, int nbRecords, int nbSample)
-{
-    int i;
-    uint32 randIdx;
-    for (i = 0; i < nbSample; i++)
-    {
-        // 0~100万の乱数を作ってレコード数で丸め
-        randIdx = ((rand() % 1000) * 1000 + (rand() % 1000)) % nbRecords;
-        sampledList[i] = records[randIdx];
-    }
-}
-
-void TrainRegressor(Regressor regr[NB_PHASE], FeatureRecord *featRecords, size_t nbRecords)
+void TrainRegressor(Regressor regr[NB_PHASE], FeatureRecord *featRecords, FeatureRecord *testRecords, size_t nbRecords, size_t nbTests)
 {
     double loss;
     int i, phase, batchIdx, learndCnt;
-    int inputSize[NB_PHASE] = {0, 0, 0, 0};
-    int tmpSize[NB_PHASE] = {0, 0, 0, 0};
+    int inputSize[NB_PHASE] = {0};
+    int testSize[NB_PHASE] = {0};
+    int tmpSize[NB_PHASE] = {0};
+    int testTmpSize[NB_PHASE] = {0};
     FeatureRecord **inputs[NB_PHASE];
+    FeatureRecord **tests[NB_PHASE];
     FeatureRecord *batchInput[BATCH_SIZE];
     for (i = 0; i < nbRecords; i++)
     {
         inputSize[PHASE(featRecords[i].nbEmpty)]++;
     }
+    for (i = 0; i < nbTests; i++)
+    {
+        testSize[PHASE(testRecords[i].nbEmpty)]++;
+    }
 
     for (phase = 0; phase < NB_PHASE; phase++)
     {
         inputs[phase] = (FeatureRecord **)malloc(sizeof(FeatureRecord *) * inputSize[phase]);
+        tests[phase] = (FeatureRecord **)malloc(sizeof(FeatureRecord *) * testSize[phase]);
     }
 
     // レコードをフェーズごとに振り分け
@@ -143,11 +153,16 @@ void TrainRegressor(Regressor regr[NB_PHASE], FeatureRecord *featRecords, size_t
         inputs[phase][tmpSize[phase]] = &featRecords[i];
         tmpSize[phase]++;
     }
+    for (i = 0; i < nbTests; i++)
+    {
+        phase = PHASE(testRecords[i].nbEmpty);
+        inputs[phase][testTmpSize[phase]] = &testRecords[i];
+        testTmpSize[phase]++;
+    }
 
     // すべてのフェーズに対して学習
     for (phase = 0; phase < NB_PHASE; phase++)
     {
-        loss = 0;
         learndCnt = 0;
         // ミニバッチ学習
         for (batchIdx = 0; batchIdx < inputSize[phase]; batchIdx += BATCH_SIZE)
@@ -155,8 +170,14 @@ void TrainRegressor(Regressor regr[NB_PHASE], FeatureRecord *featRecords, size_t
             printf("Regressor train phase:%d batch:%d      \r", phase, batchIdx / BATCH_SIZE);
             // バッチサイズ分ランダムサンプリング
             sampling(inputs[phase], batchInput, inputSize[phase], BATCH_SIZE);
-            loss += TreinRegrBatch(&regr[phase], batchInput, BATCH_SIZE);
+            TreinRegrBatch(&regr[phase], batchInput, BATCH_SIZE);
             learndCnt += BATCH_SIZE;
+        }
+
+        loss = 0;
+        for (i = 0; i < testSize[phase]; i++)
+        {
+            loss += fabsf(PredRegressor(&regr[phase], tests[phase][i]->featStats) - tests[phase][i]->stoneDiff);
         }
         printf("Regressor phase%d  MAE Loss: %.3f          \n", phase, loss / (float)learndCnt);
     }
@@ -166,6 +187,7 @@ void TrainRegressor(Regressor regr[NB_PHASE], FeatureRecord *featRecords, size_t
         free(inputs[phase]);
     }
 }
+#endif
 
 void SaveRegressor(Regressor regr[NB_PHASE], const char *file)
 {
@@ -216,7 +238,7 @@ void LoadRegressor(Regressor regr[NB_PHASE], const char *file)
 
         readed = 0;
         readed += fread(&regr[phase].weights, sizeof(float), REGR_NB_FEAT_COMB, fp);
-        if (readed < 1)
+        if (readed < REGR_NB_FEAT_COMB)
         {
             fputs("モデルファイルの読み込みに失敗しました。\n", stderr);
             return;

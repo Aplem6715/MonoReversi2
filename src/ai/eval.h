@@ -2,7 +2,11 @@
 #define EVAL_DEFINED
 
 #include "../const.h"
+#ifdef USE_NN
 #include "../learning/nnet.h"
+#elif USE_REGRESSION
+#include "../learning/regression.h"
+#endif
 
 #define NB_PHASE 15
 #define NB_PUT_1PHASE 4
@@ -99,7 +103,12 @@ typedef struct Evaluator
     unsigned short FeatureStates[FEAT_NUM];
     uint8 isOwn;
     uint8 nbEmpty;
+#ifdef USE_NN
     NNet *net;
+#elif USE_REGRESSION
+    Regressor *regr;
+#endif
+
 } Evaluator;
 
 void InitEval(Evaluator *eval);

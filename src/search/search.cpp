@@ -14,8 +14,11 @@ void InitTree(SearchTree *tree, unsigned char depth, unsigned char orderDepth, u
     tree->orderDepth = orderDepth;
     tree->useHash = useHash;
     tree->hashDepth = hashDepth;
-
+#ifdef USE_NN
     tree->eval->net = (NNet *)malloc(sizeof(NNet) * NB_PHASE);
+#elif USE_REGRESSION
+    tree->eval->regr = (Regressor *)malloc(sizeof(Regressor) * NB_PHASE);
+#endif
     InitEval(tree->eval);
 
     if (useHash)

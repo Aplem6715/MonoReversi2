@@ -23,6 +23,7 @@ OBJS=\
 	$(OUTDIR)\main.obj\
 	$(AI_OUTDIR)\eval.obj\
 	$(LEARN_OUTDIR)\nnet.obj\
+	$(LEARN_OUTDIR)\regression.obj\
 	$(SEARCH_OUTDIR)\bench.obj\
 	$(SEARCH_OUTDIR)\hash.obj\
 	$(SEARCH_OUTDIR)\moves.obj\
@@ -37,7 +38,9 @@ LEARN_OBJS=\
 	$(SEARCH_OUTDIR)\moves.obj\
 	$(SEARCH_OUTDIR)\search.obj\
 	$(AI_OUTDIR)\eval.obj\
+	$(LEARN_OUTDIR)\game_record.obj\
 	$(LEARN_OUTDIR)\nnet.obj\
+	$(LEARN_OUTDIR)\regression.obj\
 	$(LEARN_OUTDIR)\learn_eval.obj\
 	$(LEARN_OUTDIR)\learner.obj
 
@@ -57,9 +60,10 @@ CFLAGS=\
 	/USE_OPENCL\
 	/bigobj\
 	/EHsc\
-	/DLEARN_MODE\
+	/DUSE_REGRESSION\
 	/I$(INCLUDE_PATH)\
-	/Zi
+	/Zi\
+	/DLEARN_MODE
 	# /USE_SERIALIZER\ #
 
 LINK_FLAGS=\

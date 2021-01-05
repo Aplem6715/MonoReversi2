@@ -2,12 +2,12 @@
 #define REGRESSION_DEFINED
 
 #include "game_record.h"
-#include "ai_const.h"
+#include "../ai/ai_const.h"
 
 #define FEAT_NB_COMBINATION 159246
 #define NB_PHASE 15
 
-#define REGR_NB_FEAT_COMB (FEAT_NB_COMBINATION - POW3_5 * 4)
+#define REGR_NB_FEAT_COMB (FEAT_NB_COMBINATION - POW3_5 * 8 + POW3_10 * 4)
 
 typedef struct Regressor
 {
@@ -19,10 +19,13 @@ typedef struct Regressor
 #endif
 } Regressor;
 
-void InitRegressor();
+void InitRegressor(Regressor regr[NB_PHASE]);
 float PredRegressor(Regressor *regr, const uint16 features[]);
-void TrainRegressor(Regressor regr[NB_PHASE], FeatureRecord *featRecord, size_t nbRecord);
-void SaveRegressor(Regressor regr[NB_PHASE], const char *file);
+
+#ifdef LEARN_MODE
+void TrainRegressor(Regressor regr[NB_PHASE], FeatureRecord *featRecords, FeatureRecord *testRecords, size_t nbRecords, size_t nbTests)
+#endif
+    void SaveRegressor(Regressor regr[NB_PHASE], const char *file);
 void LoadRegressor(Regressor regr[NB_PHASE], const char *file);
 
 #endif

@@ -25,45 +25,6 @@ float rand_normal(float mu, float sigma)
     return mu + sigma * z;
 }
 
-void InitWeight(NNet net[NB_PHASE])
-{
-    int i, j, phase;
-    srand(WEIGHT_SEED);
-    for (phase = 0; phase < NB_PHASE; phase++)
-    {
-        for (j = 0; j < VALUE_HIDDEN_UNITS1; j++)
-        {
-            for (i = 0; i < FEAT_NB_COMBINATION; i++)
-            {
-                net[phase].c1[i][j] = rand_normal(0, sqrtf(HE_COEFF / FEAT_NUM));
-                net[phase].dw1[i][j] = 0;
-            }
-            // バイアス
-            net[phase].c1[i][j] = 0;
-            net[phase].dw1[i][j] = 0;
-        }
-        for (j = 0; j < VALUE_HIDDEN_UNITS2; j++)
-        {
-            for (i = 0; i < VALUE_HIDDEN_UNITS1; i++)
-            {
-                net[phase].c2[i][j] = rand_normal(0, sqrtf(HE_COEFF / VALUE_HIDDEN_UNITS1));
-                net[phase].dw2[i][j] = 0;
-            }
-            // バイアス
-            net[phase].c2[i][j] = 0;
-            net[phase].dw2[i][j] = 0;
-        }
-        for (i = 0; i < VALUE_HIDDEN_UNITS2; i++)
-        {
-            net[phase].c3[i][0] = rand_normal(0, sqrtf(HE_COEFF / VALUE_HIDDEN_UNITS2));
-            net[phase].dw3[i][0] = 0;
-        }
-        // バイアス
-        net[phase].c3[i][0] = 0;
-        net[phase].dw3[i][0] = 0;
-    }
-}
-
 float act(float x)
 {
     /*
@@ -177,6 +138,51 @@ float forward(NNet *net, const uint16 features[FEAT_NUM], uint8 isTrain)
     return net->out3[0];
 }
 
+float Predict(NNet *net, const uint16 features[])
+{
+    return forward(net, features, 0) - 0.5f;
+}
+
+#ifdef LEARN_MODE
+
+void InitWeight(NNet net[NB_PHASE])
+{
+    int i, j, phase;
+    srand(WEIGHT_SEED);
+    for (phase = 0; phase < NB_PHASE; phase++)
+    {
+        for (j = 0; j < VALUE_HIDDEN_UNITS1; j++)
+        {
+            for (i = 0; i < FEAT_NB_COMBINATION; i++)
+            {
+                net[phase].c1[i][j] = rand_normal(0, sqrtf(HE_COEFF / FEAT_NUM));
+                net[phase].dw1[i][j] = 0;
+            }
+            // バイアス
+            net[phase].c1[i][j] = 0;
+            net[phase].dw1[i][j] = 0;
+        }
+        for (j = 0; j < VALUE_HIDDEN_UNITS2; j++)
+        {
+            for (i = 0; i < VALUE_HIDDEN_UNITS1; i++)
+            {
+                net[phase].c2[i][j] = rand_normal(0, sqrtf(HE_COEFF / VALUE_HIDDEN_UNITS1));
+                net[phase].dw2[i][j] = 0;
+            }
+            // バイアス
+            net[phase].c2[i][j] = 0;
+            net[phase].dw2[i][j] = 0;
+        }
+        for (i = 0; i < VALUE_HIDDEN_UNITS2; i++)
+        {
+            net[phase].c3[i][0] = rand_normal(0, sqrtf(HE_COEFF / VALUE_HIDDEN_UNITS2));
+            net[phase].dw3[i][0] = 0;
+        }
+        // バイアス
+        net[phase].c3[i][0] = 0;
+        net[phase].dw3[i][0] = 0;
+    }
+}
 void backward(NNet *net, const uint16 features[FEAT_NUM], float y, float t)
 {
     UnitState *targetStat;
@@ -278,11 +284,6 @@ void update_weights(NNet *net, int batchSize)
     }
 }
 
-float Predict(NNet *net, const uint16 features[])
-{
-    return forward(net, features, 0) - 0.5f;
-}
-
 double trainBatch(NNet *net, FeatureRecord *inputs[BATCH_SIZE], int batchSize)
 {
     int i;
@@ -299,18 +300,6 @@ double trainBatch(NNet *net, FeatureRecord *inputs[BATCH_SIZE], int batchSize)
     }
     update_weights(net, batchSize);
     return loss / batchSize;
-}
-
-void sampling(FeatureRecord **records, FeatureRecord **sampledList, int nbRecords, int nbSample)
-{
-    int i;
-    uint32 randIdx;
-    for (i = 0; i < nbSample; i++)
-    {
-        // 0~100万の乱数を作ってレコード数で丸め
-        randIdx = ((rand() % 1000) * 1000 + (rand() % 1000)) % nbRecords;
-        sampledList[i] = records[randIdx];
-    }
 }
 
 void Train(NNet net[NB_PHASE], FeatureRecord *gameRecords, size_t nbRecords)
@@ -353,6 +342,7 @@ void Train(NNet net[NB_PHASE], FeatureRecord *gameRecords, size_t nbRecords)
         printf("NN Loss phase%d: %.3f          \n", phase, loss / (batchIdx / BATCH_SIZE));
     }
 }
+#endif
 
 void SaveNets(NNet net[NB_PHASE], const char *file)
 {

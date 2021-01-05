@@ -1,7 +1,6 @@
 ﻿#include "eval.h"
 #include "ai_const.h"
 #include "../bit_operation.h"
-#include "../learning/nnet.h"
 #include <assert.h>
 
 typedef struct PosToFeature
@@ -107,10 +106,15 @@ static const uint32 FeatMaxIndex[] = {
 
 //static const uint16 DEBUG_TARGET_FEAT = 3;
 static const char modelFolder[] = "resources/model/model_2003-epoch1/";
+static const char regrFolder[] = "resources/regressor/regr_2015-epoch0/";
 
 void InitEval(Evaluator *eval)
 {
+#ifdef USE_NN
     LoadNets(eval->net, modelFolder);
+#elif USE_REGRESSION
+    LoadRegressor(eval->regr, regrFolder);
+#endif
 }
 
 void ReloadEval(Evaluator *eval, uint64 own, uint64 opp, uint8 isOwnTurn)
@@ -283,6 +287,7 @@ void UpdateEvalPass(Evaluator *eval)
 
 float EvalNNet(Evaluator *eval)
 {
+#ifdef USE_NN
     if (eval->isOwn)
     {
         return Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates);
@@ -291,6 +296,9 @@ float EvalNNet(Evaluator *eval)
     {
         return -Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates);
     }
+#elif USE_REGRESSION
+    return PredRegressor(&eval->regr[PHASE(eval->nbEmpty)], eval->FeatureStates);
+#endif
 }
 
 float EvalPosTable(uint64 own, uint64 opp)

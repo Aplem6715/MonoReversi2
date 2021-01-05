@@ -44,9 +44,13 @@ typedef struct NNet
 #endif
 } NNet;
 
-void InitWeight(NNet net[NB_PHASE]);
 float Predict(NNet *net, const uint16 features[]);
+
+#ifdef LEARN_MODE
+void InitWeight(NNet net[NB_PHASE]);
 void Train(NNet net[NB_PHASE], FeatureRecord *gameRecords, size_t nbRecords);
+#endif
+
 void SaveNets(NNet net[NB_PHASE], const char *file);
 void LoadNets(NNet net[NB_PHASE], const char *file);
 

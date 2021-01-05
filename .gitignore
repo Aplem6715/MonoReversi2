@@ -1,6 +1,7 @@
 
 build/*
 resources/model/*
+resources/regressor/*
 resources/record/*
 tool/GGFToWThor/
 
