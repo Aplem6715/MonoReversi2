@@ -27,7 +27,7 @@ static const int TRAIN_NB_VERSUS = 50;
 static const uint8 VERSUS_RANDOM_TURNS = 8;
 
 static const int nbTrainCycles = 1000;
-static const int nbGameOneCycle = 256; //1024;
+static const int nbGameOneCycle = 512; //1024;
 #ifdef USE_NN
 static const string modelFolder = "resources/model/";
 static const string modelName = "model_";
@@ -168,6 +168,7 @@ void SelfPlay(uint8 searchDepth)
     ofstream logFile;
     int winCount;
     double winRatio;
+    float loss;
     int nbCycles = 0;
     logFile.open(logFileName, ios::app);
     logFile.seekp(ios::beg);
@@ -202,7 +203,7 @@ void SelfPlay(uint8 searchDepth)
 #ifdef USE_NN
         Train(trees[1].eval->net, featRecords.data(), featRecords.size());
 #elif USE_REGRESSION
-        TrainRegressor(trees[1].eval->regr, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
+        loss = TrainRegressor(trees[1].eval->regr, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
 #endif
 
         // 新旧モデルで対戦
@@ -233,7 +234,7 @@ void SelfPlay(uint8 searchDepth)
         // 対戦結果に応じてモデルを更新
         if (winRatio >= 0.60)
         {
-            string modelDir = modelFolder + modelName + to_string(nbCycles) + "/";
+            string modelDir = modelFolder + modelName + to_string(nbCycles) + "_Loss" + to_string((int)(loss * 10)) + "/";
             _mkdir(modelDir.c_str());
 
 #ifdef USE_NN
@@ -413,9 +414,9 @@ int main()
 
     string recordDir = "./resources/record/WTH_2001-2015/";
     SearchTree tree;
-    int startYear = 2001, endYear = 2001;
+    int startYear = 2001, endYear = 2015;
     int year;
-    int epochs = 1;
+    int epochs = 50;
 
     InitTree(&tree, 4, 100, 1, 6); // 旧
 #ifdef USE_NN
@@ -449,6 +450,7 @@ int main()
     }
 
     Game game(PlayerEnum::HUMAN, PlayerEnum::AI);
+    // TODO pointer dainyu matigai
     game.GetTree(Const::WHITE)->eval->regr = tree.eval->regr;
     game.Start();
 

@@ -43,11 +43,11 @@ Game::Game(PlayerEnum black, PlayerEnum white)
     // AIの初期化
     if (player[Const::WHITE] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::WHITE], 2, 2, 1, 2);
+        InitTree(&tree[Const::WHITE], 6, 2, 1, 2);
     }
     if (player[Const::BLACK] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::BLACK], 2, 2, 1, 2);
+        InitTree(&tree[Const::BLACK], 6, 2, 1, 2);
     }
     Reset();
 }
@@ -99,7 +99,7 @@ uint64 Game::WaitPosAI(uint8 color)
     printf("※考え中・・・\r");
     input = Search(&tree[color], board.GetOwn(), board.GetOpp());
     printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f\n",
-           tree[color].usedTime, tree[color].nodeCount, tree[color].nodeCount / tree[color].usedTime, tree[color].score * 128);
+           tree[color].usedTime, tree[color].nodeCount, tree[color].nodeCount / tree[color].usedTime, tree[color].score);
     return input;
 }
 

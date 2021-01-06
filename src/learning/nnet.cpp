@@ -87,7 +87,7 @@ float forward(NNet *net, const uint16 features[FEAT_NUM], uint8 isTrain)
         {
             sum += net->c1[shift + features[featIdx]][unitIdx] * 1;
             sum += bias;
-            shift += FeatMaxIndex[featIdx];
+            shift *= FeatMaxIndex[featIdx];
         }
 #ifdef LEARN_MODE
         if (isTrain)
@@ -240,7 +240,7 @@ void backward(NNet *net, const uint16 features[FEAT_NUM], float y, float t)
         for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
         {
             i = shift + features[featIdx];
-            shift += FeatMaxIndex[featIdx];
+            shift *= FeatMaxIndex[featIdx];
 
             net->dw1[i][j] += targetStat->delta * 1;
         }

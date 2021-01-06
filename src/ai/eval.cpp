@@ -106,7 +106,7 @@ static const uint32 FeatMaxIndex[] = {
 
 //static const uint16 DEBUG_TARGET_FEAT = 3;
 static const char modelFolder[] = "resources/model/model_2003-epoch1/";
-static const char regrFolder[] = "resources/regressor/regr_epoch19_2015/";
+static const char regrFolder[] = "resources/regressor/regr_52_Loss200/";
 
 void InitEval(Evaluator *eval)
 {
