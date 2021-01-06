@@ -16,6 +16,7 @@ typedef struct Regressor
 #ifdef LEARN_MODE
     uint32 nbAppear[REGR_NB_FEAT_COMB];
     float delta[REGR_NB_FEAT_COMB];
+    float beta;
 #endif
 } Regressor;
 

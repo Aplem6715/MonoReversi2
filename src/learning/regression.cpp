@@ -5,21 +5,32 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include <math.h>
 #include "../board.h"
 #define BATCH_SIZE 128
 
-static const float beta = 0.001f;
+static const float BETA_INIT = 0.01f;
 
 void InitRegressor(Regressor regr[NB_PHASE])
 {
     int phase, i;
     for (phase = 0; phase < NB_PHASE; phase++)
     {
+        regr[phase].beta = BETA_INIT;
         for (i = 0; i < REGR_NB_FEAT_COMB; i++)
         {
             regr[phase].weights[i] = 0;
         }
+    }
+}
+
+void DecreaseRegrBeta(Regressor regr[NB_PHASE])
+{
+    int phase;
+    for (phase = 0; phase < NB_PHASE; phase++)
+    {
+        regr[phase].beta /= 2.0f;
     }
 }
 
@@ -30,21 +41,24 @@ float PredRegressor(Regressor *regr, const uint16 features[])
     uint32 shift = 0;
     for (featIdx = 0; featIdx < FEAT_EDGEX_1; featIdx++)
     {
-        score += regr->weights[features[featIdx]];
-        shift *= FeatMaxIndex[featIdx];
+        score += regr->weights[shift + features[featIdx]];
+        shift += FeatMaxIndex[featIdx];
+        assert(shift < REGR_NB_FEAT_COMB);
     }
     // EDGEは1,2 3,4 5,6 7,8を統合する
     // (NNでは位置を学習・統合できるが，線形回帰は隣り合ったパターンを認識できないため)
     for (; featIdx < FEAT_EDGEX_8; featIdx += 2)
     {
-        score += regr->weights[features[featIdx] * POW3_5 + features[featIdx + 1]];
-        shift *= FeatMaxIndex[featIdx] * FeatMaxIndex[featIdx + 1];
+        score += regr->weights[shift + features[featIdx] * POW3_5 + features[featIdx + 1]];
+        shift += FeatMaxIndex[featIdx] * FeatMaxIndex[featIdx + 1];
+        assert(shift < REGR_NB_FEAT_COMB);
     }
 
     for (; featIdx < FEAT_NUM; featIdx++)
     {
-        score += regr->weights[features[featIdx]];
-        shift *= FeatMaxIndex[featIdx];
+        assert(shift < REGR_NB_FEAT_COMB);
+        score += regr->weights[shift + features[featIdx]];
+        shift += FeatMaxIndex[featIdx];
     }
     return score;
 }
@@ -55,23 +69,22 @@ void IntegrateRegrWeight();
 void UpdateRegrWeights(Regressor *regr)
 {
     int j;
-    float w;
     float alpha;
     for (j = 0; j < REGR_NB_FEAT_COMB; j++)
     {
-        alpha = fminf(beta / 50.0f, beta / (float)regr->nbAppear[j]);
+        alpha = fminf(regr->beta / 50.0f, regr->beta / (float)regr->nbAppear[j]);
         regr->weights[j] += alpha * regr->delta[j];
         regr->nbAppear[j] = 0;
         regr->delta[j] = 0;
 
         if (regr->weights[j] > 64)
         {
-            printf("max\n");
+            //printf("max\n");
             regr->weights[j] = 64;
         }
         if (regr->weights[j] < -64)
         {
-            printf("min\n");
+            //printf("min\n");
             regr->weights[j] = -64;
         }
     }
@@ -97,7 +110,7 @@ void CalcWeightDelta(Regressor *regr, const uint16 features[], float error)
         regr->nbAppear[feat]++;
         regr->delta[feat] += error;
 
-        shift *= FeatMaxIndex[featIdx];
+        shift += FeatMaxIndex[featIdx];
     }
     // EDGEは1,2 3,4 5,6 7,8を統合する
     // (NNでは位置を学習・統合できるが，線形回帰は隣り合ったパターンを認識できないため)
@@ -107,7 +120,7 @@ void CalcWeightDelta(Regressor *regr, const uint16 features[], float error)
         regr->nbAppear[feat]++;
         regr->delta[feat] += error;
 
-        shift *= FeatMaxIndex[featIdx] * FeatMaxIndex[featIdx + 1];
+        shift += FeatMaxIndex[featIdx] * FeatMaxIndex[featIdx + 1];
     }
     for (; featIdx < FEAT_NUM; featIdx++)
     {
@@ -115,7 +128,7 @@ void CalcWeightDelta(Regressor *regr, const uint16 features[], float error)
         regr->nbAppear[feat]++;
         regr->delta[feat] += error;
 
-        shift *= FeatMaxIndex[featIdx];
+        shift += FeatMaxIndex[featIdx];
     }
 }
 
@@ -149,6 +162,7 @@ float TrainRegressor(Regressor regr[NB_PHASE], FeatureRecord *featRecords, Featu
     vector<FeatureRecord *> inputs[NB_PHASE];
     FeatureRecord **tests[NB_PHASE];
     FeatureRecord *batchInput[BATCH_SIZE];
+
     for (i = 0; i < nbTests; i++)
     {
         testSize[PHASE(testRecords[i].nbEmpty)]++;
@@ -202,7 +216,7 @@ float TrainRegressor(Regressor regr[NB_PHASE], FeatureRecord *featRecords, Featu
     {
         free(tests[phase]);
     }
-    return totalLoss / totalCnt;
+    return (float)totalLoss / totalCnt;
 }
 #endif
 
