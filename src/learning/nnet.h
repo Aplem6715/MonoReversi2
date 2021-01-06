@@ -41,6 +41,8 @@ typedef struct NNet
     UnitState state1[VALUE_HIDDEN_UNITS1];
     UnitState state2[VALUE_HIDDEN_UNITS2];
     UnitState state3[1];
+
+    float lr;
 #endif
 } NNet;
 
@@ -48,7 +50,8 @@ float Predict(NNet *net, const uint16 features[]);
 
 #ifdef LEARN_MODE
 void InitWeight(NNet net[NB_PHASE]);
-void Train(NNet net[NB_PHASE], FeatureRecord *gameRecords, size_t nbRecords);
+void DecreaseNNlr(NNet net[NB_PHASE]);
+float TrainNN(NNet net[NB_PHASE], FeatureRecord *featRecords, FeatureRecord *testRecords, size_t nbRecords, size_t nbTests);
 #endif
 
 void SaveNets(NNet net[NB_PHASE], const char *file);

@@ -10,27 +10,20 @@
 #include "../board.h"
 #define BATCH_SIZE 128
 
-static const float BETA_INIT = 0.01f;
+static const float BETA_INIT = 0.001f;
 
 void InitRegressor(Regressor regr[NB_PHASE])
 {
     int phase, i;
     for (phase = 0; phase < NB_PHASE; phase++)
     {
+#ifdef LEARN_MODE
         regr[phase].beta = BETA_INIT;
+#endif
         for (i = 0; i < REGR_NB_FEAT_COMB; i++)
         {
             regr[phase].weights[i] = 0;
         }
-    }
-}
-
-void DecreaseRegrBeta(Regressor regr[NB_PHASE])
-{
-    int phase;
-    for (phase = 0; phase < NB_PHASE; phase++)
-    {
-        regr[phase].beta /= 2.0f;
     }
 }
 
@@ -64,6 +57,16 @@ float PredRegressor(Regressor *regr, const uint16 features[])
 }
 
 #ifdef LEARN_MODE
+
+void DecreaseRegrBeta(Regressor regr[NB_PHASE])
+{
+    int phase;
+    for (phase = 0; phase < NB_PHASE; phase++)
+    {
+        regr[phase].beta /= 2.0f;
+    }
+}
+
 void IntegrateRegrWeight();
 
 void UpdateRegrWeights(Regressor *regr)

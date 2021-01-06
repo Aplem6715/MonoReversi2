@@ -27,13 +27,14 @@ static const int TRAIN_NB_VERSUS = 50;
 static const uint8 VERSUS_RANDOM_TURNS = 8;
 
 static const int nbTrainCycles = 1000;
-static const int nbGameOneCycle = 512; //1024;
 #ifdef USE_NN
 static const string modelFolder = "resources/model/";
 static const string modelName = "model_";
+static const int nbGameOneCycle = 128; //1024;
 #elif USE_REGRESSION
 static const string modelFolder = "resources/regressor/";
 static const string modelName = "regr_";
+static const int nbGameOneCycle = 512; //1024;
 #endif
 static const string logFileName = "log/self_play.log";
 static const string testRecordDir = "./resources/record/WTH_7789/WTH_1982.wtb";
@@ -150,19 +151,22 @@ bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 c
     return numBlack > numWhite;
 }
 
-void SelfPlay(uint8 searchDepth)
+void SelfPlay(uint8 searchDepth, bool resetWeight)
 {
 
     SearchTree trees[2];
     InitTree(&trees[0], searchDepth, 100, 1, 6); // 旧
     InitTree(&trees[1], searchDepth, 100, 1, 6); // 新
+    if (resetWeight)
+    {
 #ifdef USE_NN
-    InitWeight(trees[0].eval->net);
-    InitWeight(trees[1].eval->net);
+        InitWeight(trees[0].eval->net);
+        InitWeight(trees[1].eval->net);
 #elif USE_REGRESSION
-    InitRegressor(trees[0].eval->regr);
-    InitRegressor(trees[1].eval->regr);
+        InitRegressor(trees[0].eval->regr);
+        InitRegressor(trees[1].eval->regr);
 #endif
+    }
 
     vector<FeatureRecord> featRecords;
     ofstream logFile;
@@ -201,7 +205,7 @@ void SelfPlay(uint8 searchDepth)
 
         // 試合結果から学習
 #ifdef USE_NN
-        Train(trees[1].eval->net, featRecords.data(), featRecords.size());
+        loss = TrainNN(trees[1].eval->net, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
 #elif USE_REGRESSION
         loss = TrainRegressor(trees[1].eval->regr, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
 #endif
@@ -393,7 +397,7 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
         cout << "Cycle: " << cycles << "  Loaded: " << loaded << endl;
         // 試合結果から学習
 #ifdef USE_NN
-        Train(eval->net, featRecords.data(), featRecords.size());
+        TrainNN(eval->net, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
 #elif USE_REGRESSION
         TrainRegressor(eval->regr, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
 #endif
@@ -406,6 +410,8 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
 
 int main()
 {
+    SelfPlay(4, false);
+    /*
     if (signal(SIGINT, sig_handler) == SIG_ERR)
     {
         printf("\ncan't catch SIGINT\n");
@@ -416,15 +422,19 @@ int main()
     SearchTree tree;
     int startYear = 2001, endYear = 2015;
     int year;
-    int epochs = 50;
+    int epochs = 3;
+    bool resetWeight = false;
 
-    InitTree(&tree, 4, 100, 1, 6); // 旧
+    InitTree(&tree, 4, 100, 1, 6);
+
+    if (resetWeight)
+    {
 #ifdef USE_NN
-    InitWeight(tree.eval->net);
+        InitWeight(tree.eval->net);
 #elif USE_REGRESSION
-    InitRegressor(tree.eval->regr);
+        InitRegressor(tree.eval->regr);
 #endif
-
+    }
     for (int epoch = 0; epoch < epochs; epoch++)
     {
         for (year = startYear; year <= endYear; year++)
@@ -447,12 +457,29 @@ int main()
         {
             break;
         }
+#ifdef USE_NN
+        DecreaseNNlr(tree.eval->net);
+#elif USE_REGRESSION
+        DecreaseRegrBeta(tree.eval->regr);
+#endif
     }
 
+    int phase;
     Game game(PlayerEnum::HUMAN, PlayerEnum::AI);
-    // TODO pointer dainyu matigai
-    game.GetTree(Const::WHITE)->eval->regr = tree.eval->regr;
+// TODO pointer dainyu matigai
+#ifdef USE_NN
+    for (phase = 0; phase < NB_PHASE; phase++)
+    {
+        game.GetTree(Const::WHITE)->eval->net[phase] = tree.eval->net[phase];
+    }
+#elif USE_REGRESSION
+    for (phase = 0; phase < NB_PHASE; phase++)
+    {
+        game.GetTree(Const::WHITE)->eval->regr[phase] = tree.eval->regr[phase];
+    }
+#endif
     game.Start();
 
     DeleteTree(&tree);
+    */
 }

@@ -106,7 +106,7 @@ static const uint32 FeatMaxIndex[] = {
 
 //static const uint16 DEBUG_TARGET_FEAT = 3;
 static const char modelFolder[] = "resources/model/model_2003-epoch1/";
-static const char regrFolder[] = "resources/regressor/regr_epoch41_2003/";
+static const char regrFolder[] = "resources/regressor/regr_epoch49_2015/";
 
 void InitEval(Evaluator *eval)
 {
@@ -297,7 +297,14 @@ float EvalNNet(Evaluator *eval)
         return -Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates);
     }
 #elif USE_REGRESSION
-    return PredRegressor(&eval->regr[PHASE(eval->nbEmpty)], eval->FeatureStates);
+    if (eval->isOwn)
+    {
+        return PredRegressor(&eval->regr[PHASE(eval->nbEmpty)], eval->FeatureStates);
+    }
+    else
+    {
+        return -PredRegressor(&eval->regr[PHASE(eval->nbEmpty)], eval->FeatureStates);
+    }
 #endif
 }
 

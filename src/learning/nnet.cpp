@@ -10,10 +10,11 @@
 #include <math.h>
 #include <assert.h>
 
-#define BATCH_SIZE 16
+#define BATCH_SIZE 32
 #define WEIGHT_SEED 42
 #define HE_COEFF 2.0f
-static const float lr = 0.0001f;
+
+static const float lrInit = 0.001f;
 
 float Uniform()
 {
@@ -87,7 +88,7 @@ float forward(NNet *net, const uint16 features[FEAT_NUM], uint8 isTrain)
         {
             sum += net->c1[shift + features[featIdx]][unitIdx] * 1;
             sum += bias;
-            shift *= FeatMaxIndex[featIdx];
+            shift += FeatMaxIndex[featIdx];
         }
 #ifdef LEARN_MODE
         if (isTrain)
@@ -152,6 +153,7 @@ void InitWeight(NNet net[NB_PHASE])
     srand(WEIGHT_SEED);
     for (phase = 0; phase < NB_PHASE; phase++)
     {
+        net[phase].lr = lrInit;
         for (j = 0; j < VALUE_HIDDEN_UNITS1; j++)
         {
             for (i = 0; i < FEAT_NB_COMBINATION; i++)
@@ -184,6 +186,17 @@ void InitWeight(NNet net[NB_PHASE])
         net[phase].dw3[i][0] = 0;
     }
 }
+
+void DecreaseNNlr(NNet net[NB_PHASE])
+{
+    int phase;
+
+    for (phase = 0; phase < NB_PHASE; phase++)
+    {
+        net[phase].lr /= 2.0f;
+    }
+}
+
 void backward(NNet *net, const uint16 features[FEAT_NUM], float y, float t)
 {
     UnitState *targetStat;
@@ -240,7 +253,7 @@ void backward(NNet *net, const uint16 features[FEAT_NUM], float y, float t)
         for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
         {
             i = shift + features[featIdx];
-            shift *= FeatMaxIndex[featIdx];
+            shift += FeatMaxIndex[featIdx];
 
             net->dw1[i][j] += targetStat->delta * 1;
         }
@@ -254,42 +267,41 @@ void update_weights(NNet *net, int batchSize)
     {
         for (i = 0; i < FEAT_NB_COMBINATION; i++)
         {
-            net->c1[i][j] += lr * (net->dw1[i][j] / (float)batchSize);
+            net->c1[i][j] += net->lr * (net->dw1[i][j] / (float)batchSize);
             net->dw1[i][j] = 0;
         }
         // バイアス
-        net->c1[FEAT_NB_COMBINATION][j] += lr * (net->dw1[FEAT_NB_COMBINATION][j] / (float)batchSize);
+        net->c1[FEAT_NB_COMBINATION][j] += net->lr * (net->dw1[FEAT_NB_COMBINATION][j] / (float)batchSize);
         net->dw1[FEAT_NB_COMBINATION][j] = 0;
     }
     for (j = 0; j < VALUE_HIDDEN_UNITS2; j++)
     {
         for (i = 0; i < VALUE_HIDDEN_UNITS1; i++)
         {
-            net->c2[i][j] += lr * (net->dw2[i][j] / (float)batchSize);
+            net->c2[i][j] += net->lr * (net->dw2[i][j] / (float)batchSize);
             net->dw2[i][j] = 0;
         }
         // バイアス
-        net->c2[VALUE_HIDDEN_UNITS1][j] += lr * (net->dw2[VALUE_HIDDEN_UNITS1][j] / (float)batchSize);
+        net->c2[VALUE_HIDDEN_UNITS1][j] += net->lr * (net->dw2[VALUE_HIDDEN_UNITS1][j] / (float)batchSize);
         net->dw2[VALUE_HIDDEN_UNITS1][j] = 0;
     }
     for (j = 0; j < 1; j++)
     {
         for (i = 0; i < VALUE_HIDDEN_UNITS2; i++)
         {
-            net->c3[i][j] += lr * (net->dw3[i][j] / (float)batchSize);
+            net->c3[i][j] += net->lr * (net->dw3[i][j] / (float)batchSize);
             net->dw3[i][j] = 0;
         }
         // バイアス
-        net->c3[VALUE_HIDDEN_UNITS2][j] += lr * (net->dw3[VALUE_HIDDEN_UNITS2][j] / (float)batchSize);
+        net->c3[VALUE_HIDDEN_UNITS2][j] += net->lr * (net->dw3[VALUE_HIDDEN_UNITS2][j] / (float)batchSize);
         net->dw3[VALUE_HIDDEN_UNITS2][j] = 0;
     }
 }
 
-double trainBatch(NNet *net, FeatureRecord *inputs[BATCH_SIZE], int batchSize)
+void trainBatch(NNet *net, FeatureRecord *inputs[BATCH_SIZE], int batchSize)
 {
     int i;
     float output;
-    double loss = 0;
     float teacher;
     for (i = 0; i < batchSize; i++)
     {
@@ -297,38 +309,75 @@ double trainBatch(NNet *net, FeatureRecord *inputs[BATCH_SIZE], int batchSize)
         teacher = (inputs[i]->stoneDiff + 64.0f) / 128.0f;
         output = forward(net, inputs[i]->featStats, 1);
         backward(net, inputs[i]->featStats, output, teacher);
-        loss += fabs((teacher * 128 - 64) - (output * 128 - 64));
     }
     update_weights(net, batchSize);
-    return loss / batchSize;
 }
 
-void Train(NNet net[NB_PHASE], FeatureRecord *gameRecords, size_t nbRecords)
+float TrainNN(NNet net[NB_PHASE], FeatureRecord *featRecords, FeatureRecord *testRecords, size_t nbRecords, size_t nbTests)
 {
-    double loss;
-    int i, phase, batchIdx;
+    double loss, totalLoss;
+    float teacher, output;
+    int i, phase, batchIdx, testCnt, totalCnt;
+
+    int testSize[NB_PHASE] = {0};
+    int testTmpSize[NB_PHASE] = {0};
+    FeatureRecord **tests[NB_PHASE];
+
     vector<FeatureRecord *> inputs[NB_PHASE];
     FeatureRecord *batchInput[BATCH_SIZE];
+
+    for (i = 0; i < nbTests; i++)
+    {
+        testSize[PHASE(testRecords[i].nbEmpty)]++;
+    }
+    for (phase = 0; phase < NB_PHASE; phase++)
+    {
+        tests[phase] = (FeatureRecord **)malloc(sizeof(FeatureRecord *) * testSize[phase]);
+    }
+
     // レコードをフェーズごとに振り分け
     for (i = 0; i < nbRecords; i++)
     {
-        phase = PHASE(gameRecords[i].nbEmpty);
-        inputs[phase].push_back(&gameRecords[i]);
+        phase = PHASE(featRecords[i].nbEmpty);
+        inputs[phase].push_back(&featRecords[i]);
+    }
+    for (i = 0; i < nbTests; i++)
+    {
+        phase = PHASE(testRecords[i].nbEmpty);
+        tests[phase][testTmpSize[phase]] = &testRecords[i];
+        testTmpSize[phase]++;
     }
 
+    totalLoss = 0;
+    totalCnt = 0;
     // すべてのフェーズに対して学習
     for (phase = 0; phase < NB_PHASE; phase++)
     {
-        loss = 0;
         // ミニバッチ学習
         for (batchIdx = 0; batchIdx < inputs[phase].size(); batchIdx += BATCH_SIZE)
         {
             printf("NN train phase:%d batch:%d      \r", phase, batchIdx / BATCH_SIZE);
             sampling(inputs[phase], batchInput, BATCH_SIZE);
-            loss += trainBatch(&net[phase], batchInput, BATCH_SIZE);
+            trainBatch(&net[phase], batchInput, BATCH_SIZE);
         }
-        printf("NN Loss phase%d: %.3f          \n", phase, loss / (batchIdx / BATCH_SIZE));
+        loss = 0;
+        testCnt = 0;
+        for (i = 0; i < testSize[phase]; i++)
+        {
+            teacher = (tests[phase][i]->stoneDiff + 64.0f) / 128.0f;
+            output = Predict(&net[phase], tests[phase][i]->featStats);
+            loss += fabsf((teacher - output) * 128.0f - 64.0f);
+            testCnt++;
+            totalCnt++;
+        }
+        totalLoss += loss;
+        printf("NN Loss phase%d: %.3f          \n", phase, loss / (float)testCnt);
     }
+    for (phase = 0; phase < NB_PHASE; phase++)
+    {
+        free(tests[phase]);
+    }
+    return (float)totalLoss / totalCnt;
 }
 #endif
 
