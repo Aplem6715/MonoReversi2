@@ -19,7 +19,6 @@ typedef struct SearchTree
     unsigned char orderDepth;
     unsigned char hashDepth;
     unsigned char useHash;
-    unsigned char nbEmpty;
     double usedTime;
     float score;
     // 外部ライブラリを使用して評価を行うか（大会で外部ライブラリの使用が禁止されている場合用）

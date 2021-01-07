@@ -57,23 +57,12 @@ void ResetTree(SearchTree *tree)
 
 float Judge(const uint64 own, const uint64 opp)
 {
-    return (CountBits(own) - CountBits(opp)) * 100.0f;
+    return (float)(CountBits(own) - CountBits(opp));
 }
 
 float WinJudge(const uint64 own, const uint64 opp)
 {
-    if (CountBits(own) > CountBits(opp))
-    {
-        return WIN_VALUE;
-    }
-    else if (CountBits(own) < CountBits(opp))
-    {
-        return -WIN_VALUE;
-    }
-    else
-    {
-        return 0;
-    }
+    return (CountBits(own) - CountBits(opp)) * 10000;
 }
 
 uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
@@ -86,14 +75,13 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
     std::chrono::system_clock::time_point start, end;
     start = std::chrono::system_clock::now();
     tree->nodeCount = 0;
-    tree->nbEmpty = (uint8)CountBits(~(own | opp));
 
     // 評価パターンの初期化
     ReloadEval(tree->eval, own, opp, 1);
 
-    if (tree->nbEmpty < tree->endDepth)
+    if (tree->eval->nbEmpty < tree->endDepth)
     {
-        tree->depth = tree->nbEmpty;
+        tree->depth = tree->eval->nbEmpty;
         // オーダリングが不要な探索では探索関数を変える
         if (tree->depth > tree->orderDepth)
         {
@@ -209,14 +197,12 @@ float AlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float
             mob ^= pos;
             rev = CalcFlip(own, opp, pos);
 
-            tree->nbEmpty--;
             UpdateEval(tree->eval, posIdx, rev);
             {
                 // 子ノードを探索
                 score = -AlphaBetaDeep(tree, opp ^ rev, own ^ rev ^ pos, -beta, -lower, depth - 1, false);
             }
             UndoEval(tree->eval, posIdx, rev);
-            tree->nbEmpty++;
 
             if (score > maxScore)
             {
@@ -308,14 +294,12 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
             // 着手位置・反転位置を取得
             pos = CalcPosBit(move->posIdx);
 
-            tree->nbEmpty--;
             UpdateEval(tree->eval, move->posIdx, move->flip);
             {
                 // 子ノードを探索
                 score = -NextSearch(tree, opp ^ move->flip, own ^ move->flip ^ pos, -beta, -lower, depth - 1, false);
             }
             UndoEval(tree->eval, move->posIdx, move->flip);
-            tree->nbEmpty++;
 
             if (score > maxScore)
             {
@@ -379,14 +363,14 @@ float AlphaBetaEndDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, fl
         {
             bestMove = NOMOVE_INDEX;
             // 勝敗判定
-            return WinJudge(own, opp);
+            return Judge(own, opp);
         }
         else
         {
             // 手番を入れ替えて探索続行
             bestMove = PASS_INDEX;
             UpdateEvalPass(tree->eval);
-            maxScore = -AlphaBetaDeep(tree, opp, own, -beta, -alpha, depth, true);
+            maxScore = -AlphaBetaEndDeep(tree, opp, own, -beta, -alpha, depth, true);
             UpdateEvalPass(tree->eval);
         }
     }
@@ -403,14 +387,12 @@ float AlphaBetaEndDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, fl
             mob ^= pos;
             rev = CalcFlip(own, opp, pos);
 
-            tree->nbEmpty--;
             UpdateEval(tree->eval, posIdx, rev);
             {
                 // 子ノードを探索
-                score = -AlphaBetaDeep(tree, opp ^ rev, own ^ rev ^ pos, -beta, -lower, depth - 1, false);
+                score = -AlphaBetaEndDeep(tree, opp ^ rev, own ^ rev ^ pos, -beta, -lower, depth - 1, false);
             }
             UndoEval(tree->eval, posIdx, rev);
-            tree->nbEmpty++;
 
             if (score > maxScore)
             {
@@ -472,13 +454,13 @@ float AlphaBetaEnd(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
         {
             bestMove = NOMOVE_INDEX;
             // 勝敗判定
-            return WinJudge(own, opp);
+            return Judge(own, opp);
         }
         else
         {
             // 手番を入れ替えて探索続行
             UpdateEvalPass(tree->eval);
-            maxScore = -AlphaBeta(tree, opp, own, -beta, -alpha, depth, true);
+            maxScore = -AlphaBetaEnd(tree, opp, own, -beta, -alpha, depth, true);
             UpdateEvalPass(tree->eval);
             bestMove = PASS_INDEX;
         }
@@ -488,11 +470,11 @@ float AlphaBetaEnd(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
         if (depth >= tree->orderDepth)
         {
             SortMoveList(&moveList);
-            NextSearch = AlphaBeta;
+            NextSearch = AlphaBetaEnd;
         }
         else
         {
-            NextSearch = AlphaBetaDeep;
+            NextSearch = AlphaBetaEndDeep;
         }
         maxScore = -Const::MAX_VALUE;
         lower = alpha;
@@ -502,14 +484,12 @@ float AlphaBetaEnd(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
             // 着手位置・反転位置を取得
             pos = CalcPosBit(move->posIdx);
 
-            tree->nbEmpty--;
             UpdateEval(tree->eval, move->posIdx, move->flip);
             {
                 // 子ノードを探索
                 score = -NextSearch(tree, opp ^ move->flip, own ^ move->flip ^ pos, -beta, -lower, depth - 1, false);
             }
             UndoEval(tree->eval, move->posIdx, move->flip);
-            tree->nbEmpty++;
 
             if (score > maxScore)
             {
