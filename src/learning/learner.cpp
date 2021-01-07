@@ -54,7 +54,7 @@ void sig_handler(int sig)
 
 void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor);
 
-bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 colorSwapped, uint8 randomTurns, double randMoveRatio, bool useRecording)
+uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, SearchTree *treeWhite, uint8 randomTurns, double randMoveRatio, bool useRecording)
 {
     uint64 input, flip;
     int nbEmpty = 60;
@@ -64,16 +64,22 @@ bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 c
     size_t topOfAddition = featRecords.size();
 
     board.Reset();
-    ReloadEval(&eval[0], board.GetBlack(), board.GetWhite(), 1);
-    ReloadEval(&eval[1], board.GetWhite(), board.GetBlack(), 0);
+    if (useRecording)
+    {
+        ReloadEval(&eval[0], board.GetBlack(), board.GetWhite(), 1);
+        ReloadEval(&eval[1], board.GetWhite(), board.GetBlack(), 0);
+    }
     while (!board.IsFinished())
     {
         //board.Draw();
         // 置ける場所がなかったらスキップ
         if (board.GetMobility() == 0)
         {
-            UpdateEvalPass(&eval[0]);
-            UpdateEvalPass(&eval[1]);
+            if (useRecording)
+            {
+                UpdateEvalPass(&eval[0]);
+                UpdateEvalPass(&eval[1]);
+            }
             board.Skip();
             continue;
         }
@@ -86,8 +92,16 @@ bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 c
         }
         else
         {
-            // AIが着手位置を決める
-            input = Search(&tree[board.GetTurnColor() ^ colorSwapped], board.GetOwn(), board.GetOpp());
+            if (board.GetTurnColor() == Const::BLACK)
+            {
+                // AIが着手位置を決める
+                input = Search(treeBlack, board.GetOwn(), board.GetOpp());
+            }
+            else
+            {
+                // AIが着手位置を決める
+                input = Search(treeWhite, board.GetOwn(), board.GetOpp());
+            }
         }
 
         // 入力位置のインデックスを取得
@@ -98,11 +112,12 @@ bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 c
         // 実際に着手
         flip = board.Put(input);
         nbEmpty--;
-        UpdateEval(&eval[0], posIdx, flip);
-        UpdateEval(&eval[1], posIdx, flip);
 
         if (useRecording)
         {
+            UpdateEval(&eval[0], posIdx, flip);
+            UpdateEval(&eval[1], posIdx, flip);
+
             // レコード設定
             for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
             {
@@ -148,7 +163,7 @@ bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 c
         }
     }
 
-    return numBlack > numWhite;
+    return numBlack > numWhite ? 0 : 1;
 }
 
 void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
@@ -165,6 +180,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
 #elif USE_REGRESSION
         InitRegressor(trees[0].eval->regr);
         InitRegressor(trees[1].eval->regr);
+        printf("Weight Init(Reset)\n");
 #endif
     }
     else
@@ -207,7 +223,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         for (int gameCnt = 0; gameCnt < nbGameOneCycle; gameCnt++)
         {
             cout << "Cycle: " << nbCycles << "\tPlaying: " << gameCnt << "\r";
-            PlayOneGame(featRecords, trees, 0, TRAIN_RANDOM_TURNS, TRAIN_RANDOM_RATIO, true);
+            PlayOneGame(featRecords, &trees[0], &trees[0], TRAIN_RANDOM_TURNS, TRAIN_RANDOM_RATIO, true);
         }
 
         // 試合結果から学習
@@ -221,7 +237,8 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         winCount = 0;
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
-            if (PlayOneGame(featRecords, trees, 0, VERSUS_RANDOM_TURNS, 0, false))
+            // 新規ウェイトを黒にしてプレイ
+            if (PlayOneGame(featRecords, &trees[1], &trees[0], VERSUS_RANDOM_TURNS, 0, false) == Const::BLACK)
             {
                 // 勝ったら加算
                 winCount++;
@@ -230,7 +247,8 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         // 白黒入れ替えて
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
-            if (!PlayOneGame(featRecords, trees, 1, VERSUS_RANDOM_TURNS, 0, false))
+            // 新規ウェイトを白にしてプレイ
+            if (PlayOneGame(featRecords, &trees[0], &trees[1], VERSUS_RANDOM_TURNS, 0, false) == Const::WHITE)
             {
                 // 勝ったら加算
                 winCount++;
@@ -243,7 +261,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         cout << "VS Result " << nbCycles << "\t Win Ratio:" << setprecision(4) << winRatio * 100 << "%\t";
 
         // 対戦結果に応じてモデルを更新
-        if (winRatio >= 0.60)
+        if (winRatio >= 0.65)
         {
             string modelDir = modelFolder + modelName + to_string(nbCycles) + "_Loss" + to_string((int)(loss * 100)) + "/";
             _mkdir(modelDir.c_str());
