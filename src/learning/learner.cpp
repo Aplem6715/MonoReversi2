@@ -217,8 +217,10 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         ConverWthor2Feat(testRecords, wthorData);
     }
 
+    // メインプレイ
     for (nbCycles = 0; nbCycles < nbTrainCycles; nbCycles++)
     {
+        featRecords.clear();
         // 指定回数分の試合を実行
         for (int gameCnt = 0; gameCnt < nbGameOneCycle; gameCnt++)
         {
@@ -257,8 +259,12 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
 
         // 対戦結果を保存
         winRatio = winCount / (double)(2 * TRAIN_NB_VERSUS);
-        logFile << "VS Result " << nbCycles << "\t Win Ratio:" << setprecision(4) << winRatio * 100 << "%\t";
-        cout << "VS Result " << nbCycles << "\t Win Ratio:" << setprecision(4) << winRatio * 100 << "%\t";
+        logFile << "VS Result " << nbCycles
+                << "\t Win Ratio:" << winRatio * 100 << "%\t "
+                << "Loss: " << setprecision(4) << loss << "%\t";
+        cout << "VS Result " << nbCycles
+             << "\t Win Ratio:" << winRatio * 100 << "%\t "
+             << "Loss: " << setprecision(4) << loss << "%\t";
 
         // 対戦結果に応じてモデルを更新
         if (winRatio >= 0.65)
@@ -290,6 +296,8 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         logFile.flush();
     }
     logFile.close();
+    DeleteTree(&trees[0]);
+    DeleteTree(&trees[1]);
 }
 
 uint8 move88ToIndex(uint8 move88)

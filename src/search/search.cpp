@@ -42,6 +42,11 @@ void DeleteTree(SearchTree *tree)
         FreeHashTable(tree->table);
         free(tree->table);
     }
+#ifdef USE_NN
+    free(tree->eval->net);
+#elif USE_REGRESSION
+    free(tree->eval->regr);
+#endif
 }
 
 void ConfigTree(SearchTree *tree, unsigned char depth)
@@ -55,14 +60,16 @@ void ResetTree(SearchTree *tree)
         ResetHashTable(tree->table);
 }
 
-float Judge(const uint64 own, const uint64 opp)
+inline float Judge(const SearchTree *tree, const uint64 own, const uint64 opp)
 {
-    return (float)(CountBits(own) - CountBits(opp));
+    const uint8 nbOwn = CountBits(own);
+    const uint8 nbOpp = 64 - tree->eval->nbEmpty - nbOwn;
+    return (float)(nbOwn - nbOpp);
 }
 
 float WinJudge(const uint64 own, const uint64 opp)
 {
-    return (CountBits(own) - CountBits(opp)) * 10000;
+    return (CountBits(own) - CountBits(opp)) * 10000.0f;
 }
 
 uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
@@ -343,7 +350,7 @@ float AlphaBetaEndDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, fl
     {
         //return EvalPosTable(own, opp);
         //return EvalTinyDnn(tree, tree->nbEmpty);
-        return Judge(own, opp);
+        return Judge(tree, own, opp);
     }
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
@@ -363,7 +370,7 @@ float AlphaBetaEndDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, fl
         {
             bestMove = NOMOVE_INDEX;
             // 勝敗判定
-            return Judge(own, opp);
+            return Judge(tree, own, opp);
         }
         else
         {
@@ -434,7 +441,7 @@ float AlphaBetaEnd(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
     if (depth <= 0)
     {
         //return EvalPosTable(own, opp);
-        return Judge(own, opp);
+        return Judge(tree, own, opp);
     }
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
@@ -454,7 +461,7 @@ float AlphaBetaEnd(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
         {
             bestMove = NOMOVE_INDEX;
             // 勝敗判定
-            return Judge(own, opp);
+            return Judge(tree, own, opp);
         }
         else
         {
