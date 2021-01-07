@@ -20,6 +20,7 @@ typedef struct Regressor
 #endif
 } Regressor;
 
+void InitRegrBeta(Regressor regr[NB_PHASE]);
 void InitRegressor(Regressor regr[NB_PHASE]);
 float PredRegressor(Regressor *regr, const uint16 features[]);
 

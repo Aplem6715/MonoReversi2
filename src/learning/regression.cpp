@@ -12,6 +12,17 @@
 
 static const float BETA_INIT = 0.001f;
 
+void InitRegrBeta(Regressor regr[NB_PHASE])
+{
+    int phase, i;
+    for (phase = 0; phase < NB_PHASE; phase++)
+    {
+#ifdef LEARN_MODE
+        regr[phase].beta = BETA_INIT;
+#endif
+    }
+}
+
 void InitRegressor(Regressor regr[NB_PHASE])
 {
     int phase, i;
@@ -149,7 +160,7 @@ void TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inpu
         CalcWeightDelta(regr, inputs[i]->featStats, teacher - output);
         if (debug)
         {
-            Board::Draw(inputs[i]->own, inputs[i]->opp, 0);
+            //Board::Draw(inputs[i]->own, inputs[i]->opp, 0);
             printf("Color: %d,  Score: %f, Pred: %f\n", inputs[i]->color, teacher, output);
         }
     }

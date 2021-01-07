@@ -12,7 +12,6 @@ typedef struct FeatureRecord
 {
     uint16 featStats[FEAT_NUM];
     uint8 nbEmpty;
-    uint64 own, opp;
     uint8 color;
     signed char stoneDiff;
 } FeatureRecord;

@@ -110,8 +110,8 @@ bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 c
             }
             record.nbEmpty = nbEmpty;
             record.stoneDiff = 1;
-            record.own = board.GetBlack();
-            record.opp = board.GetWhite();
+            //record.own = board.GetBlack();
+            //record.opp = board.GetWhite();
             record.color = Const::BLACK;
             // レコードを追加
             featRecords.push_back(record);
@@ -123,8 +123,8 @@ bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 c
             }
             record.nbEmpty = nbEmpty;
             record.stoneDiff = -1;
-            record.own = board.GetWhite();
-            record.opp = board.GetBlack();
+            //record.own = board.GetWhite();
+            //record.opp = board.GetBlack();
             record.color = Const::WHITE;
 
             // レコードを追加
@@ -151,12 +151,12 @@ bool PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree tree[2], uint8 c
     return numBlack > numWhite;
 }
 
-void SelfPlay(uint8 searchDepth, bool resetWeight)
+void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
 {
 
     SearchTree trees[2];
-    InitTree(&trees[0], searchDepth, 100, 1, 6); // 旧
-    InitTree(&trees[1], searchDepth, 100, 1, 6); // 新
+    InitTree(&trees[0], midDepth, endDepth, 100, 1, 6); // 旧
+    InitTree(&trees[1], midDepth, endDepth, 100, 1, 6); // 新
     if (resetWeight)
     {
 #ifdef USE_NN
@@ -165,6 +165,13 @@ void SelfPlay(uint8 searchDepth, bool resetWeight)
 #elif USE_REGRESSION
         InitRegressor(trees[0].eval->regr);
         InitRegressor(trees[1].eval->regr);
+#endif
+    }
+    else
+    {
+#if USE_REGRESSION
+        InitRegrBeta(trees[0].eval->regr);
+        InitRegrBeta(trees[1].eval->regr);
 #endif
     }
 
@@ -238,7 +245,7 @@ void SelfPlay(uint8 searchDepth, bool resetWeight)
         // 対戦結果に応じてモデルを更新
         if (winRatio >= 0.60)
         {
-            string modelDir = modelFolder + modelName + to_string(nbCycles) + "_Loss" + to_string((int)(loss * 10)) + "/";
+            string modelDir = modelFolder + modelName + to_string(nbCycles) + "_Loss" + to_string((int)(loss * 100)) + "/";
             _mkdir(modelDir.c_str());
 
 #ifdef USE_NN
@@ -317,8 +324,8 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         }
         record.nbEmpty = nbEmpty;
         record.stoneDiff = 1;
-        record.own = board.GetBlack();
-        record.opp = board.GetWhite();
+        //record.own = board.GetBlack();
+        //record.opp = board.GetWhite();
         record.color = Const::BLACK;
         // レコードを追加
         featRecords.push_back(record);
@@ -330,8 +337,8 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         }
         record.nbEmpty = nbEmpty;
         record.stoneDiff = -1;
-        record.own = board.GetWhite();
-        record.opp = board.GetBlack();
+        //record.own = board.GetWhite();
+        // record.opp = board.GetBlack();
         record.color = Const::WHITE;
 
         // レコードを追加
@@ -410,7 +417,7 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
 
 int main()
 {
-    SelfPlay(4, false);
+    SelfPlay(4, 8, false);
     /*
     if (signal(SIGINT, sig_handler) == SIG_ERR)
     {

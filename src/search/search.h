@@ -14,6 +14,8 @@ typedef struct SearchTree
     Evaluator eval[1];
     size_t nodeCount;
     unsigned char depth;
+    unsigned char midDepth;
+    unsigned char endDepth;
     unsigned char orderDepth;
     unsigned char hashDepth;
     unsigned char useHash;
@@ -26,7 +28,7 @@ typedef struct SearchTree
 
 typedef float (*SearchFunc_t)(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed);
 
-void InitTree(SearchTree *tree, unsigned char depth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth);
+void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth);
 void DeleteTree(SearchTree *tree);
 void ConfigTree(SearchTree *tree, unsigned char depth);
 void ResetTree(SearchTree *tree);
@@ -35,5 +37,7 @@ void PVS(SearchTree *tree);
 
 float AlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed);
 float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed);
+float AlphaBetaEndDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed);
+float AlphaBetaEnd(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed);
 
 #endif
