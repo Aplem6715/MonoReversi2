@@ -9,13 +9,17 @@
 
 #define REGR_NB_FEAT_COMB (FEAT_NB_COMBINATION - POW3_5 * 8 + POW3_10 * 4)
 
+// 連結EDGE分-4
+#define REGR_FEAT_NUM (FEAT_NUM - 4)
+#define REGR_FEAT_TYPES 11
+
 typedef struct Regressor
 {
     // 重み（EDGEペア統合分のサイズを減らす)
     float weights[REGR_NB_FEAT_COMB];
 #ifdef LEARN_MODE
-    uint32 nbAppear[REGR_NB_FEAT_COMB];
-    float delta[REGR_NB_FEAT_COMB];
+    uint32 *nbAppears[REGR_FEAT_NUM];
+    float *del[REGR_FEAT_NUM];
     float beta;
 #endif
 } Regressor;

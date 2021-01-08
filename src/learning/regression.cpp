@@ -8,9 +8,57 @@
 #include <assert.h>
 #include <math.h>
 #include "../board.h"
-#define BATCH_SIZE 128
 
+#define BATCH_SIZE 128
 static const float BETA_INIT = 0.001f;
+
+static const uint32 FeatMaxIndex[] = {
+    POW3_8, POW3_8, POW3_8, POW3_8,     // LINE2  26244
+    POW3_8, POW3_8, POW3_8, POW3_8,     // LINE3  26244
+    POW3_8, POW3_8, POW3_8, POW3_8,     // LINE4  26244
+    POW3_4, POW3_4, POW3_4, POW3_4,     // DIAG4    324
+    POW3_5, POW3_5, POW3_5, POW3_5,     // DIAG5    972
+    POW3_6, POW3_6, POW3_6, POW3_6,     // DIAG6   2916
+    POW3_7, POW3_7, POW3_7, POW3_7,     // DIAG7   8748
+    POW3_8, POW3_8,                     // DIAG8  13122
+    POW3_10, POW3_10, POW3_10, POW3_10, // EDGEX 3^10x4
+    POW3_8, POW3_8, POW3_8, POW3_8,     // CORNR  26244
+    POW3_8, POW3_8, POW3_8, POW3_8      // BMRAN  26244
+};
+
+static const uint32 FeatTypeMaxIndex[] = {
+    POW3_8,  // LINE2  26244
+    POW3_8,  // LINE3  26244
+    POW3_8,  // LINE4  26244
+    POW3_4,  // DIAG4    324
+    POW3_5,  // DIAG5    972
+    POW3_6,  // DIAG6   2916
+    POW3_7,  // DIAG7   8748
+    POW3_8,  // DIAG8  13122
+    POW3_10, // EDGEX 3^10x4
+    POW3_8,  // CORNR  26244
+    POW3_8,  // BMRAN  26244
+};
+
+static const uint16 POW3_LIST[] = {POW3_0, POW3_1, POW3_2, POW3_4, POW3_5, POW3_6, POW3_7, POW3_8, POW3_9, POW3_10};
+static uint16 SAME_INDEX_8[POW3_8];
+static uint16 SAME_INDEX_7[POW3_7];
+static uint16 SAME_INDEX_6[POW3_6];
+static uint16 SAME_INDEX_5[POW3_5];
+static uint16 SAME_INDEX_4[POW3_4];
+static uint16 SAME_INDEX_3[POW3_3];
+static uint16 SAME_INDEX_CORNR[POW3_9];
+static uint16 SAME_INDEX_BMRAN[POW3_9];
+static uint16 SAME_INDEX_EDGE[POW3_10];
+
+static uint16 *SAMES[] = {
+    SAME_INDEX_3,
+    SAME_INDEX_4,
+    SAME_INDEX_5,
+    SAME_INDEX_6,
+    SAME_INDEX_7,
+    SAME_INDEX_8,
+};
 
 void InitRegrBeta(Regressor regr[NB_PHASE])
 {
@@ -36,6 +84,63 @@ void InitRegressor(Regressor regr[NB_PHASE])
             regr[phase].weights[i] = 0;
         }
     }
+#ifdef LEARN_MODE
+    uint16 same, idx;
+    int j, digit, digitStart = 3;
+    // 単純反転インデックスを計算
+    for (digit = digitStart; digit < 8; digit++)
+    {
+        for (i = 0; i < POW3_LIST[digit]; i++)
+        {
+            idx = i;
+            same = 0;
+            for (j = 0; j < 8; j++)
+            {
+                // 3進1桁目を取り出してj桁左シフト
+                same += idx % 3 * POW3_LIST[j];
+                // idx右シフト
+                idx /= 3;
+            }
+            SAMES[digit - digitStart][i] = same;
+        }
+    }
+
+    // CORNRの対称インデックスを計算
+    static uint16 corn_revs[8] = {POW3_0, POW3_3, POW3_6, POW3_1, POW3_4, POW3_7, POW3_2, POW3_5};
+    for (i = 0; i < POW3_8; i++)
+    {
+        for (j = 0; j < 8; j++)
+        {
+            same += idx % 3 * corn_revs[j];
+            idx /= 3;
+        }
+        SAME_INDEX_CORNR[i] = same;
+    }
+
+    // BMRANの対称インデックスを計算
+    static uint16 bmran_revs[8] = {POW3_0, POW3_4, POW3_6, POW3_7, POW3_1, POW3_5, POW3_2, POW3_3};
+    for (i = 0; i < POW3_8; i++)
+    {
+        for (j = 0; j < 8; j++)
+        {
+            same += idx % 3 * bmran_revs[j];
+            idx /= 3;
+        }
+        SAME_INDEX_BMRAN[i] = same;
+    }
+
+    // 連結EDGEの対称インデックスを計算
+    static uint16 edge_revs[10] = {POW3_5, POW3_6, POW3_7, POW3_8, POW3_9, POW3_0, POW3_1, POW3_2, POW3_3, POW3_4};
+    for (i = 0; i < POW3_10; i++)
+    {
+        for (j = 0; j < 10; j++)
+        {
+            same += idx % 3 * edge_revs[j];
+            idx /= 3;
+        }
+        SAME_INDEX_EDGE[i] = same;
+    }
+#endif
 }
 
 float PredRegressor(Regressor *regr, const uint16 features[])
@@ -78,19 +183,24 @@ void DecreaseRegrBeta(Regressor regr[NB_PHASE])
     }
 }
 
-void IntegrateRegrWeight();
+void IntegrateRegrWeight()
+{
+}
 
 void UpdateRegrWeights(Regressor *regr)
 {
-    int j;
+    int j, featType;
     float alpha;
+    for (featType = 0; featType < REGR_FEAT_NUM; featType++)
+    {
+    }
     for (j = 0; j < REGR_NB_FEAT_COMB; j++)
     {
         alpha = fminf(regr->beta / 50.0f, regr->beta / (float)regr->nbAppear[j]);
         regr->weights[j] += alpha * regr->delta[j];
         regr->nbAppear[j] = 0;
         regr->delta[j] = 0;
-
+        /*
         if (regr->weights[j] > 64)
         {
             //printf("max\n");
@@ -101,48 +211,45 @@ void UpdateRegrWeights(Regressor *regr)
             //printf("min\n");
             regr->weights[j] = -64;
         }
+        */
     }
 }
 
 void ResetRegrState(Regressor *regr)
 {
-    int featIdx;
-    for (featIdx = 0; featIdx < REGR_NB_FEAT_COMB; featIdx++)
+    int featType, i;
+    for (featType = 0; featType < REGR_FEAT_TYPES; featType++)
     {
-        regr->nbAppear[featIdx] = 0;
-        regr->delta[featIdx] = 0;
+        for (i = 0; i < FeatTypeMaxIndex[featType]; i++)
+        {
+            regr->nbAppears[featType][i] = 0;
+            regr->del[featType][i] = 0;
+        }
     }
 }
 
-void CalcWeightDelta(Regressor *regr, const uint16 features[], float error)
+void CalcWeightDelta(Regressor *regr, const uint16 features[FEAT_NUM], float error)
 {
-    int featIdx, feat;
+    int featIdx, feat, featType, edgeShift, idx;
     uint32 shift = 0;
-    for (featIdx = 0; featIdx < FEAT_EDGEX_1; featIdx++)
-    {
-        feat = shift + features[featIdx];
-        regr->nbAppear[feat]++;
-        regr->delta[feat] += error;
 
-        shift += FeatMaxIndex[featIdx];
+    // TODO: featTypeはLINE, DIAG3,4,5,6,7,8, EDGE, CORNR, BMRANの0～11,
+    //       featuresはLINE_1, LINE_2, ..., となり約4倍になる。
+    for (featType = 0; featType < FEAT_EDGEX_1; featType++)
+    {
+        regr->nbAppears[featType][features[featType]]++;
+        regr->del[featType][features[featType]] += error;
     }
-    // EDGEは1,2 3,4 5,6 7,8を統合する
-    // (NNでは位置を学習・統合できるが，線形回帰は隣り合ったパターンを認識できないため)
-    for (; featIdx <= FEAT_EDGEX_8; featIdx += 2)
+    for (edgeShift = 0; featType <= FEAT_EDGEX_4; featType++, edgeShift += 2)
     {
-        feat = shift + features[featIdx] * POW3_5 + features[featIdx + 1];
-        regr->nbAppear[feat]++;
-        regr->delta[feat] += error;
-
-        shift += FeatMaxIndex[featIdx] * FeatMaxIndex[featIdx + 1];
+        idx = features[idx] * POW3_5 + features[idx + 1];
+        regr->nbAppears[featType][idx]++;
+        regr->del[featType][idx] += error;
     }
-    for (; featIdx < FEAT_NUM; featIdx++)
+    for (; featType < REGR_FEAT_NUM; featType++)
     {
-        feat = shift + features[featIdx];
-        regr->nbAppear[feat]++;
-        regr->delta[feat] += error;
-
-        shift += FeatMaxIndex[featIdx];
+        regr->nbAppears[featType][features[featType + 4]]++;  // EDGE連結で減った分+4
+        regr->del[featType][features[featType + 4]] += error; // EDGE連結で減った分+4
     }
 }
 

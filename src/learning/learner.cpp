@@ -34,7 +34,7 @@ static const int nbGameOneCycle = 128; //1024;
 #elif USE_REGRESSION
 static const string modelFolder = "resources/regressor/";
 static const string modelName = "regr_";
-static const int nbGameOneCycle = 512; //1024;
+static const int nbGameOneCycle = 1024; //1024;
 #endif
 static const string logFileName = "log/self_play.log";
 static const string testRecordDir = "./resources/record/WTH_7789/WTH_1982.wtb";
@@ -261,10 +261,10 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         winRatio = winCount / (double)(2 * TRAIN_NB_VERSUS);
         logFile << "VS Result " << nbCycles
                 << "\t Win Ratio:" << winRatio * 100 << "%\t "
-                << "Loss: " << setprecision(4) << loss << "%\t";
+                << "Loss: " << setprecision(6) << loss << "%\t";
         cout << "VS Result " << nbCycles
              << "\t Win Ratio:" << winRatio * 100 << "%\t "
-             << "Loss: " << setprecision(4) << loss << "%\t";
+             << "Loss: " << setprecision(6) << loss << "%\t";
 
         // 対戦結果に応じてモデルを更新
         if (winRatio >= 0.65)
