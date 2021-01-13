@@ -39,6 +39,7 @@ LEARN_OBJS=\
 	$(SEARCH_OUTDIR)\moves.obj\
 	$(SEARCH_OUTDIR)\search.obj\
 	$(AI_OUTDIR)\eval.obj\
+	$(AI_OUTDIR)\ai_const.obj\
 	$(LEARN_OUTDIR)\game_record.obj\
 	$(LEARN_OUTDIR)\nnet.obj\
 	$(LEARN_OUTDIR)\regression.obj\
@@ -63,6 +64,7 @@ CFLAGS=\
 	/USE_OPENCL\
 	/bigobj\
 	/EHsc\
+	/DNDEBUG\
 	/DLEARN_MODE\
 	/DUSE_REGRESSION\
 	/I$(INCLUDE_PATH)

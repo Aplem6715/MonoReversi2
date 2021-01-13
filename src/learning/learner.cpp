@@ -34,23 +34,16 @@ static const int nbGameOneCycle = 128; //1024;
 #elif USE_REGRESSION
 static const string modelFolder = "resources/regressor/";
 static const string modelName = "regr_";
-static const int nbGameOneCycle = 1024; //1024;
+static const int nbGameOneCycle = 512; //1024;
 #endif
-static const string logFileName = "log/self_play.log";
+static const string selfPlayLogFileName = "log/self_play.log";
+static const string recordLearnLogFileName = "log/record_learn.log";
 static const string testRecordDir = "./resources/record/WTH_7789/WTH_1982.wtb";
 static const int nbTest = 100;
 
 static random_device rnd;
 static mt19937 mt(rnd());
 static uniform_real_distribution<double> rnd_prob(0.0, 1.0);
-
-volatile sig_atomic_t aborted = false;
-
-void sig_handler(int sig)
-{
-    printf("Handle!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    aborted = true;
-}
 
 void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor);
 
@@ -66,8 +59,8 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
     board.Reset();
     if (useRecording)
     {
-        ReloadEval(&eval[0], board.GetBlack(), board.GetWhite(), 1);
-        ReloadEval(&eval[1], board.GetWhite(), board.GetBlack(), 0);
+        ReloadEval(&eval[0], board.GetBlack(), board.GetWhite(), OWN);
+        ReloadEval(&eval[1], board.GetWhite(), board.GetBlack(), OPP);
     }
     while (!board.IsFinished())
     {
@@ -117,33 +110,39 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
         {
             UpdateEval(&eval[0], posIdx, flip);
             UpdateEval(&eval[1], posIdx, flip);
-
-            // レコード設定
-            for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
+            // ランダムターン中の記録はなし
+            if (60 - nbEmpty > randomTurns)
             {
-                record.featStats[featIdx] = eval[0].FeatureStates[featIdx];
-            }
-            record.nbEmpty = nbEmpty;
-            record.stoneDiff = 1;
-            //record.own = board.GetBlack();
-            //record.opp = board.GetWhite();
-            record.color = Const::BLACK;
-            // レコードを追加
-            featRecords.push_back(record);
+                //if (board.GetTurnColor() == Const::BLACK)
+                //{
+                // レコード設定
+                for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
+                {
+                    record.featStats[OWN][featIdx] = eval[0].FeatureStates[featIdx];
+                    record.featStats[OPP][featIdx] = OpponentIndex(eval[0].FeatureStates[featIdx], FeatDigits[featIdx]);
+                }
+                record.nbEmpty = nbEmpty;
+                record.stoneDiff = 1;
+                record.color = Const::BLACK;
+                // レコードを追加
+                featRecords.push_back(record);
+                /*}
+                else
+                {
+                    // レコード設定
+                    for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
+                    {
+                        record.featStats[OWN][featIdx] = eval[1].FeatureStates[featIdx];
+                        record.featStats[OPP][featIdx] = OpponentIndex(eval[1].FeatureStates[featIdx], FeatDigits[featIdx]);
+                    }
+                    record.nbEmpty = nbEmpty;
+                    record.stoneDiff = -1;
+                    record.color = Const::WHITE;
 
-            // レコード設定
-            for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
-            {
-                record.featStats[featIdx] = eval[1].FeatureStates[featIdx];
+                    // レコードを追加
+                    featRecords.push_back(record);
+                }*/
             }
-            record.nbEmpty = nbEmpty;
-            record.stoneDiff = -1;
-            //record.own = board.GetWhite();
-            //record.opp = board.GetBlack();
-            record.color = Const::WHITE;
-
-            // レコードを追加
-            featRecords.push_back(record);
         }
 
     } //end of loop:　while (!board.IsFinished())
@@ -163,7 +162,7 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
         }
     }
 
-    return numBlack > numWhite ? 0 : 1;
+    return numBlack > numWhite ? Const::BLACK : Const::WHITE;
 }
 
 void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
@@ -172,14 +171,18 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
     SearchTree trees[2];
     InitTree(&trees[0], midDepth, endDepth, 100, 1, 6); // 旧
     InitTree(&trees[1], midDepth, endDepth, 100, 1, 6); // 新
+
+    InitRegrTrain(trees[0].eval->regr);
+    InitRegrTrain(trees[1].eval->regr);
+
     if (resetWeight)
     {
 #ifdef USE_NN
         InitWeight(trees[0].eval->net);
         InitWeight(trees[1].eval->net);
 #elif USE_REGRESSION
-        InitRegressor(trees[0].eval->regr);
-        InitRegressor(trees[1].eval->regr);
+        ClearRegressorWeight(trees[0].eval->regr);
+        ClearRegressorWeight(trees[1].eval->regr);
         printf("Weight Init(Reset)\n");
 #endif
     }
@@ -192,12 +195,13 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
     }
 
     vector<FeatureRecord> featRecords;
-    ofstream logFile;
+    vector<FeatureRecord> dummyRecords;
     int winCount;
     double winRatio;
     float loss;
     int nbCycles = 0;
-    logFile.open(logFileName, ios::app);
+    ofstream logFile;
+    logFile.open(selfPlayLogFileName, ios::app);
     logFile.seekp(ios::beg);
 
     vector<FeatureRecord> testRecords;
@@ -232,7 +236,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
 #ifdef USE_NN
         loss = TrainNN(trees[1].eval->net, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
 #elif USE_REGRESSION
-        loss = TrainRegressor(trees[1].eval->regr, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
+        loss = TrainRegressor(trees[1].eval->regr, featRecords, testRecords.data(), testRecords.size());
 #endif
 
         // 新旧モデルで対戦
@@ -240,7 +244,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
             // 新規ウェイトを黒にしてプレイ
-            if (PlayOneGame(featRecords, &trees[1], &trees[0], VERSUS_RANDOM_TURNS, 0, false) == Const::BLACK)
+            if (PlayOneGame(dummyRecords, &trees[1], &trees[0], VERSUS_RANDOM_TURNS, 0, false) == Const::BLACK)
             {
                 // 勝ったら加算
                 winCount++;
@@ -250,7 +254,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
             // 新規ウェイトを白にしてプレイ
-            if (PlayOneGame(featRecords, &trees[0], &trees[1], VERSUS_RANDOM_TURNS, 0, false) == Const::WHITE)
+            if (PlayOneGame(dummyRecords, &trees[0], &trees[1], VERSUS_RANDOM_TURNS, 0, false) == Const::WHITE)
             {
                 // 勝ったら加算
                 winCount++;
@@ -316,8 +320,8 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
     size_t topOfAddition = featRecords.size();
 
     board.Reset();
-    ReloadEval(&eval[0], board.GetBlack(), board.GetWhite(), 1);
-    ReloadEval(&eval[1], board.GetWhite(), board.GetBlack(), 0);
+    ReloadEval(&eval[0], board.GetBlack(), board.GetWhite(), OWN);
+    ReloadEval(&eval[1], board.GetWhite(), board.GetBlack(), OPP);
     while (!board.IsFinished())
     {
         //board.Draw();
@@ -343,32 +347,40 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         UpdateEval(&eval[0], posIdx, flip);
         UpdateEval(&eval[1], posIdx, flip);
 
-        // 黒用レコード設定
+        //if (board.GetTurnColor() == Const::BLACK)
+        //{
+        //黒用レコード設定
         for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
         {
-            record.featStats[featIdx] = eval[0].FeatureStates[featIdx];
+            record.featStats[OWN][featIdx] = eval[0].FeatureStates[featIdx];
+            record.featStats[OPP][featIdx] = OpponentIndex(eval[0].FeatureStates[featIdx], FeatDigits[featIdx]);
+            assert(record.featStats[OWN][featIdx] < FeatMaxIndex[featIdx]);
+            assert(record.featStats[OPP][featIdx] < FeatMaxIndex[featIdx]);
         }
         record.nbEmpty = nbEmpty;
         record.stoneDiff = 1;
-        //record.own = board.GetBlack();
-        //record.opp = board.GetWhite();
         record.color = Const::BLACK;
         // レコードを追加
         featRecords.push_back(record);
-
-        // 白用レコード設定
-        for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
+        assert(CountBits(~(board.GetBlack() | board.GetWhite())) == nbEmpty);
+        /**}
+        else
         {
-            record.featStats[featIdx] = eval[1].FeatureStates[featIdx];
-        }
-        record.nbEmpty = nbEmpty;
-        record.stoneDiff = -1;
-        //record.own = board.GetWhite();
-        // record.opp = board.GetBlack();
-        record.color = Const::WHITE;
+            // 白用レコード設定
+            for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
+            {
+                record.featStats[OWN][featIdx] = eval[1].FeatureStates[featIdx];
+                record.featStats[OPP][featIdx] = OpponentIndex(eval[1].FeatureStates[featIdx], FeatDigits[featIdx]);
+                assert(record.featStats[OWN][featIdx] < FeatMaxIndex[featIdx]);
+                assert(record.featStats[OPP][featIdx] < FeatMaxIndex[featIdx]);
+            }
+            record.nbEmpty = nbEmpty;
+            record.stoneDiff = -1;
+            record.color = Const::WHITE;
 
-        // レコードを追加
-        featRecords.push_back(record);
+            // レコードを追加
+            featRecords.push_back(record);
+        }*/
 
     } //end of loop:　while (!board.IsFinished())
 
@@ -396,13 +408,18 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
     uint32 loaded = 0;
     int cycles = 0;
     int converted;
+    float loss;
     size_t readSuccsess;
     FILE *fp = fopen(recordFileName.c_str(), "rb");
     FILE *tfp = fopen(testRecordDir.c_str(), "rb");
+    ofstream logFile;
+    logFile.open(recordLearnLogFileName, ios::app);
+    logFile.seekp(ios::beg);
 
     fread(&header, sizeof(WthorHeaderWTB), 1, fp);
     fread(&testHeader, sizeof(WthorHeaderWTB), 1, tfp);
 
+    testRecords.reserve(testHeader.nbRecords);
     for (loaded = 0; loaded < nbTest; loaded++)
     {
         readSuccsess = fread(&wthorData, sizeof(wthorData), 1, tfp);
@@ -413,7 +430,8 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
         ConverWthor2Feat(testRecords, wthorData);
     }
 
-    while (loaded < header.nbRecords && !aborted)
+    featRecords.reserve(header.nbRecords);
+    while (loaded < header.nbRecords)
     {
         featRecords.clear();
         for (converted = 0; converted < nbGameOneCycle; converted++)
@@ -432,68 +450,77 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
 #ifdef USE_NN
         TrainNN(eval->net, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
 #elif USE_REGRESSION
-        TrainRegressor(eval->regr, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
+        loss = TrainRegressor(eval->regr, featRecords, testRecords.data(), testRecords.size());
 #endif
+        logFile << "Cycle: " << cycles << "\t "
+                << "Loss: " << setprecision(6) << loss << "%" << endl;
+        logFile.flush();
         cycles++;
     }
 
+    logFile.close();
     fclose(fp);
     fclose(tfp);
 }
 
 int main()
 {
-    SelfPlay(4, 8, false);
-    /*
-    if (signal(SIGINT, sig_handler) == SIG_ERR)
-    {
-        printf("\ncan't catch SIGINT\n");
-        return 0;
-    }
+    SelfPlay(4, 6, false);
 
-    string recordDir = "./resources/record/WTH_2001-2015/";
+    /*
+    string recordDir = "./resources/record/";
     SearchTree tree;
     int startYear = 2001, endYear = 2015;
     int year;
-    int epochs = 3;
-    bool resetWeight = false;
+    int epochs = 5;
+    bool resetWeight = true;
 
-    InitTree(&tree, 4, 100, 1, 6);
+    InitTree(&tree, 4, 6, 100, 1, 6);
+    InitRegrTrain(tree.eval->regr);
 
+    /*
+    Board board;
+    uint64 black, white;
+    while (true)
+    {
+        black = 18014398509481984ULL;
+        white = 35184372088832ULL;
+        board.Draw(black, white, 0);
+        ReloadEval(tree.eval, black, white, 0);
+        tree.eval->nbEmpty = 32;
+        float val = EvalNNet(tree.eval);
+        printf("val: %f\n", val);
+    }*/
+    /*
     if (resetWeight)
     {
 #ifdef USE_NN
         InitWeight(tree.eval->net);
 #elif USE_REGRESSION
-        InitRegressor(tree.eval->regr);
+        ClearRegressorWeight(tree.eval->regr);
 #endif
     }
     for (int epoch = 0; epoch < epochs; epoch++)
     {
+        /*
         for (year = startYear; year <= endYear; year++)
         {
-            //SelfPlay(2);
-            LearnFromRecords(tree.eval, recordDir + "WTH_" + to_string(year) + ".wtb");
-            string modelDir = modelFolder + modelName + "epoch" + to_string(epoch) + "_" + to_string(year) + "/";
-            _mkdir(modelDir.c_str());
+            LearnFromRecords(tree.eval, recordDir + "WTH_2001-2015/WTH_" + to_string(year) + ".wtb");
+        }/
+        LearnFromRecords(tree.eval, recordDir + "GGS/GGS_145-154.wtb");
+
+        string modelDir = modelFolder + modelName + "epoch" + to_string(epoch) + "/";
+        _mkdir(modelDir.c_str());
 #ifdef USE_NN
-            SaveNets(tree.eval->net, modelDir.c_str());
+        SaveNets(tree.eval->net, modelDir.c_str());
 #elif USE_REGRESSION
-            SaveRegressor(tree.eval->regr, modelDir.c_str());
+        SaveRegressor(tree.eval->regr, modelDir.c_str());
 #endif
-            if (aborted)
-            {
-                break;
-            }
-        }
-        if (aborted)
-        {
-            break;
-        }
+
 #ifdef USE_NN
         DecreaseNNlr(tree.eval->net);
 #elif USE_REGRESSION
-        DecreaseRegrBeta(tree.eval->regr);
+        DecreaseRegrBeta(tree.eval->regr, 0.75f);
 #endif
     }
 
@@ -513,6 +540,5 @@ int main()
 #endif
     game.Start();
 
-    DeleteTree(&tree);
-    */
+    DeleteTree(&tree);*/
 }

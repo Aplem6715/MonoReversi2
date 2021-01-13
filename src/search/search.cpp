@@ -15,11 +15,7 @@ void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
     tree->orderDepth = orderDepth;
     tree->useHash = useHash;
     tree->hashDepth = hashDepth;
-#ifdef USE_NN
-    tree->eval->net = (NNet *)malloc(sizeof(NNet) * NB_PHASE);
-#elif USE_REGRESSION
-    tree->eval->regr = (Regressor *)malloc(sizeof(Regressor) * NB_PHASE);
-#endif
+
     InitEval(tree->eval);
 
     if (useHash)
@@ -37,6 +33,7 @@ void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
 
 void DeleteTree(SearchTree *tree)
 {
+    DeleteEval(tree->eval);
     if (tree->useHash)
     {
         FreeHashTable(tree->table);
@@ -84,7 +81,7 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
     tree->nodeCount = 0;
 
     // 評価パターンの初期化
-    ReloadEval(tree->eval, own, opp, 1);
+    ReloadEval(tree->eval, own, opp, OWN);
 
     if (tree->eval->nbEmpty < tree->endDepth)
     {

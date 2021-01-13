@@ -8,12 +8,17 @@
 #include "../learning/regression.h"
 #endif
 
-#define NB_PHASE 15
-#define NB_PUT_1PHASE 4
-#define PHASE(nbEmpty) (nbEmpty / NB_PUT_1PHASE)
-
-// パターン種類
-#define NB_FEATURE_TYPES (11)
+#define FEAT_TYPE_LINE2 0
+#define FEAT_TYPE_LINE3 1
+#define FEAT_TYPE_LINE4 2
+#define FEAT_TYPE_DIAG4 3
+#define FEAT_TYPE_DIAG5 4
+#define FEAT_TYPE_DIAG6 5
+#define FEAT_TYPE_DIAG7 6
+#define FEAT_TYPE_DIAG8 7
+#define FEAT_TYPE_EDGEX 8
+#define FEAT_TYPE_CORNR 9
+#define FEAT_TYPE_BMRAN 10
 
 // 3^9 x 4 = 78,732
 #define FEAT_LINE2_1 0 //3^9
@@ -61,31 +66,26 @@
 #define FEAT_DIAG8_1 28
 #define FEAT_DIAG8_2 29
 
-// 3^11 x 4 = 708,588
+// 3^10 x 4 = 708,588
 #define FEAT_EDGEX_1 30
 #define FEAT_EDGEX_2 31
 #define FEAT_EDGEX_3 32
 #define FEAT_EDGEX_4 33
-#define FEAT_EDGEX_5 34
-#define FEAT_EDGEX_6 35
-#define FEAT_EDGEX_7 36
-#define FEAT_EDGEX_8 37
 
-// 3^10 x 4 = 236,196
-#define FEAT_CORNR_1 38
-#define FEAT_CORNR_2 39
-#define FEAT_CORNR_3 40
-#define FEAT_CORNR_4 41
+// 3^9 x 4 = 236,196
+#define FEAT_CORNR_1 34
+#define FEAT_CORNR_2 35
+#define FEAT_CORNR_3 36
+#define FEAT_CORNR_4 37
 
-// 3^11 x 4 = 708,588
-#define FEAT_BMRAN_1 42
-#define FEAT_BMRAN_2 43
-#define FEAT_BMRAN_3 44
-#define FEAT_BMRAN_4 45
-
-#define FEAT_NUM 46
+// 3^8 x 4 = 708,588
+#define FEAT_BMRAN_1 38
+#define FEAT_BMRAN_2 39
+#define FEAT_BMRAN_3 40
+#define FEAT_BMRAN_4 41
 
 extern const uint32 FeatMaxIndex[];
+extern const uint8 FeatDigits[];
 
 const float VALUE_TABLE[] = {
     120, -20, 20, 5, 5, 20, -20, 120,   //
@@ -101,7 +101,7 @@ const float VALUE_TABLE[] = {
 typedef struct Evaluator
 {
     unsigned short FeatureStates[FEAT_NUM];
-    uint8 isOwn;
+    uint8 player;
     uint8 nbEmpty;
 #ifdef USE_NN
     NNet *net;
@@ -111,8 +111,11 @@ typedef struct Evaluator
 
 } Evaluator;
 
+uint16 OpponentIndex(uint16 idx, uint8 digit);
+
 void InitEval(Evaluator *eval);
-void ReloadEval(Evaluator *eval, uint64 own, uint64 opp, uint8 isOwnTurn);
+void DeleteEval(Evaluator *eval);
+void ReloadEval(Evaluator *eval, uint64 own, uint64 opp, uint8 player);
 void UpdateEval(Evaluator *eval, uint8 pos, uint64 flip);
 void UndoEval(Evaluator *eval, uint8 pos, uint64 flip);
 void UpdateEvalPass(Evaluator *eval);

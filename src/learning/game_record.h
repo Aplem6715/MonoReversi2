@@ -2,15 +2,15 @@
 #define GAME_RECORD_DEFINED
 
 #include "../const.h"
+#include "../ai/ai_const.h"
 #include <vector>
 using namespace std;
 
-#define FEAT_NUM 46
 #define RESULT_UNSETTLED -100
 
 typedef struct FeatureRecord
 {
-    uint16 featStats[FEAT_NUM];
+    uint16 featStats[2][FEAT_NUM];
     uint8 nbEmpty;
     uint8 color;
     signed char stoneDiff;
