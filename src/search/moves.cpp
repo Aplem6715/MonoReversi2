@@ -35,11 +35,11 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, float al
     {
         move->score = (1 << 30);
     }
-    else if (move->posIdx == hashData->bestMove)
+    else if (hashData && move->posIdx == hashData->bestMove)
     {
         move->score = (1 << 29);
     }
-    else if (move->posIdx == hashData->secondMove)
+    else if (hashData && move->posIdx == hashData->secondMove)
     {
         move->score = (1 << 28);
     }
@@ -53,7 +53,9 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, float al
         uint64 next_mob = CalcMobility(opp ^ move->flip, own ^ move->flip ^ posBit);
         move->score += (-(CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 12);
 
-        move->score += ((int)(-AlphaBeta(tree, opp ^ move->flip, own ^ move->flip ^ posBit, -Const::MAX_VALUE, -alpha, 1, 0)) * (1 << 15));
+        UpdateEval(tree->eval, move->posIdx, move->flip);
+        move->score += ((int)(-AlphaBeta(tree, opp ^ move->flip, own ^ move->flip ^ posBit, -Const::MAX_VALUE, -alpha, 0, 0)) * (1 << 15));
+        UndoEval(tree->eval, move->posIdx, move->flip);
     }
 }
 

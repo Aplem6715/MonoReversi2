@@ -14,6 +14,8 @@
 #include <iostream>
 #include <iomanip>
 #include <direct.h>
+#include <chrono>
+#include <thread>
 
 using namespace std;
 
@@ -21,12 +23,14 @@ using namespace std;
 static const uint8 TRAIN_RANDOM_TURNS = 4;
 // ランダム行動割合（１試合に1回くらい）
 static const double TRAIN_RANDOM_RATIO = 1.0 / 60.0;
+// 次善手割合（１試合５回くらい
+static const double TRAIN_SECOND_RATIO = 5.0 / 60.0;
 
 // 学習結果確認の対戦回数（１色で50試合＝全体で100）
 static const int TRAIN_NB_VERSUS = 50;
-static const uint8 VERSUS_RANDOM_TURNS = 8;
+static const uint8 VERSUS_RANDOM_TURNS = 10;
 
-static const int nbTrainCycles = 1000;
+static const int nbTrainCycles = 4096;
 #ifdef USE_NN
 static const string modelFolder = "resources/model/";
 static const string modelName = "model_";
@@ -34,7 +38,7 @@ static const int nbGameOneCycle = 128; //1024;
 #elif USE_REGRESSION
 static const string modelFolder = "resources/regressor/";
 static const string modelName = "regr_";
-static const int nbGameOneCycle = 512; //1024;
+static const int nbGameOneCycle = 256; //1024;
 #endif
 static const string selfPlayLogFileName = "log/self_play.log";
 static const string recordLearnLogFileName = "log/record_learn.log";
@@ -47,10 +51,11 @@ static uniform_real_distribution<double> rnd_prob(0.0, 1.0);
 
 void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor);
 
-uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, SearchTree *treeWhite, uint8 randomTurns, double randMoveRatio, bool useRecording)
+uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, SearchTree *treeWhite, uint8 randomTurns, double randMoveRatio, double secondMoveRatio, bool useRecording)
 {
     uint64 input, flip;
     int nbEmpty = 60;
+    uint8 useSecondMove;
     Board board;
     Evaluator eval[2];
     FeatureRecord record;
@@ -65,6 +70,8 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
     while (!board.IsFinished())
     {
         //board.Draw();
+        //_sleep(750);
+
         // 置ける場所がなかったらスキップ
         if (board.GetMobility() == 0)
         {
@@ -82,18 +89,22 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
         {
             // ランダム着手位置
             input = board.GetRandomPosMoveable();
+            //printf("Random!!!\n");
         }
         else
         {
+            useSecondMove = rnd_prob(mt) < secondMoveRatio ? 1 : 0;
             if (board.GetTurnColor() == Const::BLACK)
             {
                 // AIが着手位置を決める
-                input = Search(treeBlack, board.GetOwn(), board.GetOpp());
+                input = Search(treeBlack, board.GetOwn(), board.GetOpp(), useSecondMove);
+                //printf("\n%f\n", treeBlack->score);
             }
             else
             {
                 // AIが着手位置を決める
-                input = Search(treeWhite, board.GetOwn(), board.GetOpp());
+                input = Search(treeWhite, board.GetOwn(), board.GetOpp(), useSecondMove);
+                //printf("\n%f\n", treeWhite->score);
             }
         }
 
@@ -113,9 +124,6 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
             // ランダムターン中の記録はなし
             if (60 - nbEmpty > randomTurns)
             {
-                //if (board.GetTurnColor() == Const::BLACK)
-                //{
-                // レコード設定
                 for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
                 {
                     record.featStats[OWN][featIdx] = eval[0].FeatureStates[featIdx];
@@ -126,22 +134,6 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
                 record.color = Const::BLACK;
                 // レコードを追加
                 featRecords.push_back(record);
-                /*}
-                else
-                {
-                    // レコード設定
-                    for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
-                    {
-                        record.featStats[OWN][featIdx] = eval[1].FeatureStates[featIdx];
-                        record.featStats[OPP][featIdx] = OpponentIndex(eval[1].FeatureStates[featIdx], FeatDigits[featIdx]);
-                    }
-                    record.nbEmpty = nbEmpty;
-                    record.stoneDiff = -1;
-                    record.color = Const::WHITE;
-
-                    // レコードを追加
-                    featRecords.push_back(record);
-                }*/
             }
         }
 
@@ -169,8 +161,8 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
 {
 
     SearchTree trees[2];
-    InitTree(&trees[0], midDepth, endDepth, 100, 1, 6); // 旧
-    InitTree(&trees[1], midDepth, endDepth, 100, 1, 6); // 新
+    InitTree(&trees[0], midDepth, endDepth, 3, 1, 3); // 旧
+    InitTree(&trees[1], midDepth, endDepth, 3, 1, 3); // 新
 
     InitRegrTrain(trees[0].eval->regr);
     InitRegrTrain(trees[1].eval->regr);
@@ -229,7 +221,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         for (int gameCnt = 0; gameCnt < nbGameOneCycle; gameCnt++)
         {
             cout << "Cycle: " << nbCycles << "\tPlaying: " << gameCnt << "\r";
-            PlayOneGame(featRecords, &trees[0], &trees[0], TRAIN_RANDOM_TURNS, TRAIN_RANDOM_RATIO, true);
+            PlayOneGame(featRecords, &trees[0], &trees[0], TRAIN_RANDOM_TURNS, TRAIN_RANDOM_RATIO, TRAIN_SECOND_RATIO, true);
         }
 
         // 試合結果から学習
@@ -244,7 +236,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
             // 新規ウェイトを黒にしてプレイ
-            if (PlayOneGame(dummyRecords, &trees[1], &trees[0], VERSUS_RANDOM_TURNS, 0, false) == Const::BLACK)
+            if (PlayOneGame(dummyRecords, &trees[1], &trees[0], VERSUS_RANDOM_TURNS, 0, 0, false) == Const::BLACK)
             {
                 // 勝ったら加算
                 winCount++;
@@ -254,7 +246,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
             // 新規ウェイトを白にしてプレイ
-            if (PlayOneGame(dummyRecords, &trees[0], &trees[1], VERSUS_RANDOM_TURNS, 0, false) == Const::WHITE)
+            if (PlayOneGame(dummyRecords, &trees[0], &trees[1], VERSUS_RANDOM_TURNS, 0, 0, false) == Const::WHITE)
             {
                 // 勝ったら加算
                 winCount++;
@@ -271,7 +263,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
              << "Loss: " << setprecision(6) << loss << "%\t";
 
         // 対戦結果に応じてモデルを更新
-        if (winRatio >= 0.65)
+        if (winRatio >= 0.60)
         {
             string modelDir = modelFolder + modelName + to_string(nbCycles) + "_Loss" + to_string((int)(loss * 100)) + "/";
             _mkdir(modelDir.c_str());
@@ -465,7 +457,7 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
 
 int main()
 {
-    SelfPlay(4, 6, false);
+    SelfPlay(4, 6, true);
 
     /*
     string recordDir = "./resources/record/";

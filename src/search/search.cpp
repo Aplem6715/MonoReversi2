@@ -69,10 +69,10 @@ float WinJudge(const uint64 own, const uint64 opp)
     return (CountBits(own) - CountBits(opp)) * 10000.0f;
 }
 
-uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
+uint64 Search(SearchTree *tree, uint64 own, uint64 opp, uint8 choiceSecond)
 {
     float score, maxScore = -Const::MAX_VALUE;
-    uint64 bestPos, pos, mob, rev;
+    uint64 bestPos = 3, pos = 3, secondPos = 3, mob, rev;
     uint8 posIdx;
     SearchFunc_t SearchFunc;
 
@@ -111,6 +111,7 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
     }
 
     mob = CalcMobility(own, opp);
+    assert(mob != 0);
     while (mob != 0)
     {
         pos = GetLSB(mob);
@@ -127,6 +128,7 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
         if (score > maxScore)
         {
             maxScore = score;
+            secondPos = bestPos;
             bestPos = pos;
         }
     }
@@ -136,6 +138,10 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp)
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000.0);
     tree->score = maxScore;
 
+    if (choiceSecond == 1 && secondPos != 3)
+    {
+        return secondPos;
+    }
     return bestPos;
 }
 
@@ -283,6 +289,7 @@ float AlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float bet
     {
         if (depth >= tree->orderDepth)
         {
+            EvaluateMoveList(tree, &moveList, own, opp, alpha, hashData);
             SortMoveList(&moveList);
             NextSearch = AlphaBeta;
         }
@@ -473,6 +480,7 @@ float AlphaBetaEnd(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
     {
         if (depth >= tree->orderDepth)
         {
+            EvaluateMoveList(tree, &moveList, own, opp, alpha, hashData);
             SortMoveList(&moveList);
             NextSearch = AlphaBetaEnd;
         }

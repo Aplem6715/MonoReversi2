@@ -140,7 +140,7 @@ static const uint8 FeatDigits[] = {
 
 //static const uint16 DEBUG_TARGET_FEAT = 3;
 static const char modelFolder[] = "resources/model/model_2003-epoch1/";
-static const char regrFolder[] = "resources/regressor/regr_epoch4/";
+static const char regrFolder[] = "resources/regressor/best/";
 
 void InitEval(Evaluator *eval)
 {
@@ -197,7 +197,7 @@ void ReloadEval(Evaluator *eval, uint64 own, uint64 opp, uint8 player)
         // 関連するすべての特徴のインデックスを更新
         for (i = 0; i < nbFeat; i++)
         {
-            // 0(empty) -> 1(opp)
+            // 0(empty) -> 2(opp)
             eval->FeatureStates[pos2f->feature[i].feat] += 2 * pos2f->feature[i].idx;
         }
     }
