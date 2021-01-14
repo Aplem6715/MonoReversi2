@@ -1,7 +1,10 @@
 
 build/*
-resources/*
-!resources/bench
+/resources/*
+!/resources/regressor
+/resources/regressor/*
+!/resources/regressor/best/
+!/resources/bench
 tool/GGFToWThor/
 
 # external lib

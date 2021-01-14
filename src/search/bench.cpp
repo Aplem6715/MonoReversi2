@@ -77,7 +77,7 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
         {
             board.Skip();
         }
-        pos = Search(&tree, board.GetOwn(), board.GetOpp());
+        pos = Search(&tree, board.GetOwn(), board.GetOpp(), 0);
         board.Put(pos);
         board.Draw();
         CalcPosAscii(CalcPosIndex(pos), xAscii, y);
