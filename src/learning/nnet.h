@@ -2,10 +2,10 @@
 #define NNET_DEFINED
 
 #include "game_record.h"
+#include "../ai/ai_const.h"
 
-#define FEAT_NB_COMBINATION_NN 159246
 #define VALUE_HIDDEN_UNITS1 32
-#define VALUE_HIDDEN_UNITS2 16
+#define VALUE_HIDDEN_UNITS2 1
 
 #define NB_LAYERS 3
 #define NB_PHASE 15
@@ -25,7 +25,7 @@ typedef struct UnitState
 
 typedef struct NNet
 {
-    float c1[FEAT_NB_COMBINATION_NN + 1][VALUE_HIDDEN_UNITS1];
+    float c1[NB_FEAT_COMB + 1][VALUE_HIDDEN_UNITS1];
     float c2[VALUE_HIDDEN_UNITS1 + 1][VALUE_HIDDEN_UNITS2];
     float c3[VALUE_HIDDEN_UNITS2 + 1][1];
 
@@ -34,7 +34,7 @@ typedef struct NNet
     float out3[1];
 
 #ifdef LEARN_MODE
-    float dw1[FEAT_NB_COMBINATION_NN + 1][VALUE_HIDDEN_UNITS1];
+    float dw1[NB_FEAT_COMB + 1][VALUE_HIDDEN_UNITS1];
     float dw2[VALUE_HIDDEN_UNITS1 + 1][VALUE_HIDDEN_UNITS2];
     float dw3[VALUE_HIDDEN_UNITS2 + 1][1];
 

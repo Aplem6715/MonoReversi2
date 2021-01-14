@@ -14,7 +14,7 @@
 #define WEIGHT_SEED 42
 #define HE_COEFF 2.0f
 
-static const float lrInit = 0.001f;
+static const float lrInit = 0.005f;
 
 float Uniform()
 {
@@ -83,7 +83,7 @@ float forward(NNet *net, const uint16 features[FEAT_NUM], uint8 isTrain)
     {
         sum = 0;
         shift = 0;
-        bias = net->c1[FEAT_NB_COMBINATION_NN][unitIdx];
+        bias = net->c1[NB_FEAT_COMB][unitIdx];
         for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
         {
             sum += net->c1[shift + features[featIdx]][unitIdx] * 1;
@@ -156,7 +156,7 @@ void InitWeight(NNet net[NB_PHASE])
         net[phase].lr = lrInit;
         for (j = 0; j < VALUE_HIDDEN_UNITS1; j++)
         {
-            for (i = 0; i < FEAT_NB_COMBINATION_NN; i++)
+            for (i = 0; i < NB_FEAT_COMB; i++)
             {
                 net[phase].c1[i][j] = rand_normal(0, sqrtf(HE_COEFF / FEAT_NUM));
                 net[phase].dw1[i][j] = 0;
@@ -249,7 +249,7 @@ void backward(NNet *net, const uint16 features[FEAT_NUM], float y, float t)
         targetStat = &net->state1[j];
         targetStat->delta = d_act(targetStat->sumIn) * delta_w_sum;
         // バイアス
-        net->dw1[FEAT_NB_COMBINATION_NN][j] += targetStat->delta;
+        net->dw1[NB_FEAT_COMB][j] += targetStat->delta;
         for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
         {
             i = shift + features[featIdx];
@@ -265,14 +265,14 @@ void update_weights(NNet *net, int batchSize)
     int i, j;
     for (j = 0; j < VALUE_HIDDEN_UNITS1; j++)
     {
-        for (i = 0; i < FEAT_NB_COMBINATION_NN; i++)
+        for (i = 0; i < NB_FEAT_COMB; i++)
         {
             net->c1[i][j] += net->lr * (net->dw1[i][j] / (float)batchSize);
             net->dw1[i][j] = 0;
         }
         // バイアス
-        net->c1[FEAT_NB_COMBINATION_NN][j] += net->lr * (net->dw1[FEAT_NB_COMBINATION_NN][j] / (float)batchSize);
-        net->dw1[FEAT_NB_COMBINATION_NN][j] = 0;
+        net->c1[NB_FEAT_COMB][j] += net->lr * (net->dw1[NB_FEAT_COMB][j] / (float)batchSize);
+        net->dw1[NB_FEAT_COMB][j] = 0;
     }
     for (j = 0; j < VALUE_HIDDEN_UNITS2; j++)
     {
@@ -398,7 +398,7 @@ void SaveNets(NNet net[NB_PHASE], const char *file)
         }
 
         writed = 0;
-        writed += fwrite(&net[phase].c1, sizeof(float), (FEAT_NB_COMBINATION_NN + 1) * VALUE_HIDDEN_UNITS1, fp);
+        writed += fwrite(&net[phase].c1, sizeof(float), (NB_FEAT_COMB + 1) * VALUE_HIDDEN_UNITS1, fp);
         writed += fwrite(&net[phase].c2, sizeof(float), (VALUE_HIDDEN_UNITS1 + 1) * VALUE_HIDDEN_UNITS2, fp);
         writed += fwrite(&net[phase].c3, sizeof(float), (VALUE_HIDDEN_UNITS2 + 1), fp);
         if (writed < 3)
@@ -432,7 +432,7 @@ void LoadNets(NNet net[NB_PHASE], const char *file)
         }
 
         readed = 0;
-        readed += fread(&net[phase].c1, sizeof(float), (FEAT_NB_COMBINATION_NN + 1) * VALUE_HIDDEN_UNITS1, fp);
+        readed += fread(&net[phase].c1, sizeof(float), (NB_FEAT_COMB + 1) * VALUE_HIDDEN_UNITS1, fp);
         readed += fread(&net[phase].c2, sizeof(float), (VALUE_HIDDEN_UNITS1 + 1) * VALUE_HIDDEN_UNITS2, fp);
         readed += fread(&net[phase].c3, sizeof(float), (VALUE_HIDDEN_UNITS2 + 1), fp);
         if (readed < 3)

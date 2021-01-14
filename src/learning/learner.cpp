@@ -34,7 +34,7 @@ static const int nbTrainCycles = 4096;
 #ifdef USE_NN
 static const string modelFolder = "resources/model/";
 static const string modelName = "model_";
-static const int nbGameOneCycle = 128; //1024;
+static const int nbGameOneCycle = 512; //1024;
 #elif USE_REGRESSION
 static const string modelFolder = "resources/regressor/";
 static const string modelName = "regr_";
@@ -161,11 +161,14 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
 {
 
     SearchTree trees[2];
-    InitTree(&trees[0], midDepth, endDepth, 3, 1, 3); // 旧
-    InitTree(&trees[1], midDepth, endDepth, 3, 1, 3); // 新
+    InitTree(&trees[0], midDepth, endDepth, 8, 1, 3); // 旧
+    InitTree(&trees[1], midDepth, endDepth, 8, 1, 3); // 新
 
+#ifdef USE_NN
+#elif USE_REGRESSION
     InitRegrTrain(trees[0].eval->regr);
     InitRegrTrain(trees[1].eval->regr);
+#endif
 
     if (resetWeight)
     {
@@ -440,7 +443,7 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
         cout << "Cycle: " << cycles << "  Loaded: " << loaded << endl;
         // 試合結果から学習
 #ifdef USE_NN
-        TrainNN(eval->net, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
+        loss = TrainNN(eval->net, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
 #elif USE_REGRESSION
         loss = TrainRegressor(eval->regr, featRecords, testRecords.data(), testRecords.size());
 #endif
@@ -457,8 +460,8 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
 
 int main()
 {
-    SelfPlay(4, 6, true);
 
+    SelfPlay(4, 8, false);
     /*
     string recordDir = "./resources/record/";
     SearchTree tree;
@@ -468,7 +471,9 @@ int main()
     bool resetWeight = true;
 
     InitTree(&tree, 4, 6, 100, 1, 6);
+#if USE_REGRESSION
     InitRegrTrain(tree.eval->regr);
+#endif
 
     /*
     Board board;
@@ -494,11 +499,13 @@ int main()
     }
     for (int epoch = 0; epoch < epochs; epoch++)
     {
-        /*
+        */
+    /*
         for (year = startYear; year <= endYear; year++)
         {
             LearnFromRecords(tree.eval, recordDir + "WTH_2001-2015/WTH_" + to_string(year) + ".wtb");
-        }/
+        }*/
+    /*
         LearnFromRecords(tree.eval, recordDir + "GGS/GGS_145-154.wtb");
 
         string modelDir = modelFolder + modelName + "epoch" + to_string(epoch) + "/";
