@@ -1,8 +1,7 @@
 
 build/*
-resources/model/*
-resources/regressor/*
-resources/record/*
+resources/*
+!resources/bench
 tool/GGFToWThor/
 
 # external lib
