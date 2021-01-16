@@ -23,11 +23,13 @@ OBJS=\
 	$(OUTDIR)\main.obj\
 	$(AI_OUTDIR)\eval.obj\
 	$(AI_OUTDIR)\ai_const.obj\
-	$(LEARN_OUTDIR)\nnet.obj\
-	$(LEARN_OUTDIR)\regression.obj\
+	$(AI_OUTDIR)\nnet.obj\
+	$(AI_OUTDIR)\regression.obj\
 	$(SEARCH_OUTDIR)\bench.obj\
 	$(SEARCH_OUTDIR)\hash.obj\
 	$(SEARCH_OUTDIR)\moves.obj\
+	$(SEARCH_OUTDIR)\mid.obj\
+	$(SEARCH_OUTDIR)\end.obj\
 	$(SEARCH_OUTDIR)\search.obj
 
 
@@ -38,13 +40,14 @@ LEARN_OBJS=\
 	$(OUTDIR)\board.obj\
 	$(SEARCH_OUTDIR)\hash.obj\
 	$(SEARCH_OUTDIR)\moves.obj\
+	$(SEARCH_OUTDIR)\mid.obj\
+	$(SEARCH_OUTDIR)\end.obj\
 	$(SEARCH_OUTDIR)\search.obj\
 	$(AI_OUTDIR)\eval.obj\
 	$(AI_OUTDIR)\ai_const.obj\
+	$(AI_OUTDIR)\nnet.obj\
+	$(AI_OUTDIR)\regression.obj\
 	$(LEARN_OUTDIR)\game_record.obj\
-	$(LEARN_OUTDIR)\nnet.obj\
-	$(LEARN_OUTDIR)\regression.obj\
-	$(LEARN_OUTDIR)\learn_eval.obj\
 	$(LEARN_OUTDIR)\learner.obj
 
 	

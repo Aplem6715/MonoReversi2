@@ -5,7 +5,7 @@
 #include "../bit_operation.h"
 #include "../search/search.h"
 #include "../game.h"
-#include "nnet.h"
+#include "../ai/nnet.h"
 #include <signal.h>
 #include <string>
 #include <assert.h>

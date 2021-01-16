@@ -1,6 +1,7 @@
 ﻿#include <stdio.h>
 #include <assert.h>
 #include "moves.h"
+#include "mid.h"
 #include "search.h"
 #include "../bit_operation.h"
 
@@ -54,7 +55,7 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, float al
         move->score += (-(CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 12);
 
         UpdateEval(tree->eval, move->posIdx, move->flip);
-        move->score += ((int)(-AlphaBeta(tree, opp ^ move->flip, own ^ move->flip ^ posBit, -Const::MAX_VALUE, -alpha, 0, 0)) * (1 << 15));
+        move->score += ((int)(-MidAlphaBeta(tree, opp ^ move->flip, own ^ move->flip ^ posBit, -Const::MAX_VALUE, -alpha, 0, 0)) * (1 << 15));
         UndoEval(tree->eval, move->posIdx, move->flip);
     }
 }
