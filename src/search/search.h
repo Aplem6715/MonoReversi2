@@ -29,7 +29,7 @@ typedef float (*SearchFunc_t)(SearchTree *tree, uint64 own, uint64 opp, float al
 
 void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth);
 void DeleteTree(SearchTree *tree);
-void ConfigTree(SearchTree *tree, unsigned char depth);
+void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth);
 void ResetTree(SearchTree *tree);
 uint64 Search(SearchTree *tree, uint64 own, uint64 opp, uint8 choiceSecond);
 void PVS(SearchTree *tree);

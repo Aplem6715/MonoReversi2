@@ -1,7 +1,7 @@
 ﻿
 #define _CRT_SECURE_NO_WARNINGS
 #include "nnet.h"
-#include "../ai/eval.h"
+#include "eval.h"
 
 #define _USE_MATH_DEFINES
 #include <string.h>

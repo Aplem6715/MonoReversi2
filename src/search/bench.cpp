@@ -62,7 +62,8 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
 
     for (uint8 move : moves)
     {
-        board.Put(CalcPosBit(move));
+        pos = CalcPosBit(move);
+        board.Put(pos);
     }
 
     board.Draw();
@@ -123,7 +124,7 @@ void BenchSearching(vector<unsigned char> depths, unsigned char useHash, unsigne
     logfile << "探索深度,思考時間,探索ノード数,探索速度,ハッシュ記録数,ハッシュヒット数,ハッシュ衝突数,推定CPUスコア,着手位置\n";
     LoadGameRecords(SEARCH_BENCH_FILE, records);
 
-    InitTree(&tree, 4, 6, orderDepth, useHash, hashDepth);
+    InitTree(&tree, 4, 4, orderDepth, useHash, hashDepth);
     for (vector<uint8> moves : records)
     {
         for (uint8 move : moves)
@@ -136,7 +137,7 @@ void BenchSearching(vector<unsigned char> depths, unsigned char useHash, unsigne
         logfile << "\n";
         for (unsigned char depth : depths)
         {
-            ConfigTree(&tree, depth);
+            ConfigTree(&tree, depth, depth);
             Bench1Game(tree, moves, 2, logfile);
         }
         logfile << "\n";

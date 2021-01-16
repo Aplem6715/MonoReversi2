@@ -6,6 +6,7 @@
 #include "../search/search.h"
 #include "../game.h"
 #include "../ai/nnet.h"
+#include "../ai/regression.h"
 #include <signal.h>
 #include <string>
 #include <assert.h>

@@ -154,6 +154,6 @@ uint64 CalcPosBit(unsigned char posIdx)
 
 void CalcPosAscii(unsigned char posIdx, char &x, int &y)
 {
-    x = 'A' + (8 - (posIdx % 8));
+    x = 'H' - posIdx % 8;
     y = 8 - (posIdx / 8);
 }

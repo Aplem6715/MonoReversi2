@@ -46,9 +46,10 @@ void DeleteTree(SearchTree *tree)
 #endif
 }
 
-void ConfigTree(SearchTree *tree, unsigned char depth)
+void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth)
 {
-    tree->depth = depth;
+    tree->midDepth = midDepth;
+    tree->endDepth = endDepth;
 }
 
 void ResetTree(SearchTree *tree)
