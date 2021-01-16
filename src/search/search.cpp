@@ -1,12 +1,10 @@
 ﻿
-#include "search.h"
-#include "../bit_operation.h"
 #include "hash.h"
 #include "moves.h"
-#include "../learning/nnet.h"
+#include "search.h"
+#include "../ai/nnet.h"
+#include "../bit_operation.h"
 #include <assert.h>
-
-#include "../learning/learn_eval.h"
 
 void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth)
 {

@@ -1,8 +1,8 @@
 ﻿#ifndef NNET_DEFINED
 #define NNET_DEFINED
 
-#include "game_record.h"
-#include "../ai/ai_const.h"
+#include "../learning/game_record.h"
+#include "ai_const.h"
 
 #define VALUE_HIDDEN_UNITS1 32
 #define VALUE_HIDDEN_UNITS2 1

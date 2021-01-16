@@ -6,6 +6,8 @@ typedef unsigned int uint32;
 typedef unsigned short uint16;
 typedef unsigned char uint8;
 
+#define MAX_MOVES 32
+
 struct Const
 {
     static const uint8 WHITE;
