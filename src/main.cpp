@@ -8,8 +8,8 @@ int main()
 {
     srand((unsigned int)time(NULL));
     InitHash();
-    //Game game = Game(PlayerEnum::HUMAN, PlayerEnum::AI);
-    Game game = Game(PlayerEnum::AI, PlayerEnum::HUMAN);
+    //Game game = Game(PlayerEnum::HUMAN, PlayerEnum::AI, 8, 10);
+    Game game = Game(PlayerEnum::AI, PlayerEnum::HUMAN, 8, 10);
     game.Start();
 
     //std::vector<unsigned char> depths = {4, 6, 8, 10};

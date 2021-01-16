@@ -23,7 +23,7 @@ private:
     std::vector<uint8> moves;
 
 public:
-    Game(PlayerEnum black, PlayerEnum white);
+    Game(PlayerEnum black, PlayerEnum white, int mid, int end);
     ~Game();
     uint64 Game::WaitPosAI(uint8 color);
     uint64 Game::WaitPos(uint8 color);
