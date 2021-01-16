@@ -1,7 +1,7 @@
 ﻿
 #define _CRT_SECURE_NO_WARNINGS
 #include "regression.h"
-#include "../ai/eval.h"
+#include "eval.h"
 
 #include <stdlib.h>
 #include <stdio.h>

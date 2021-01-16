@@ -3,9 +3,9 @@
 
 #include "../const.h"
 #ifdef USE_NN
-#include "../learning/nnet.h"
+#include "../ai/nnet.h"
 #elif USE_REGRESSION
-#include "../learning/regression.h"
+#include "../ai/regression.h"
 #endif
 
 #define FEAT_TYPE_LINE2 0

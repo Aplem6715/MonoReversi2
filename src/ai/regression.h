@@ -1,8 +1,8 @@
 ﻿#ifndef REGRESSION_DEFINED
 #define REGRESSION_DEFINED
 
-#include "game_record.h"
-#include "../ai/ai_const.h"
+#include "../learning/game_record.h"
+#include "ai_const.h"
 
 // 連結EDGE分-4
 

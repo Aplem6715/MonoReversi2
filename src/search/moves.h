@@ -1,8 +1,8 @@
 ﻿#ifndef MOVES_DEFINED
 #define MOVES_DEFINED
 
-#include "s_const.h"
 #include "hash.h"
+#include "../const.h"
 
 typedef struct Move
 {

@@ -22,7 +22,7 @@ private:
     int nbPlayed;
 
 public:
-    Board(/* args */);
+    Board();
     ~Board();
 
     static void Draw(uint64 black, uint64 white, uint64 mobility);
