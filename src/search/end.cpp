@@ -87,6 +87,7 @@ float EndAlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, fl
                 // 上限突破したら
                 if (score >= beta)
                 {
+                    tree->nbCut++;
                     // 探索終了（カット）
                     break;
                 }
@@ -185,6 +186,7 @@ float EndAlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
                 // 上限突破したら
                 if (score >= beta)
                 {
+                    tree->nbCut++;
                     // 探索終了（カット）
                     break;
                 }

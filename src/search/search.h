@@ -12,6 +12,7 @@ typedef struct SearchTree
     HashTable *table;
     Evaluator eval[1];
     size_t nodeCount;
+    size_t nbCut;
     unsigned char depth;
     unsigned char midDepth;
     unsigned char endDepth;

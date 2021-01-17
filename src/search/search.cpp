@@ -69,6 +69,7 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp, uint8 choiceSecond)
     std::chrono::system_clock::time_point start, end;
     start = std::chrono::system_clock::now();
     tree->nodeCount = 0;
+    tree->nbCut = 0;
 
     // 評価パターンの初期化
     ReloadEval(tree->eval, own, opp, OWN);
