@@ -296,7 +296,7 @@ float MidAlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
         if (depth >= tree->orderDepth)
         {
             EvaluateMoveList(tree, &moveList, own, opp, hashData);
-            SortMoveList(&moveList);
+            //SortMoveList(&moveList);
             NextSearch = MidAlphaBeta;
         }
         else
@@ -306,7 +306,8 @@ float MidAlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
         maxScore = -Const::MAX_VALUE;
         lower = alpha;
         // 打つ手がある時, 良い手から並べ替えつつループ
-        for (move = moveList.moves->next; move != NULL; move = move->next)
+        //for (move = moveList.moves->next; move != NULL; move = move->next)
+        for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
         {
             // 着手位置・反転位置を取得
             pos = CalcPosBit(move->posIdx);

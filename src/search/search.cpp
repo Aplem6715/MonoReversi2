@@ -76,6 +76,7 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp, uint8 choiceSecond)
 
     if (tree->eval->nbEmpty < tree->endDepth)
     {
+        tree->isEndSearch = 1;
         tree->depth = tree->eval->nbEmpty;
         // オーダリングが不要な探索では探索関数を変える
         if (tree->depth > tree->orderDepth)
@@ -89,6 +90,7 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp, uint8 choiceSecond)
     }
     else
     {
+        tree->isEndSearch = 0;
         tree->depth = tree->midDepth;
         // オーダリングが不要な探索では探索関数を変える
         if (tree->depth > tree->orderDepth)
