@@ -72,7 +72,7 @@ float PVS(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, uns
     {
         if (depth >= tree->orderDepth)
         {
-            EvaluateMoveList(tree, &moveList, own, opp, alpha, hashData);
+            EvaluateMoveList(tree, &moveList, own, opp, hashData);
             SortMoveList(&moveList);
             NextSearch = PVS;
         }
@@ -293,7 +293,7 @@ float MidAlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
     {
         if (depth >= tree->orderDepth)
         {
-            EvaluateMoveList(tree, &moveList, own, opp, alpha, hashData);
+            EvaluateMoveList(tree, &moveList, own, opp, hashData);
             SortMoveList(&moveList);
             NextSearch = MidAlphaBeta;
         }

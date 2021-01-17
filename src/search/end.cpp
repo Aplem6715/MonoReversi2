@@ -154,7 +154,7 @@ float EndAlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
     {
         if (depth >= tree->orderDepth)
         {
-            EvaluateMoveList(tree, &moveList, own, opp, alpha, hashData);
+            EvaluateMoveList(tree, &moveList, own, opp, hashData);
             SortMoveList(&moveList);
             NextSearch = EndAlphaBeta;
         }

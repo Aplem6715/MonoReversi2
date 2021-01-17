@@ -21,8 +21,8 @@ typedef struct MoveList
 struct SearchTree;
 
 void CreateMoveList(MoveList *moveList, uint64 own, uint64 opp);
-void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, float alpha, const HashData *hashData);
-void EvaluateMoveList(SearchTree *tree, MoveList *movelist, uint64 own, uint64 opp, float alpha, const HashData *hashData);
+void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, const HashData *hashData);
+void EvaluateMoveList(SearchTree *tree, MoveList *movelist, uint64 own, uint64 opp, const HashData *hashData);
 Move *NextBestMoveWithSwap(Move *prev);
 void SortMoveList(MoveList *moveList);
 

@@ -24,13 +24,14 @@ void CreateMoveList(MoveList *moveList, uint64 own, uint64 opp)
         prev = prev->next = move;
         move++;
     }
+    // 12, 21, 22, 30, 37, 45, 47, 55, 62
     prev->next = NULL;
     moveList->nbMoves = (uint8)(move - moveList->moves - 1);
 
     assert(moveList->nbMoves == CountBits(CalcMobility(own, opp)));
 }
 
-void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, float alpha, const HashData *hashData)
+void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, const HashData *hashData)
 {
     if (move->flip == opp)
     {
@@ -75,12 +76,12 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, float al
     }
 }
 
-void EvaluateMoveList(SearchTree *tree, MoveList *movelist, uint64 own, uint64 opp, float alpha, const HashData *hashData)
+void EvaluateMoveList(SearchTree *tree, MoveList *movelist, uint64 own, uint64 opp, const HashData *hashData)
 {
     Move *move;
-    for (move = movelist->moves->next; move; move = move->next)
+    for (move = movelist->moves->next; move != NULL; move = move->next)
     {
-        EvaluateMove(tree, move, own, opp, alpha, hashData);
+        EvaluateMove(tree, move, own, opp, hashData);
     }
 }
 
@@ -114,6 +115,6 @@ Move *NextBestMoveWithSwap(Move *prev)
 void SortMoveList(MoveList *moveList)
 {
     Move *move;
-    for (move = moveList->moves->next; move != NULL; move = NextBestMoveWithSwap(move))
+    for (move = NextBestMoveWithSwap(moveList->moves); move != NULL; move = NextBestMoveWithSwap(move))
         ;
 }
