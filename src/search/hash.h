@@ -57,6 +57,8 @@ void ResetHashStatistics(HashTable *table);
 
 // ハッシュテーブル内を検索
 HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uint64 *hashCode);
+// ハッシュ内に含まれているか
+uint8 HashContains(HashTable *table, uint64 own, uint64 opp);
 
 bool CutWithHash(HashData *hashData, float *alpha, float *beta, float *score);
 

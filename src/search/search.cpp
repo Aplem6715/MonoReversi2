@@ -6,6 +6,7 @@
 #include "end.h"
 #include "../ai/nnet.h"
 #include "../bit_operation.h"
+#include <chrono>
 #include <assert.h>
 
 void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth)

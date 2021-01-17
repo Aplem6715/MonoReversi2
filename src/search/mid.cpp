@@ -7,7 +7,20 @@
 
 inline float WinJudge(const uint64 own, const uint64 opp)
 {
-    return (CountBits(own) - CountBits(opp)) * 10000.0f;
+    uint8 ownCnt = CountBits(own);
+    uint8 oppCnt = CountBits(opp);
+    if (ownCnt > oppCnt)
+    {
+        return SCORE_MAX;
+    }
+    else if (ownCnt < oppCnt)
+    {
+        return SCORE_MIN;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 float PVS(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed)

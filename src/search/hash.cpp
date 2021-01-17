@@ -115,6 +115,21 @@ HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uin
     return NULL;
 }
 
+uint8 HashContains(HashTable *table, uint64 own, uint64 opp)
+{
+    // ハッシュコード取得
+    uint64 hashCode = GetHashCode(own, opp);
+    // サイズでモジュロ演算(code % size)
+    uint64 index = hashCode & (table->size - 1);
+    HashData *data = &table->data[index];
+
+    if (data->own == own && data->opp == opp)
+    {
+        return 1;
+    }
+    return 0;
+}
+
 bool CutWithHash(HashData *hashData, float *alpha, float *beta, float *score)
 {
     assert(hashData != NULL);

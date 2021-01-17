@@ -34,29 +34,44 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, float al
 {
     if (move->flip == opp)
     {
-        move->score = (1 << 30);
+        // 完全勝利で最高得点
+        move->score = (1 << 31);
     }
     else if (hashData && move->posIdx == hashData->bestMove)
     {
-        move->score = (1 << 29);
+        // ハッシュで最善手記録があれば高得点
+        move->score = (1 << 30);
     }
     else if (hashData && move->posIdx == hashData->secondMove)
     {
-        move->score = (1 << 28);
+        // ハッシュで次善手記録があれば高得点
+        move->score = (1 << 29);
     }
     else
     {
-        // 着手位置でスコア付け
-        move->score = (int)VALUE_TABLE[move->posIdx];
-
-        // 相手の着手位置が多いとマイナス，少ないとプラス
         uint64 posBit = CalcPosBit(move->posIdx);
         uint64 next_mob = CalcMobility(opp ^ move->flip, own ^ move->flip ^ posBit);
-        move->score += (-(CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 12);
+        uint64 next_own = opp ^ move->flip;
+        uint64 next_opp = own ^ move->flip ^ posBit;
 
+        // 一手読みのスコア付け（24~8bit目)
+        // 着手して相手のターンに進める
         UpdateEval(tree->eval, move->posIdx, move->flip);
-        move->score += ((int)(-MidAlphaBeta(tree, opp ^ move->flip, own ^ move->flip ^ posBit, -Const::MAX_VALUE, -alpha, 0, 0)) * (1 << 15));
+        // 相手のスコアを±反転してスコア加算
+        move->score += ((uint16)(SCORE_MAX - EvalNNet(tree->eval)) * (1 << 8));
         UndoEval(tree->eval, move->posIdx, move->flip);
+
+        // 相手の着手位置が多いとマイナス，少ないとプラス(14~8bit目)
+        move->score += (MAX_MOVES - (CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 8);
+
+        // 置換表に含まれていたらプラス(8bit目)
+        if (HashContains(tree->table, next_own, next_opp))
+        {
+            move->score += (1 << 8);
+        }
+
+        // 着手位置でスコア付け(8~0bit)
+        move->score = VALUE_TABLE[move->posIdx];
     }
 }
 

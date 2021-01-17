@@ -332,18 +332,24 @@ void UpdateEvalPass(Evaluator *eval)
 
 float EvalNNet(Evaluator *eval)
 {
+    float score;
 #ifdef USE_NN
     if (eval->player)
     {
-        return Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates);
+        score = Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates);
     }
     else
     {
-        return -Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates);
+        score = -Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates);
     }
 #elif USE_REGRESSION
-    return PredRegressor(&eval->regr[PHASE(eval->nbEmpty)], eval->FeatureStates, eval->player);
+    score = PredRegressor(&eval->regr[PHASE(eval->nbEmpty)], eval->FeatureStates, eval->player);
 #endif
+
+    // 最小値以上，最大値以下に
+    score = maxf(score, EVAL_MIN);
+    score = minf(score, EVAL_MAX);
+    return score;
 }
 
 float EvalPosTable(uint64 own, uint64 opp)

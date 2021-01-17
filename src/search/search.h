@@ -3,7 +3,6 @@
 
 #define WIN_VALUE (1000000)
 
-#include <chrono>
 #include "hash.h"
 #include "../const.h"
 #include "../ai/eval.h"

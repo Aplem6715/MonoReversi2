@@ -8,7 +8,7 @@ typedef struct Move
 {
     uint64 flip;
     uint8 posIdx;
-    int score;
+    uint32 score;
     Move *next;
 } Move;
 
