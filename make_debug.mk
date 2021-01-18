@@ -67,6 +67,7 @@ CFLAGS=\
 	/bigobj\
 	/EHsc\
 	/DUSE_REGRESSION\
+	/DUSE_INTRIN\
 	/I$(INCLUDE_PATH)\
 	/Zi
 	#/DLEARN_MODE

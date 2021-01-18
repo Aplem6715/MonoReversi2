@@ -9,15 +9,15 @@ int main()
 {
     srand((unsigned int)time(NULL));
     InitHash();
-    Game game = Game(PlayerEnum::HUMAN, PlayerEnum::AI, 10, 21);
+    //Game game = Game(PlayerEnum::HUMAN, PlayerEnum::AI, 10, 21);
     //Game game = Game(PlayerEnum::AI, PlayerEnum::HUMAN, 10, 21);
-    game.Start();
+    //game.Start();
 
-    //std::vector<unsigned char> depths = {8, 10, 12};
+    std::vector<unsigned char> depths = {8, 10, 12};
     //char x;
     //int y;
     //CalcPosAscii(C7, x, y);
-    //BenchSearching(depths, 1, 3, 4);
+    BenchSearching(depths, 1, 3, 4);
     //MakeBench(10, 10);
 
     return 1;

@@ -1,4 +1,8 @@
 ﻿
+#ifdef USE_INTRIN
+#include <intrin.h>
+#endif
+
 #include "bit_operation.h"
 
 uint64 CalcMobilityL(uint64 aly, uint64 masked_opp, uint64 empty,
@@ -119,6 +123,9 @@ uint64 CalcFlip(uint64 aly, uint64 opp, uint64 pos)
 
 int CountBits(uint64 stone)
 {
+#ifdef USE_INTRIN
+    return (int)__popcnt64(stone);
+#else
     int count = 0;
     while (stone)
     {
@@ -126,10 +133,14 @@ int CountBits(uint64 stone)
         count++;
     }
     return count;
+#endif
 }
 
 uint8 CalcPosIndex(uint64 pos)
 {
+#ifdef USE_INTRIN
+    return (uint8)_tzcnt_u64(pos);
+#else
     uint64 cursor = 0x0000000000000001;
     int idx = 0;
     if (pos == 0)
@@ -140,6 +151,7 @@ uint8 CalcPosIndex(uint64 pos)
         idx++;
     }
     return idx;
+#endif
 }
 
 uint8 CalcPosIndex(const char *ascii)
