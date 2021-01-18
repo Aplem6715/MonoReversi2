@@ -126,6 +126,7 @@ int CountBits(uint64 stone)
 #ifdef USE_INTRIN
     return (int)__popcnt64(stone);
 #else
+    /* ビット演算に変更
     int count = 0;
     while (stone)
     {
@@ -133,6 +134,16 @@ int CountBits(uint64 stone)
         count++;
     }
     return count;
+    */
+
+    uint64 c = 0;
+    c = (stone & 0x5555555555555555) + ((stone >> 1) & 0x5555555555555555);
+    c = (c & 0x3333333333333333) + ((c >> 2) & 0x3333333333333333);
+    c = (c & 0x0f0f0f0f0f0f0f0f) + ((c >> 4) & 0x0f0f0f0f0f0f0f0f);
+    c = (c & 0x00ff00ff00ff00ff) + ((c >> 8) & 0x00ff00ff00ff00ff);
+    c = (c & 0x0000ffff0000ffff) + ((c >> 16) & 0x0000ffff0000ffff);
+    c = (c & 0x00000000ffffffff) + ((c >> 32) & 0x00000000ffffffff);
+    return (int)c;
 #endif
 }
 
@@ -141,6 +152,7 @@ uint8 CalcPosIndex(uint64 pos)
 #ifdef USE_INTRIN
     return (uint8)_tzcnt_u64(pos);
 #else
+    /* ビット演算に変更
     uint64 cursor = 0x0000000000000001;
     int idx = 0;
     if (pos == 0)
@@ -151,6 +163,8 @@ uint8 CalcPosIndex(uint64 pos)
         idx++;
     }
     return idx;
+    */
+    return CountBits(~pos & (pos - 1));
 #endif
 }
 
