@@ -28,6 +28,6 @@
 #define POW3_10 59049
 #define POW3_11 177147
 
-extern const uint16 POW3_LIST[];
+extern const uint16_t POW3_LIST[];
 
 #endif

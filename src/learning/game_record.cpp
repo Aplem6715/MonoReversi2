@@ -7,7 +7,7 @@ using namespace std;
 void sampling(vector<FeatureRecord *> &records, FeatureRecord **sampledList, int nbSample)
 {
     int i;
-    uint32 randIdx;
+    uint32_t randIdx;
 
     for (i = 0; i < nbSample; i++)
     {

@@ -84,12 +84,16 @@
 #define FEAT_BMRAN_3 40
 #define FEAT_BMRAN_4 41
 
-#define EVAL_MAX (64.0f)
-#define EVAL_MIN (-64.0f)
-#define SCORE_MAX (65.0f)
-#define SCORE_MIN (-65.0f)
+// 1石の価値 (2byte signed)
+#define STONE_VALUE (500)
+// 評価関数の最大値 (500 x 64[stone])
+#define EVAL_MAX (32000)
+#define EVAL_MIN (-32000)
+// 探索スコアの最大値 (EVAL_MAX + 1)
+#define SCORE_MAX (32001)
+#define SCORE_MIN (-32001)
 
-extern const uint32 FeatMaxIndex[];
+extern const uint32_t FeatMaxIndex[];
 extern const uint8 FeatDigits[];
 
 const uint8 VALUE_TABLE[] = {
@@ -115,17 +119,17 @@ typedef struct Evaluator
 
 } Evaluator;
 
-uint16 OpponentIndex(uint16 idx, uint8 digit);
+uint16_t OpponentIndex(uint16_t idx, uint8 digit);
 
 void InitEval(Evaluator *eval);
 void DeleteEval(Evaluator *eval);
-void ReloadEval(Evaluator *eval, uint64 own, uint64 opp, uint8 player);
-void UpdateEval(Evaluator *eval, uint8 pos, uint64 flip);
-void UndoEval(Evaluator *eval, uint8 pos, uint64 flip);
+void ReloadEval(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player);
+void UpdateEval(Evaluator *eval, uint8 pos, uint64_t flip);
+void UndoEval(Evaluator *eval, uint8 pos, uint64_t flip);
 void UpdateEvalPass(Evaluator *eval);
 //void SetWeights(Evaluator *eval, Weight *weights[NB_PHASE]);
 
 float EvalNNet(Evaluator *eval);
-float EvalPosTable(uint64 own, uint64 opp);
+float EvalPosTable(uint64_t own, uint64_t opp);
 
 #endif

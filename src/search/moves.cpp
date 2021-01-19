@@ -5,13 +5,13 @@
 #include "search.h"
 #include "../bit_operation.h"
 
-void CreateMoveList(MoveList *moveList, uint64 own, uint64 opp)
+void CreateMoveList(MoveList *moveList, uint64_t own, uint64_t opp)
 {
     Move *prev = moveList->moves;
     Move *move = moveList->moves + 1;
     uint8 posIdx;
-    uint64 pos, rev;
-    uint64 mob = CalcMobility(own, opp);
+    uint64_t pos, rev;
+    uint64_t mob = CalcMobility(own, opp);
 
     while (mob != 0)
     {
@@ -33,7 +33,7 @@ void CreateMoveList(MoveList *moveList, uint64 own, uint64 opp)
     assert(moveList->nbMoves == CountBits(CalcMobility(own, opp)));
 }
 
-void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, const HashData *hashData)
+void EvaluateMove(SearchTree *tree, Move *move, uint64_t own, uint64_t opp, const HashData *hashData)
 {
     if (move->flip == opp)
     {
@@ -52,12 +52,12 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, const Ha
     }
     else
     {
-        uint64 posBit = CalcPosBit(move->posIdx);
-        uint64 next_mob = CalcMobility(opp ^ move->flip, own ^ move->flip ^ posBit);
-        uint64 next_own = opp ^ move->flip;
-        uint64 next_opp = own ^ move->flip ^ posBit;
+        uint64_t posBit = CalcPosBit(move->posIdx);
+        uint64_t next_mob = CalcMobility(opp ^ move->flip, own ^ move->flip ^ posBit);
+        uint64_t next_own = opp ^ move->flip;
+        uint64_t next_opp = own ^ move->flip ^ posBit;
         float score;
-        uint16 score16;
+        uint16_t score16;
 
         // 着手位置でスコア付け(8~0bit)
         move->score = VALUE_TABLE[move->posIdx];
@@ -66,7 +66,7 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, const Ha
         // 着手して相手のターンに進める
         UpdateEval(tree->eval, move->posIdx, move->flip);
         score = EvalNNet(tree->eval);
-        score16 = (uint16)(SCORE_MAX - score);
+        score16 = (uint16_t)(SCORE_MAX - score);
         // 相手のスコアを±反転してスコア加算
         move->score += (score16 * (1 << 8));
         UndoEval(tree->eval, move->posIdx, move->flip);
@@ -82,7 +82,7 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, const Ha
     }
 }
 
-void EvaluateMoveList(SearchTree *tree, MoveList *movelist, uint64 own, uint64 opp, const HashData *hashData)
+void EvaluateMoveList(SearchTree *tree, MoveList *movelist, uint64_t own, uint64_t opp, const HashData *hashData)
 {
     Move *move;
     for (move = movelist->moves->next; move != NULL; move = move->next)

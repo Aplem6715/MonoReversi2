@@ -1,7 +1,7 @@
 ﻿#ifndef HASH_DEFINED
 #define HASH_DEFINED
 
-typedef unsigned long long uint64;
+typedef unsigned long long uint64_t;
 typedef unsigned char uint8;
 
 #define NOMOVE_INDEX 64
@@ -21,7 +21,7 @@ enum HashHitState
 // 8x2 + 1 + 1*2 + 4x2 = 27[byte]
 typedef struct HashData
 {
-    uint64 own, opp;
+    uint64_t own, opp;
     uint8 depth;
     uint8 bestMove, secondMove;
     float lower, upper;
@@ -35,9 +35,9 @@ typedef struct HashTable
     size_t size;
 
     //　↓以降↓ 測定用
-    uint64 nbUsed;
-    uint64 nbHit;
-    uint64 nbCollide;
+    uint64_t nbUsed;
+    uint64_t nbHit;
+    uint64_t nbCollide;
 } HashTable;
 
 #define HASH_SEED (160510)
@@ -53,19 +53,19 @@ void FreeHashTable(HashTable *table);
 void ResetHashTable(HashTable *table);
 // ハッシュテーブル内の統計情報をリセット
 void ResetHashStatistics(HashTable *table);
-//inline uint64 GetHashCode(uint64 own, uint64 opp);
+//inline uint64_t GetHashCode(uint64_t own, uint64_t opp);
 
 // ハッシュテーブル内を検索
-HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uint64 *hashCode);
+HashData *GetHashData(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, uint64_t *hashCode);
 // ハッシュ内に含まれているか
-uint8 HashContains(HashTable *table, uint64 own, uint64 opp);
+uint8 HashContains(HashTable *table, uint64_t own, uint64_t opp);
 
 bool CutWithHash(HashData *hashData, float *alpha, float *beta, float *score);
 
-void SaveHashData(HashTable *table, uint64 hashCode, uint64 own, uint64 opp, uint8 bestMove, uint8 depth, float alpha, float beta, float maxScore);
+void SaveHashData(HashTable *table, uint64_t hashCode, uint64_t own, uint64_t opp, uint8 bestMove, uint8 depth, float alpha, float beta, float maxScore);
 /* 未使用（探索関数の中で実装されている機能）
-void HashOverwrite(HashTable *table, uint64 own, uint64 opp, uint8 depth, float lower, float upper, uint64 hashCode);
-void HashPriorityOverwrite(HashTable *table, uint64 own, uint64 opp, uint8 depth, float lower, float upper, uint64 hashCode);
+void HashOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, float lower, float upper, uint64_t hashCode);
+void HashPriorityOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, float lower, float upper, uint64_t hashCode);
 */
 
 #endif

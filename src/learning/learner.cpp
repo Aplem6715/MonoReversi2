@@ -54,7 +54,7 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor);
 
 uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, SearchTree *treeWhite, uint8 randomTurns, double randMoveRatio, double secondMoveRatio, bool useRecording)
 {
-    uint64 flip;
+    uint64_t flip;
     uint8 pos;
     int nbEmpty = 60;
     uint8 useSecondMove;
@@ -306,7 +306,7 @@ uint8 move88ToIndex(uint8 move88)
 
 void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
 {
-    uint64 flip;
+    uint64_t flip;
     uint8 pos;
     int nbEmpty = 60;
     int nbMoves = 0;
@@ -401,7 +401,7 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
     WthorHeaderWTB testHeader;
     WthorWTB wthorData;
 
-    uint32 loaded = 0;
+    uint32_t loaded = 0;
     int cycles = 0;
     int converted;
     float loss;
@@ -478,7 +478,7 @@ int main()
 
     /*
     Board board;
-    uint64 black, white;
+    uint64_t black, white;
     while (true)
     {
         black = 18014398509481984ULL;

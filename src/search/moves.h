@@ -6,9 +6,9 @@
 
 typedef struct Move
 {
-    uint64 flip;
+    uint64_t flip;
     uint8 posIdx;
-    uint32 score;
+    uint32_t score;
     Move *next;
 } Move;
 
@@ -20,9 +20,9 @@ typedef struct MoveList
 
 struct SearchTree;
 
-void CreateMoveList(MoveList *moveList, uint64 own, uint64 opp);
-void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, const HashData *hashData);
-void EvaluateMoveList(SearchTree *tree, MoveList *movelist, uint64 own, uint64 opp, const HashData *hashData);
+void CreateMoveList(MoveList *moveList, uint64_t own, uint64_t opp);
+void EvaluateMove(SearchTree *tree, Move *move, uint64_t own, uint64_t opp, const HashData *hashData);
+void EvaluateMoveList(SearchTree *tree, MoveList *movelist, uint64_t own, uint64_t opp, const HashData *hashData);
 Move *NextBestMoveWithSwap(Move *prev);
 void SortMoveList(MoveList *moveList);
 

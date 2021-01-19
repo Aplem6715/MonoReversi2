@@ -69,10 +69,10 @@ float d_mse(float y, float t)
     return (y - t);
 }
 
-float forward(NNet *net, const uint16 features[FEAT_NUM], uint8 isTrain)
+float forward(NNet *net, const uint16_t features[FEAT_NUM], uint8 isTrain)
 {
 
-    uint32 shift = 0;
+    uint32_t shift = 0;
     int unitIdx;
     int prevUnit;
     int featIdx;
@@ -140,7 +140,7 @@ float forward(NNet *net, const uint16 features[FEAT_NUM], uint8 isTrain)
     return net->out3[0];
 }
 
-float Predict(NNet *net, const uint16 features[])
+float Predict(NNet *net, const uint16_t features[])
 {
     return forward(net, features, 0) - 0.5f;
 }
@@ -197,7 +197,7 @@ void DecreaseNNlr(NNet net[NB_PHASE])
     }
 }
 
-void backward(NNet *net, const uint16 features[FEAT_NUM], float y, float t)
+void backward(NNet *net, const uint16_t features[FEAT_NUM], float y, float t)
 {
     UnitState *targetStat;
     int j;
@@ -234,8 +234,8 @@ void backward(NNet *net, const uint16 features[FEAT_NUM], float y, float t)
     }
 
     // 中間1 -> 入力
-    uint32 shift;
-    uint16 featIdx;
+    uint32_t shift;
+    uint16_t featIdx;
     for (j = 0; j < VALUE_HIDDEN_UNITS1; j++)
     {
         delta_w_sum = 0;

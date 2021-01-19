@@ -11,10 +11,10 @@
  * @param digit インデックスの３進桁数
  * @return uint16 逆立場のインデックス
  */
-uint16 OpponentIndex(uint16 idx, uint8 digit)
+uint16_t OpponentIndex(uint16_t idx, uint8 digit)
 {
-    const uint16 oppN[] = {0, 2, 1};
-    uint16 ret = 0;
+    const uint16_t oppN[] = {0, 2, 1};
+    uint16_t ret = 0;
     uint8 shift;
     for (shift = 0; shift < digit; shift++)
     {
@@ -110,7 +110,7 @@ static const PosToFeature Pos2Feat[] = {
 };
 
 // ALL 211,734
-static const uint32 FeatMaxIndex[] = {
+static const uint32_t FeatMaxIndex[] = {
     POW3_8, POW3_8, POW3_8, POW3_8,     // LINE2  26244
     POW3_8, POW3_8, POW3_8, POW3_8,     // LINE3  26244
     POW3_8, POW3_8, POW3_8, POW3_8,     // LINE4  26244
@@ -162,7 +162,7 @@ void DeleteEval(Evaluator *eval)
 #endif
 }
 
-void ReloadEval(Evaluator *eval, uint64 own, uint64 opp, uint8 player)
+void ReloadEval(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player)
 {
     const PosToFeature *pos2f;
     uint8 pos;
@@ -204,7 +204,7 @@ void ReloadEval(Evaluator *eval, uint64 own, uint64 opp, uint8 player)
     assert(own == 0 && opp == 0);
 }
 
-void UpdateEval(Evaluator *eval, uint8 pos, uint64 flip)
+void UpdateEval(Evaluator *eval, uint8 pos, uint64_t flip)
 {
     const PosToFeature *pos2f = &(Pos2Feat[pos]);
     int nbFeat = pos2f->nbFeature;
@@ -264,7 +264,7 @@ void UpdateEval(Evaluator *eval, uint8 pos, uint64 flip)
     eval->nbEmpty--;
 }
 
-void UndoEval(Evaluator *eval, uint8 pos, uint64 flip)
+void UndoEval(Evaluator *eval, uint8 pos, uint64_t flip)
 {
     const PosToFeature *pos2f = &(Pos2Feat[pos]);
     int nbFeat = pos2f->nbFeature;
@@ -332,7 +332,8 @@ void UpdateEvalPass(Evaluator *eval)
 
 float EvalNNet(Evaluator *eval)
 {
-    float score;
+    float scoref;
+    int16_t score;
 #ifdef USE_NN
     if (eval->player)
     {
@@ -343,16 +344,17 @@ float EvalNNet(Evaluator *eval)
         score = -Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates);
     }
 #elif USE_REGRESSION
-    score = PredRegressor(&eval->regr[PHASE(eval->nbEmpty)], eval->FeatureStates, eval->player);
+    scoref = PredRegressor(&eval->regr[PHASE(eval->nbEmpty)], eval->FeatureStates, eval->player);
+    score = (int16_t)(scoref * STONE_VALUE);
 #endif
 
     // 最小値以上，最大値以下に
-    score = maxf(score, EVAL_MIN);
-    score = minf(score, EVAL_MAX);
+    score = max(score, EVAL_MIN);
+    score = min(score, EVAL_MAX);
     return score;
 }
 
-float EvalPosTable(uint64 own, uint64 opp)
+float EvalPosTable(uint64_t own, uint64_t opp)
 {
     int i = 0;
     float score = 0;

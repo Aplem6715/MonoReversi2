@@ -5,7 +5,7 @@
 #include "../bit_operation.h"
 #include <assert.h>
 
-inline float WinJudge(const uint64 own, const uint64 opp)
+inline float WinJudge(const uint64_t own, const uint64_t opp)
 {
     uint8 ownCnt = CountBits(own);
     uint8 oppCnt = CountBits(opp);
@@ -23,10 +23,10 @@ inline float WinJudge(const uint64 own, const uint64 opp)
     }
 }
 
-float PVS(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed)
+float PVS(SearchTree *tree, uint64_t own, uint64_t opp, float alpha, float beta, unsigned char depth, unsigned char passed)
 {
     uint8 bestMove;
-    uint64 pos, hashCode;
+    uint64_t pos, hashCode;
     SearchFunc_t NextSearch;
     MoveList moveList;
     Move *move;
@@ -152,12 +152,12 @@ float PVS(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, uns
     return maxScore;
 }
 
-float MidAlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed)
+float MidAlphaBetaDeep(SearchTree *tree, uint64_t own, uint64_t opp, float alpha, float beta, unsigned char depth, unsigned char passed)
 {
 
     assert(depth <= tree->orderDepth);
 
-    uint64 mob, pos, rev, hashCode;
+    uint64_t mob, pos, rev, hashCode;
     uint8 posIdx;
     uint8 bestMove;
     HashData *hashData = NULL;
@@ -246,10 +246,10 @@ float MidAlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, fl
     return maxScore;
 }
 
-float MidAlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed)
+float MidAlphaBeta(SearchTree *tree, uint64_t own, uint64_t opp, float alpha, float beta, unsigned char depth, unsigned char passed)
 {
     uint8 bestMove;
-    uint64 pos, hashCode;
+    uint64_t pos, hashCode;
     SearchFunc_t NextSearch;
     MoveList moveList;
     Move *move;

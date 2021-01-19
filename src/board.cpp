@@ -6,10 +6,10 @@
 Board::Board(/* args */){};
 Board::~Board(){};
 
-uint64 Board::GetBlack() { return black; }
-uint64 Board::GetWhite() { return white; }
+uint64_t Board::GetBlack() { return black; }
+uint64_t Board::GetWhite() { return white; }
 
-uint64 Board::GetOwn()
+uint64_t Board::GetOwn()
 {
     if (turn == Const::BLACK)
     {
@@ -18,7 +18,7 @@ uint64 Board::GetOwn()
     return white;
 }
 
-uint64 Board::GetOpp()
+uint64_t Board::GetOpp()
 {
     if (turn == Const::BLACK)
     {
@@ -37,9 +37,9 @@ void Board::Reset()
     nbPlayed = 0;
 }
 
-uint64 Board::PutTT(uint8 pos)
+uint64_t Board::PutTT(uint8 pos)
 {
-    uint64 flip;
+    uint64_t flip;
     if (turn == Const::BLACK)
     {
         flip = CalcFlipOptimized(black, white, pos);
@@ -63,10 +63,10 @@ uint64 Board::PutTT(uint8 pos)
 
 uint8 Board::GetRandomPosMoveable()
 {
-    uint64 mob = GetMobility();
+    uint64_t mob = GetMobility();
     if (mob == 0)
         return 0;
-    uint64 posBit = 0x0000000000000001;
+    uint64_t posBit = 0x0000000000000001;
     uint8 nbMobs = CountBits(mob);
     uint8 target = rand() % nbMobs + 1;
     int ignored = 0;
@@ -87,7 +87,7 @@ uint8 Board::GetRandomPosMoveable()
 
 void Board::Undo()
 {
-    uint64 flip, pos;
+    uint64_t flip, pos;
     uint8 hist_turn;
     if (nbPlayed > 0)
     {
@@ -127,9 +127,9 @@ void Board::Skip()
     turn ^= 1;
 }
 
-void Board::Draw(uint64 black, uint64 white, uint64 mobility)
+void Board::Draw(uint64_t black, uint64_t white, uint64_t mobility)
 {
-    uint64 cursor = 0x0000000000000001;
+    uint64_t cursor = 0x0000000000000001;
     printf("＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋\n");
     printf("｜　｜ A｜ B｜ C｜ D｜ E｜ F｜ G｜ H｜\n");
     for (int y = 0; y < 17; y++)
@@ -209,7 +209,7 @@ int Board::GetStoneCount(uint8 color)
     }
 }
 
-uint64 Board::GetMobility()
+uint64_t Board::GetMobility()
 {
     if (turn == Const::BLACK)
     {

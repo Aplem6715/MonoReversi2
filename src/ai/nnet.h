@@ -46,7 +46,7 @@ typedef struct NNet
 #endif
 } NNet;
 
-float Predict(NNet *net, const uint16 features[]);
+float Predict(NNet *net, const uint16_t features[]);
 
 #ifdef LEARN_MODE
 void InitWeight(NNet net[NB_PHASE]);

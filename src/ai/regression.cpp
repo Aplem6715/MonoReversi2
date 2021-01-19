@@ -12,7 +12,7 @@
 #define BATCH_SIZE 128
 static const float BETA_INIT = 0.005f;
 
-static const uint32 FeatTypeMaxIndex[] = {
+static const uint32_t FeatTypeMaxIndex[] = {
     POW3_8,  // LINE2  26244
     POW3_8,  // LINE3  26244
     POW3_8,  // LINE4  26244
@@ -26,7 +26,7 @@ static const uint32 FeatTypeMaxIndex[] = {
     POW3_8,  // BMRAN  26244
 };
 
-static const uint16 FeatTypeNbRots[] = {
+static const uint16_t FeatTypeNbRots[] = {
     4, // LINE2
     4, // LINE3
     4, // LINE4
@@ -40,14 +40,14 @@ static const uint16 FeatTypeNbRots[] = {
     4, // BMRAN
 };
 
-static uint16 SAME_INDEX_8[POW3_8];
-static uint16 SAME_INDEX_7[POW3_7];
-static uint16 SAME_INDEX_6[POW3_6];
-static uint16 SAME_INDEX_5[POW3_5];
-static uint16 SAME_INDEX_4[POW3_4];
-static uint16 SAME_INDEX_EDGE[POW3_10];
-static uint16 SAME_INDEX_CORNR[POW3_9];
-static uint16 SAME_INDEX_BMRAN[POW3_8];
+static uint16_t SAME_INDEX_8[POW3_8];
+static uint16_t SAME_INDEX_7[POW3_7];
+static uint16_t SAME_INDEX_6[POW3_6];
+static uint16_t SAME_INDEX_5[POW3_5];
+static uint16_t SAME_INDEX_4[POW3_4];
+static uint16_t SAME_INDEX_EDGE[POW3_10];
+static uint16_t SAME_INDEX_CORNR[POW3_9];
+static uint16_t SAME_INDEX_BMRAN[POW3_8];
 
 void InitRegr(Regressor regr[NB_PHASE])
 {
@@ -91,7 +91,7 @@ void InitRegrBeta(Regressor regr[NB_PHASE])
 void ClearRegressorWeight(Regressor regr[NB_PHASE])
 {
     int phase, feat;
-    uint32 i;
+    uint32_t i;
     for (phase = 0; phase < NB_PHASE; phase++)
     {
         for (feat = 0; feat < FEAT_NUM; feat++)
@@ -108,7 +108,7 @@ void ClearRegressorWeight(Regressor regr[NB_PHASE])
 void RegrApplyWeightToOpp(Regressor *regr)
 {
     uint8 feat;
-    uint16 i;
+    uint16_t i;
     for (feat = 0; feat < FEAT_NUM; feat++)
     {
         for (i = 0; i < FeatMaxIndex[feat]; i++)
@@ -118,7 +118,7 @@ void RegrApplyWeightToOpp(Regressor *regr)
     }
 }
 
-float PredRegressor(Regressor *regr, const uint16 features[FEAT_NUM], uint8 player)
+float PredRegressor(Regressor *regr, const uint16_t features[FEAT_NUM], uint8 player)
 {
     int feat;
     float score = 0;
@@ -152,13 +152,13 @@ void UpdateRegrWeights(Regressor *regr)
 {
     int featType, feat, rot;
     float alpha;
-    uint16 idx, sameIdx, featIdx;
+    uint16_t idx, sameIdx, featIdx;
 
-    uint32 appearSum;
+    uint32_t appearSum;
     float delSum;
 
     // タイプごとの対象型インデックスへの参照を配列として持っておく
-    uint16 *FeatTypeSames[NB_FEATURE_TYPES] = {
+    uint16_t *FeatTypeSames[NB_FEATURE_TYPES] = {
         SAME_INDEX_8, //LINE2
         SAME_INDEX_8, //LINE3
         SAME_INDEX_8, //LINE4
@@ -211,7 +211,7 @@ void UpdateRegrWeights(Regressor *regr)
 
 void ResetRegrState(Regressor *regr)
 {
-    uint16 featIdx, i;
+    uint16_t featIdx, i;
     for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
     {
         for (i = 0; i < FeatMaxIndex[featIdx]; i++)
@@ -222,7 +222,7 @@ void ResetRegrState(Regressor *regr)
     }
 }
 
-void CalcWeightDelta(Regressor *regr, const uint16 features[FEAT_NUM], float error)
+void CalcWeightDelta(Regressor *regr, const uint16_t features[FEAT_NUM], float error)
 {
     int featType;
 
@@ -264,7 +264,7 @@ void InitRegrTrain(Regressor regr[NB_PHASE])
 {
     int phase, i;
 
-    static uint16 *SIMPLE_SAMES[] = {
+    static uint16_t *SIMPLE_SAMES[] = {
         SAME_INDEX_4,
         SAME_INDEX_5,
         SAME_INDEX_6,
@@ -278,12 +278,12 @@ void InitRegrTrain(Regressor regr[NB_PHASE])
         regr[phase].beta = BETA_INIT;
         for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
         {
-            regr[phase].nbAppears[featIdx] = (uint32 *)malloc(sizeof(uint32) * FeatMaxIndex[featIdx]);
+            regr[phase].nbAppears[featIdx] = (uint32_t *)malloc(sizeof(uint32_t) * FeatMaxIndex[featIdx]);
             regr[phase].del[featIdx] = (float *)malloc(sizeof(float) * FeatMaxIndex[featIdx]);
         }
     }
 
-    uint16 same, idx;
+    uint16_t same, idx;
     int j, digit, digitStart = 4;
     // 単純反転インデックスを計算
     for (digit = digitStart; digit <= 8; digit++)
@@ -304,7 +304,7 @@ void InitRegrTrain(Regressor regr[NB_PHASE])
     }
 
     // CORNRの対称インデックスを計算
-    static uint16 corn_revs[9] = {POW3_0, POW3_3, POW3_6, POW3_1, POW3_4, POW3_7, POW3_2, POW3_5, POW3_8};
+    static uint16_t corn_revs[9] = {POW3_0, POW3_3, POW3_6, POW3_1, POW3_4, POW3_7, POW3_2, POW3_5, POW3_8};
     for (i = 0; i < POW3_9; i++)
     {
         same = 0;
@@ -318,7 +318,7 @@ void InitRegrTrain(Regressor regr[NB_PHASE])
     }
 
     // BMRANの対称インデックスを計算
-    static uint16 bmran_revs[8] = {POW3_0, POW3_4, POW3_6, POW3_7, POW3_1, POW3_5, POW3_2, POW3_3};
+    static uint16_t bmran_revs[8] = {POW3_0, POW3_4, POW3_6, POW3_7, POW3_1, POW3_5, POW3_2, POW3_3};
     for (i = 0; i < POW3_8; i++)
     {
         same = 0;

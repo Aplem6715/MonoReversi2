@@ -59,10 +59,10 @@ void ResetTree(SearchTree *tree)
         ResetHashTable(tree->table);
 }
 
-uint8 Search(SearchTree *tree, uint64 own, uint64 opp, uint8 choiceSecond)
+uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
 {
     float score, maxScore = -Const::MAX_VALUE;
-    uint64 mob, rev, pos;
+    uint64_t mob, rev, pos;
     uint8 posIdx, bestPos = 64, secondPos = 64;
     SearchFunc_t SearchFunc;
 

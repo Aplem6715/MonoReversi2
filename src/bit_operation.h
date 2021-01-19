@@ -4,12 +4,12 @@
 
 #include "const.h"
 
-uint64 CalcMobility(const uint64 aly, const uint64 opp);
-uint64 CalcFlipOptimized(uint64 own, uint64 opp, uint8 pos);
-uint8 CountBits(uint64 stone);
-uint8 CalcPosIndex(uint64 pos);
+uint64_t CalcMobility(const uint64_t aly, const uint64_t opp);
+uint64_t CalcFlipOptimized(uint64_t own, uint64_t opp, uint8 pos);
+uint8 CountBits(uint64_t stone);
+uint8 CalcPosIndex(uint64_t pos);
 uint8 CalcPosIndex(const char *ascii);
-uint64 CalcPosBit(uint8 posIdx);
+uint64_t CalcPosBit(uint8 posIdx);
 void CalcPosAscii(uint8 posIdx, char &x, int &y);
 
 inline unsigned char AntiColor(unsigned char color)
@@ -19,11 +19,11 @@ inline unsigned char AntiColor(unsigned char color)
 
 #pragma warning(push)
 #pragma warning(disable : 4146)
-inline uint64 GetLSB(uint64 bits)
+inline uint64_t GetLSB(uint64_t bits)
 {
     return (-bits & bits);
 }
-inline uint8 NextIndex(uint64 *bits)
+inline uint8 NextIndex(uint64_t *bits)
 {
     *bits &= *bits - 1;
     return CalcPosIndex(*bits);

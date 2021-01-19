@@ -6,7 +6,7 @@
 #include "bit_operation.h"
 #include <assert.h>
 
-inline uint8 popcnt(uint64 x)
+inline uint8 popcnt(uint64_t x)
 {
 #ifdef USE_INTRIN
     return (uint8)__popcnt64(x);
@@ -21,7 +21,7 @@ inline uint8 popcnt(uint64 x)
     return count;
     */
 
-    uint64 c = 0;
+    uint64_t c = 0;
     c = (x & 0x5555555555555555) + ((x >> 1) & 0x5555555555555555);
     c = (c & 0x3333333333333333) + ((c >> 2) & 0x3333333333333333);
     c = (c & 0x0f0f0f0f0f0f0f0f) + ((c >> 4) & 0x0f0f0f0f0f0f0f0f);
@@ -32,13 +32,13 @@ inline uint8 popcnt(uint64 x)
 #endif
 }
 
-inline uint8 tzcnt(uint64 x)
+inline uint8 tzcnt(uint64_t x)
 {
 #ifdef USE_INTRIN
     return (uint8)_tzcnt_u64(x);
 #else
     /* ビット演算に変更
-    uint64 cursor = 0x0000000000000001;
+    uint64_t cursor = 0x0000000000000001;
     int idx = 0;
     if (pos == 0)
         return 64;
@@ -53,7 +53,7 @@ inline uint8 tzcnt(uint64 x)
 #endif
 }
 
-inline uint8 lzcnt(uint64 x)
+inline uint8 lzcnt(uint64_t x)
 {
 #ifdef USE_INTRIN
     return (uint8)_lzcnt_u64(x);
@@ -69,10 +69,10 @@ inline uint8 lzcnt(uint64 x)
 }
 
 #ifndef __AVX2__
-uint64 CalcMobilityL(uint64 aly, uint64 masked_opp, uint64 empty,
-                     unsigned char dir)
+uint64_t CalcMobilityL(uint64_t aly, uint64_t masked_opp, uint64_t empty,
+                       unsigned char dir)
 {
-    uint64 tmp = masked_opp & (aly << dir);
+    uint64_t tmp = masked_opp & (aly << dir);
     tmp |= masked_opp & (tmp << dir);
     tmp |= masked_opp & (tmp << dir);
     tmp |= masked_opp & (tmp << dir);
@@ -81,10 +81,10 @@ uint64 CalcMobilityL(uint64 aly, uint64 masked_opp, uint64 empty,
     return empty & (tmp << dir);
 }
 
-uint64 CalcMobilityR(uint64 aly, uint64 masked_opp, uint64 empty,
-                     unsigned char dir)
+uint64_t CalcMobilityR(uint64_t aly, uint64_t masked_opp, uint64_t empty,
+                       unsigned char dir)
 {
-    uint64 tmp = masked_opp & (aly >> dir);
+    uint64_t tmp = masked_opp & (aly >> dir);
     tmp |= masked_opp & (tmp >> dir);
     tmp |= masked_opp & (tmp >> dir);
     tmp |= masked_opp & (tmp >> dir);
@@ -94,7 +94,7 @@ uint64 CalcMobilityR(uint64 aly, uint64 masked_opp, uint64 empty,
 }
 #endif
 
-uint64 CalcMobility(const uint64 aly, const uint64 opp)
+uint64_t CalcMobility(const uint64_t aly, const uint64_t opp)
 {
 #ifdef __AVX2__
     __m256i PP, mOO, MM, flip_l, flip_r, pre_l, pre_r, shift2;
@@ -123,14 +123,14 @@ uint64 CalcMobility(const uint64 aly, const uint64 opp)
     M = _mm_or_si128(M, _mm_unpackhi_epi64(M, M));
     return _mm_cvtsi128_si64(M) & ~(aly | opp); // mask with empties
 #else
-    uint64 empty = ~(aly | opp);
+    uint64_t empty = ~(aly | opp);
     // 上下左右の壁をまたがないようにマスクをかける
-    uint64 mask_rl = opp & 0x7e7e7e7e7e7e7e7e;
-    uint64 mask_ud = opp & 0x00ffffffffffff00;
-    uint64 mask_al = opp & 0x007e7e7e7e7e7e00;
+    uint64_t mask_rl = opp & 0x7e7e7e7e7e7e7e7e;
+    uint64_t mask_ud = opp & 0x00ffffffffffff00;
+    uint64_t mask_al = opp & 0x007e7e7e7e7e7e00;
 
     // 8方向に対して着手可能位置を検索
-    uint64 mobilty = CalcMobilityL(aly, mask_rl, empty, 1);
+    uint64_t mobilty = CalcMobilityL(aly, mask_rl, empty, 1);
     mobilty |= CalcMobilityL(aly, mask_ud, empty, 8);
     mobilty |= CalcMobilityL(aly, mask_al, empty, 7);
     mobilty |= CalcMobilityL(aly, mask_al, empty, 9);
@@ -143,11 +143,11 @@ uint64 CalcMobility(const uint64 aly, const uint64 opp)
 }
 
 /* 過去の遺産
-uint64 CalcFlipL(uint64 aly, uint64 masked_empty, uint64 pos,
+uint64_t CalcFlipL(uint64_t aly, uint64_t masked_empty, uint64_t pos,
                  unsigned char dir)
 {
-    uint64 rev = 0;
-    uint64 tmp = ~(aly | masked_empty) & (pos << dir);
+    uint64_t rev = 0;
+    uint64_t tmp = ~(aly | masked_empty) & (pos << dir);
     if (tmp)
     {
         for (int i = 0; i < 6; i++)
@@ -171,11 +171,11 @@ uint64 CalcFlipL(uint64 aly, uint64 masked_empty, uint64 pos,
     return rev;
 }
 
-uint64 CalcFlipR(uint64 aly, uint64 masked_empty, uint64 pos,
+uint64_t CalcFlipR(uint64_t aly, uint64_t masked_empty, uint64_t pos,
                  unsigned char dir)
 {
-    uint64 rev = 0;
-    uint64 tmp = ~(aly | masked_empty) & (pos >> dir);
+    uint64_t rev = 0;
+    uint64_t tmp = ~(aly | masked_empty) & (pos >> dir);
     if (tmp)
     {
         for (int i = 0; i < 6; i++)
@@ -222,13 +222,12 @@ FlipGenerator
 　　return flipped.x | flipped.y | flipped.z | flipped.w;
 */
 
-
-uint64 CalcFlipOptimized(const uint64 own, const uint64 opp, const uint8 pos)
+uint64_t CalcFlipOptimized(const uint64_t own, const uint64_t opp, const uint8 pos)
 {
-    uint64 flipped[4];
-    uint64 oppM[4];
-    uint64 outflank[4];
-    uint64 mask[4];
+    uint64_t flipped[4];
+    uint64_t oppM[4];
+    uint64_t outflank[4];
+    uint64_t mask[4];
 
     oppM[0] = opp;
     oppM[1] = opp & 0x7e7e7e7e7e7e7e7eULL;
@@ -271,10 +270,10 @@ uint64 CalcFlipOptimized(const uint64 own, const uint64 opp, const uint8 pos)
     return flipped[0] | flipped[1] | flipped[2] | flipped[3];
 
     /* 過去の遺産
-    uint64 blank_rl = ~(aly | (opp & 0x7e7e7e7e7e7e7e7e));
-    uint64 blank_ud = ~(aly | (opp & 0x00ffffffffffff00));
-    uint64 blank_al = ~(aly | (opp & 0x007e7e7e7e7e7e00));
-    uint64 rev = CalcFlipL(aly, blank_rl, pos, 1);
+    uint64_t blank_rl = ~(aly | (opp & 0x7e7e7e7e7e7e7e7e));
+    uint64_t blank_ud = ~(aly | (opp & 0x00ffffffffffff00));
+    uint64_t blank_al = ~(aly | (opp & 0x007e7e7e7e7e7e00));
+    uint64_t rev = CalcFlipL(aly, blank_rl, pos, 1);
     rev |= CalcFlipL(aly, blank_ud, pos, 8);
     rev |= CalcFlipL(aly, blank_al, pos, 7);
     rev |= CalcFlipL(aly, blank_al, pos, 9);
@@ -286,12 +285,12 @@ uint64 CalcFlipOptimized(const uint64 own, const uint64 opp, const uint8 pos)
     */
 }
 
-uint8 CountBits(uint64 stone)
+uint8 CountBits(uint64_t stone)
 {
     return popcnt(stone);
 }
 
-uint8 CalcPosIndex(uint64 pos)
+uint8 CalcPosIndex(uint64_t pos)
 {
     return tzcnt(pos);
 }
@@ -301,9 +300,9 @@ uint8 CalcPosIndex(const char *ascii)
     return 63 - ((ascii[0] - 'A') + (ascii[1] - '1') * 8);
 }
 
-uint64 CalcPosBit(unsigned char posIdx)
+uint64_t CalcPosBit(unsigned char posIdx)
 {
-    return (uint64)0x0000000000000001 << posIdx;
+    return (uint64_t)0x0000000000000001 << posIdx;
 }
 
 void CalcPosAscii(unsigned char posIdx, char &x, int &y)
