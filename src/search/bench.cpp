@@ -14,7 +14,7 @@ using namespace std;
 void MakeBench(int nbGames, uint8 nbRandomTurn)
 {
     Board board;
-    uint64 pos;
+    uint8 pos;
     uint8 turn;
     char xAscii;
     int y;
@@ -32,8 +32,8 @@ void MakeBench(int nbGames, uint8 nbRandomTurn)
             {
                 break;
             }
-            board.Put(pos);
-            moves[turn] = CalcPosIndex(pos);
+            board.PutTT(pos);
+            moves[turn] = pos;
         }
 
         if (pos == 0)
@@ -55,7 +55,7 @@ void MakeBench(int nbGames, uint8 nbRandomTurn)
 void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logfile)
 {
     Board board;
-    uint64 pos;
+    uint8 pos;
     char xAscii;
     int y;
 
@@ -63,8 +63,7 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
 
     for (uint8 move : moves)
     {
-        pos = CalcPosBit(move);
-        board.Put(pos);
+        board.PutTT(move);
     }
 
     board.Draw();
@@ -80,9 +79,9 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
             board.Skip();
         }
         pos = Search(&tree, board.GetOwn(), board.GetOpp(), 0);
-        board.Put(pos);
+        board.PutTT(pos);
         board.Draw();
-        CalcPosAscii(CalcPosIndex(pos), xAscii, y);
+        CalcPosAscii(pos, xAscii, y);
 
         {
             logfile << (int)tree.depth << ","

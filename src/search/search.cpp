@@ -59,11 +59,11 @@ void ResetTree(SearchTree *tree)
         ResetHashTable(tree->table);
 }
 
-uint64 Search(SearchTree *tree, uint64 own, uint64 opp, uint8 choiceSecond)
+uint8 Search(SearchTree *tree, uint64 own, uint64 opp, uint8 choiceSecond)
 {
     float score, maxScore = -Const::MAX_VALUE;
-    uint64 bestPos = 3, pos = 3, secondPos = 3, mob, rev;
-    uint8 posIdx;
+    uint64 mob, rev, pos;
+    uint8 posIdx, bestPos = 64, secondPos = 64;
     SearchFunc_t SearchFunc;
 
     std::chrono::system_clock::time_point start, end;
@@ -110,7 +110,7 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp, uint8 choiceSecond)
         pos = GetLSB(mob);
         posIdx = CalcPosIndex(pos);
         mob ^= pos;
-        rev = CalcFlip(own, opp, pos);
+        rev = CalcFlipOptimized(own, opp, posIdx);
 
         UpdateEval(tree->eval, posIdx, rev);
         {
@@ -122,7 +122,7 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp, uint8 choiceSecond)
         {
             maxScore = score;
             secondPos = bestPos;
-            bestPos = pos;
+            bestPos = posIdx;
         }
     }
 
@@ -131,7 +131,7 @@ uint64 Search(SearchTree *tree, uint64 own, uint64 opp, uint8 choiceSecond)
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000.0);
     tree->score = maxScore;
 
-    if (choiceSecond == 1 && secondPos != 3)
+    if (choiceSecond == 1 && secondPos != 64)
     {
         return secondPos;
     }

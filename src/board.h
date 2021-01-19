@@ -34,14 +34,14 @@ public:
     uint64 GetMobility();
     uint8 GetTurnColor();
     void Reset();
-    uint64 Put(uint64 pos);
-    uint64 GetRandomPosMoveable();
+    uint64 PutTT(uint8 pos);
+    uint8 GetRandomPosMoveable();
     void Undo();
     void UndoUntilColorChange();
     void Skip();
     void Draw();
     int GetStoneCount(uint8 color);
-    bool IsLegal(uint64 pos);
+    bool IsLegalTT(uint8 pos);
     bool IsFinished();
 };
 

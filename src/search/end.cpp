@@ -70,7 +70,7 @@ float EndAlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, fl
             pos = GetLSB(mob);
             posIdx = CalcPosIndex(pos);
             mob ^= pos;
-            rev = CalcFlip(own, opp, pos);
+            rev = CalcFlipOptimized(own, opp, posIdx);
 
             UpdateEval(tree->eval, posIdx, rev);
             {
@@ -82,7 +82,7 @@ float EndAlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, fl
             if (score > maxScore)
             {
                 maxScore = score;
-                bestMove = CalcPosIndex(pos);
+                bestMove = posIdx;
 
                 // 上限突破したら
                 if (score >= beta)

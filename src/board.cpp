@@ -37,20 +37,20 @@ void Board::Reset()
     nbPlayed = 0;
 }
 
-uint64 Board::Put(uint64 pos)
+uint64 Board::PutTT(uint8 pos)
 {
     uint64 flip;
     if (turn == Const::BLACK)
     {
-        flip = CalcFlip(black, white, pos);
-        black = black ^ flip ^ pos;
+        flip = CalcFlipOptimized(black, white, pos);
+        black = black ^ flip ^ CalcPosBit(pos);
         white = white ^ flip;
     }
     else
     {
-        flip = CalcFlip(white, black, pos);
+        flip = CalcFlipOptimized(white, black, pos);
         black = black ^ flip;
-        white = white ^ flip ^ pos;
+        white = white ^ flip ^ CalcPosBit(pos);
     }
     // 着手情報を保存（どっちが，どこに打ち，どこを反転させたか）
     history[nbPlayed].color = turn;
@@ -61,18 +61,18 @@ uint64 Board::Put(uint64 pos)
     return flip;
 }
 
-uint64 Board::GetRandomPosMoveable()
+uint8 Board::GetRandomPosMoveable()
 {
     uint64 mob = GetMobility();
     if (mob == 0)
         return 0;
-    uint64 pos = 0x0000000000000001;
+    uint64 posBit = 0x0000000000000001;
     uint8 nbMobs = CountBits(mob);
     uint8 target = rand() % nbMobs + 1;
     int ignored = 0;
     while (1)
     {
-        if ((pos & mob) != 0)
+        if ((posBit & mob) != 0)
         {
             ignored++;
             if (ignored == target)
@@ -80,9 +80,9 @@ uint64 Board::GetRandomPosMoveable()
                 break;
             }
         }
-        pos <<= 1;
+        posBit <<= 1;
     }
-    return pos;
+    return CalcPosIndex(posBit);
 }
 
 void Board::Undo()
@@ -221,9 +221,9 @@ uint64 Board::GetMobility()
     }
 }
 
-bool Board::IsLegal(uint64 pos)
+bool Board::IsLegalTT(uint8 pos)
 {
-    return (GetMobility() & pos) != 0;
+    return (GetMobility() & CalcPosBit(pos)) != 0;
 }
 
 bool Board::IsFinished()

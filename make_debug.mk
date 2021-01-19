@@ -52,6 +52,7 @@ LEARN_OBJS=\
 
 	
 CFLAGS=\
+	/arch:AVX2\
 	/nologo\
 	/W3\
 	/c\
@@ -59,16 +60,11 @@ CFLAGS=\
 	/DUNICODE\
 	/D_UNICODE\
 	/source-charset:utf-8\
-	/USE_SSE\
-	/USE_AVX\
-	/USE_AVX2\
-	/USE_CUDA\
-	/USE_OPENCL\
 	/bigobj\
 	/EHsc\
+	/I$(INCLUDE_PATH)\
 	/DUSE_REGRESSION\
 	/DUSE_INTRIN\
-	/I$(INCLUDE_PATH)\
 	/Zi
 	#/DLEARN_MODE
 	# /USE_SERIALIZER\ #

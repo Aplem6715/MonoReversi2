@@ -4,9 +4,9 @@
 
 #include "const.h"
 
-uint64 CalcMobility(uint64 aly, uint64 opp);
-uint64 CalcFlip(uint64 aly, uint64 opp, uint64 pos);
-int CountBits(uint64 stone);
+uint64 CalcMobility(const uint64 aly, const uint64 opp);
+uint64 CalcFlipOptimized(uint64 own, uint64 opp, uint8 pos);
+uint8 CountBits(uint64 stone);
 uint8 CalcPosIndex(uint64 pos);
 uint8 CalcPosIndex(const char *ascii);
 uint64 CalcPosBit(uint8 posIdx);

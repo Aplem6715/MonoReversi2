@@ -9,6 +9,7 @@ void CreateMoveList(MoveList *moveList, uint64 own, uint64 opp)
 {
     Move *prev = moveList->moves;
     Move *move = moveList->moves + 1;
+    uint8 posIdx;
     uint64 pos, rev;
     uint64 mob = CalcMobility(own, opp);
 
@@ -16,11 +17,12 @@ void CreateMoveList(MoveList *moveList, uint64 own, uint64 opp)
     {
         // 着手位置・反転位置を取得
         pos = GetLSB(mob);
+        posIdx = CalcPosIndex(pos);
         mob ^= pos;
-        rev = CalcFlip(own, opp, pos);
+        rev = CalcFlipOptimized(own, opp, posIdx);
 
         move->flip = rev;
-        move->posIdx = CalcPosIndex(pos);
+        move->posIdx = posIdx;
         prev = prev->next = move;
         move++;
     }

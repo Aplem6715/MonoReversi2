@@ -65,7 +65,7 @@ Game::~Game()
     }
 }
 
-uint64 WaitPosHumanInput()
+uint8 WaitPosHumanInput()
 {
     string str_pos;
     int x, y;
@@ -84,7 +84,7 @@ uint64 WaitPosHumanInput()
 
         if (x >= 0 && x < 8 && y >= 0 && y < 8)
         {
-            return CalcPosBit(x + y * 8);
+            return x + y * 8;
         }
         else
         {
@@ -93,9 +93,9 @@ uint64 WaitPosHumanInput()
     }
 }
 
-uint64 Game::WaitPosAI(uint8 color)
+uint8 Game::WaitPosAI(uint8 color)
 {
-    uint64 input;
+    uint8 input;
     printf("※考え中・・・\r");
     input = Search(&tree[color], board.GetOwn(), board.GetOpp(), 0);
     printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
@@ -108,7 +108,7 @@ uint64 Game::WaitPosAI(uint8 color)
     return input;
 }
 
-uint64 Game::WaitPos(uint8 color)
+uint8 Game::WaitPos(uint8 color)
 {
     if (player[color] == PlayerEnum::HUMAN)
     {
@@ -135,7 +135,7 @@ void Game::Reset()
 
 void Game::Start()
 {
-    uint64 input;
+    uint8 pos;
     turn = 0;
     Reset();
 
@@ -152,21 +152,19 @@ void Game::Start()
         }
 
         // 入力/解析の着手位置を待機
-        input = WaitPos(board.GetTurnColor());
-        if (input == Const::UNDO)
+        pos = WaitPos(board.GetTurnColor());
+        if (pos == Const::UNDO)
         {
             board.UndoUntilColorChange();
             board.UndoUntilColorChange();
         }
 
-        // 入力位置のインデックスを取得
-        uint8 posIdx = CalcPosIndex(input);
         // 合法手判定
-        if (!board.IsLegal(input))
+        if (!board.IsLegalTT(pos))
         {
             cout
-                << (char)('A' + posIdx % 8)
-                << posIdx / 8 + 1
+                << (char)('A' + pos % 8)
+                << pos / 8 + 1
                 << "には置けません\n";
             continue;
         }
@@ -174,15 +172,15 @@ void Game::Start()
         {
             cout
                 << (board.GetTurnColor() == Const::BLACK ? "○が" : "●が")
-                << (char)('A' + posIdx % 8)
-                << posIdx / 8 + 1
+                << (char)('A' + pos % 8)
+                << pos / 8 + 1
                 << "に置きました\n";
-            moves.push_back(posIdx);
+            moves.push_back(pos);
             turn++;
         }
 
         // 実際に着手
-        board.Put(input);
+        board.PutTT(pos);
 
     } //end of loop:　while (!board.IsFinished())
 

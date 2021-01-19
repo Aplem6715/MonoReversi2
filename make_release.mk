@@ -61,18 +61,13 @@ CFLAGS=\
 	/DUNICODE\
 	/D_UNICODE\
 	/source-charset:utf-8\
-	/USE_SSE\
-	/USE_AVX\
-	/USE_AVX2\
-	/USE_CUDA\
-	/USE_OPENCL\
 	/bigobj\
 	/EHsc\
 	/I$(INCLUDE_PATH)\
 	/DNDEBUG\
+	/DUSE_INTRIN\
 	/DUSE_REGRESSION
 	#/DLEARN_MODE
-	#/DUSE_INTRIN\
 	# /USE_SERIALIZER\ #
 
 LINK_FLAGS=\
