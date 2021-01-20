@@ -330,10 +330,10 @@ void UpdateEvalPass(Evaluator *eval)
     eval->player ^= 1;
 }
 
-float EvalNNet(Evaluator *eval)
+score_t EvalNNet(Evaluator *eval)
 {
     float scoref;
-    int16_t score;
+    score_t score;
 #ifdef USE_NN
     if (eval->player)
     {
@@ -345,19 +345,19 @@ float EvalNNet(Evaluator *eval)
     }
 #elif USE_REGRESSION
     scoref = PredRegressor(&eval->regr[PHASE(eval->nbEmpty)], eval->FeatureStates, eval->player);
-    score = (int16_t)(scoref * STONE_VALUE);
+    score = lroundf(scoref * STONE_VALUE);
 #endif
 
     // 最小値以上，最大値以下に
-    score = max(score, EVAL_MIN);
-    score = min(score, EVAL_MAX);
+    score = MAX(score, EVAL_MIN);
+    score = MIN(score, EVAL_MAX);
     return score;
 }
 
-float EvalPosTable(uint64_t own, uint64_t opp)
+score_t EvalPosTable(uint64_t own, uint64_t opp)
 {
     int i = 0;
-    float score = 0;
+    score_t score = 0;
     for (i = 0; i < Const::BOARD_SIZE * Const::BOARD_SIZE; i++)
     {
         score += ((own >> i) & 1) * VALUE_TABLE[i];

@@ -53,8 +53,8 @@ void ResetHashTable(HashTable *table)
         table->data[i].depth = 0;
         table->data[i].bestMove = NOMOVE_INDEX;
         table->data[i].bestMove = NOMOVE_INDEX;
-        table->data[i].lower = 0.0;
-        table->data[i].upper = 0.0;
+        table->data[i].lower = 0;
+        table->data[i].upper = 0;
     }
     ResetHashStatistics(table);
 }
@@ -130,7 +130,7 @@ uint8 HashContains(HashTable *table, uint64_t own, uint64_t opp)
     return 0;
 }
 
-bool CutWithHash(HashData *hashData, float *alpha, float *beta, float *score)
+bool CutWithHash(HashData *hashData, score_t *alpha, score_t *beta, score_t *score)
 {
     assert(hashData != NULL);
     if (hashData->upper <= *alpha)
@@ -149,12 +149,12 @@ bool CutWithHash(HashData *hashData, float *alpha, float *beta, float *score)
         return true;
     }
 
-    *alpha = maxf(*alpha, hashData->lower);
-    *beta = minf(*beta, hashData->upper);
+    *alpha = MAX(*alpha, hashData->lower);
+    *beta = MIN(*beta, hashData->upper);
     return false;
 }
 
-void SaveNewData(HashData *data, const uint64_t own, const uint64_t opp, const uint8 bestMove, const uint8 depth, const float alpha, const float beta, const float maxScore)
+void SaveNewData(HashData *data, const uint64_t own, const uint64_t opp, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
 {
     if (maxScore < beta)
         data->upper = maxScore;
@@ -177,7 +177,7 @@ void SaveNewData(HashData *data, const uint64_t own, const uint64_t opp, const u
     data->depth = depth;
 }
 
-void UpdateData(HashData *data, const uint64_t own, const uint64_t opp, const uint8 bestMove, const uint8 depth, const float alpha, const float beta, const float maxScore)
+void UpdateData(HashData *data, const uint64_t own, const uint64_t opp, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
 {
     if (maxScore < beta && maxScore < data->upper)
         data->upper = maxScore;
@@ -192,7 +192,7 @@ void UpdateData(HashData *data, const uint64_t own, const uint64_t opp, const ui
     }
 }
 
-void SaveHashData(HashTable *table, uint64_t hashCode, uint64_t own, uint64_t opp, uint8 bestMove, uint8 depth, float alpha, float beta, float maxScore)
+void SaveHashData(HashTable *table, uint64_t hashCode, uint64_t own, uint64_t opp, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore)
 {
     uint64_t index = hashCode & (table->size - 1);
     HashData *hashData = &table->data[index];
@@ -213,7 +213,7 @@ void SaveHashData(HashTable *table, uint64_t hashCode, uint64_t own, uint64_t op
 }
 
 /* 未使用（探索関数の中で実装されている機能）
-void HashOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, float lower, float upper, uint64_t hashCode)
+void HashOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, score_t lower, score_t upper, uint64_t hashCode)
 {
     uint64_t index = hashCode & (table->size - 1);
     HashData *data = &table->data[index];
@@ -225,7 +225,7 @@ void HashOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, fl
     data->upper = upper;
 }
 
-void HashPriorityOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, float lower, float upper, uint64_t hashCode)
+void HashPriorityOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, score_t lower, score_t upper, uint64_t hashCode)
 {
     uint64_t index = hashCode & (table->size - 1);
     HashData *data = &table->data[index];

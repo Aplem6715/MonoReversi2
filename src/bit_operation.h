@@ -4,6 +4,9 @@
 
 #include "const.h"
 
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
 uint64_t CalcMobility(const uint64_t aly, const uint64_t opp);
 uint64_t CalcFlipOptimized(uint64_t own, uint64_t opp, uint8 pos);
 uint8 CountBits(uint64_t stone);
@@ -30,6 +33,7 @@ inline uint8 NextIndex(uint64_t *bits)
 }
 #pragma warning(pop)
 
+/*
 inline int max(const int x1, const int x2)
 {
     return x1 > x2 ? x1 : x2;
@@ -48,6 +52,6 @@ inline int min(const int x1, const int x2)
 inline float minf(const float x1, const float x2)
 {
     return x1 < x2 ? x1 : x2;
-}
+}*/
 
 #endif

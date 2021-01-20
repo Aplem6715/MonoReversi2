@@ -56,26 +56,27 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64_t own, uint64_t opp, cons
         uint64_t next_mob = CalcMobility(opp ^ move->flip, own ^ move->flip ^ posBit);
         uint64_t next_own = opp ^ move->flip;
         uint64_t next_opp = own ^ move->flip ^ posBit;
-        float score;
-        uint16_t score16;
+        score_t score;
 
         // 着手位置でスコア付け(8~0bit)
-        move->score = VALUE_TABLE[move->posIdx];
+        move->score = (uint32_t)VALUE_TABLE[move->posIdx];
 
         // 一手読みのスコア付け（24~8bit目)
         // 着手して相手のターンに進める
         UpdateEval(tree->eval, move->posIdx, move->flip);
         score = EvalNNet(tree->eval);
-        score16 = (uint16_t)(SCORE_MAX - score);
+        score = SCORE_MAX - score;
+        assert(score >= 0);
+
         // 相手のスコアを±反転してスコア加算
-        move->score += (score16 * (1 << 8));
+        move->score += ((uint32_t)score * (1 << 8));
         UndoEval(tree->eval, move->posIdx, move->flip);
 
         // 相手の着手位置が多いとマイナス，少ないとプラス(14~8bit目)
         move->score += (MAX_MOVES + 4 /*角分*/ - (CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 8);
 
         // 置換表に含まれていたらプラス(8bit目)
-        if (HashContains(tree->table, next_own, next_opp))
+        if (hashData != NULL && HashContains(tree->table, next_own, next_opp))
         {
             move->score += (1 << 8);
         }

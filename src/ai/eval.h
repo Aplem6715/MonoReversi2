@@ -84,19 +84,10 @@
 #define FEAT_BMRAN_3 40
 #define FEAT_BMRAN_4 41
 
-// 1石の価値 (2byte signed)
-#define STONE_VALUE (500)
-// 評価関数の最大値 (500 x 64[stone])
-#define EVAL_MAX (32000)
-#define EVAL_MIN (-32000)
-// 探索スコアの最大値 (EVAL_MAX + 1)
-#define SCORE_MAX (32001)
-#define SCORE_MIN (-32001)
-
 extern const uint32_t FeatMaxIndex[];
 extern const uint8 FeatDigits[];
 
-const uint8 VALUE_TABLE[] = {
+const score_t VALUE_TABLE[] = {
     20, 4, 18, 12, 12, 18, 4, 20,
     4, 1, 6, 8, 8, 6, 1, 4,
     18, 6, 15, 10, 10, 15, 6, 18,
@@ -129,7 +120,7 @@ void UndoEval(Evaluator *eval, uint8 pos, uint64_t flip);
 void UpdateEvalPass(Evaluator *eval);
 //void SetWeights(Evaluator *eval, Weight *weights[NB_PHASE]);
 
-float EvalNNet(Evaluator *eval);
-float EvalPosTable(uint64_t own, uint64_t opp);
+score_t EvalNNet(Evaluator *eval);
+score_t EvalPosTable(uint64_t own, uint64_t opp);
 
 #endif

@@ -5,14 +5,14 @@
 #include "../bit_operation.h"
 #include <assert.h>
 
-inline float Judge(const SearchTree *tree, const uint64_t own, const uint64_t opp)
+inline score_t Judge(const SearchTree *tree, const uint64_t own, const uint64_t opp)
 {
     const uint8 nbOwn = CountBits(own);
     const uint8 nbOpp = 64 - tree->eval->nbEmpty - nbOwn;
-    return (float)(nbOwn - nbOpp);
+    return (score_t)(nbOwn - nbOpp) * STONE_VALUE;
 }
 
-float EndAlphaBetaDeep(SearchTree *tree, uint64_t own, uint64_t opp, float alpha, float beta, unsigned char depth, unsigned char passed)
+score_t EndAlphaBetaDeep(SearchTree *tree, uint64_t own, uint64_t opp, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
 {
 
     assert(depth <= tree->orderDepth);
@@ -21,7 +21,7 @@ float EndAlphaBetaDeep(SearchTree *tree, uint64_t own, uint64_t opp, float alpha
     uint8 posIdx;
     uint8 bestMove;
     HashData *hashData = NULL;
-    float score, maxScore, lower;
+    score_t score, maxScore, lower;
 
     tree->nodeCount++;
     if (depth <= 0)
@@ -106,7 +106,7 @@ float EndAlphaBetaDeep(SearchTree *tree, uint64_t own, uint64_t opp, float alpha
     return maxScore;
 }
 
-float EndAlphaBeta(SearchTree *tree, uint64_t own, uint64_t opp, float alpha, float beta, unsigned char depth, unsigned char passed)
+score_t EndAlphaBeta(SearchTree *tree, uint64_t own, uint64_t opp, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
 {
     uint8 bestMove;
     uint64_t pos, hashCode;
@@ -114,7 +114,7 @@ float EndAlphaBeta(SearchTree *tree, uint64_t own, uint64_t opp, float alpha, fl
     MoveList moveList;
     Move *move;
     HashData *hashData = NULL;
-    float score, maxScore, lower;
+    score_t score, maxScore, lower;
 
     tree->nodeCount++;
     if (depth <= 0)

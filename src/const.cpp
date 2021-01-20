@@ -1,5 +1,4 @@
 ﻿#include "const.h"
-#include <float.h>
 
 const uint8 Const::BLACK = 0;
 const uint8 Const::WHITE = 1;
@@ -10,4 +9,4 @@ const uint8 Const::UNDO = 65;
 
 const uint8 Const::BOARD_SIZE = 8;
 
-const float Const::MAX_VALUE = FLT_MAX;
+const score_t Const::MAX_VALUE = INT16_MAX;

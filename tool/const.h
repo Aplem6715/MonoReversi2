@@ -1,9 +1,11 @@
 #ifndef CONST_DEFINED
 #define CONST_DEFINED
 
+/*
 typedef unsigned long long uint64_t;
 typedef unsigned int uint32;
 typedef unsigned short uint16;
+*/
 typedef unsigned char uint8;
 
 struct Const
@@ -16,8 +18,6 @@ struct Const
     static const uint8 UNDO;
 
     static const uint8 BOARD_SIZE;
-
-    static const float MAX_VALUE;
 };
 
 #endif

@@ -68,7 +68,7 @@ inline uint8 lzcnt(uint64_t x)
 #endif
 }
 
-#ifndef __AVX2__
+#if !defined(__AVX2__) || !defined(USE_INTRIN)
 uint64_t CalcMobilityL(uint64_t aly, uint64_t masked_opp, uint64_t empty,
                        unsigned char dir)
 {
@@ -96,7 +96,7 @@ uint64_t CalcMobilityR(uint64_t aly, uint64_t masked_opp, uint64_t empty,
 
 uint64_t CalcMobility(const uint64_t aly, const uint64_t opp)
 {
-#ifdef __AVX2__
+#if defined(__AVX2__) && defined(USE_INTRIN)
     __m256i PP, mOO, MM, flip_l, flip_r, pre_l, pre_r, shift2;
     __m128i M;
     const __m256i shift1897 = _mm256_set_epi64x(7, 9, 8, 1);

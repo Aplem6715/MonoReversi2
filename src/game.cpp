@@ -99,7 +99,7 @@ uint8 Game::WaitPosAI(uint8 color)
     printf("※考え中・・・\r");
     input = Search(&tree[color], board.GetOwn(), board.GetOpp(), 0);
     printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
-           tree[color].usedTime, tree[color].nodeCount, tree[color].nodeCount / tree[color].usedTime, tree[color].score);
+           tree[color].usedTime, tree[color].nodeCount, tree[color].nodeCount / tree[color].usedTime, tree[color].score / (float)(STONE_VALUE));
     if (tree[color].isEndSearch)
     {
         printf("(WLD)");

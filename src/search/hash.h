@@ -1,8 +1,7 @@
 ﻿#ifndef HASH_DEFINED
 #define HASH_DEFINED
 
-typedef unsigned long long uint64_t;
-typedef unsigned char uint8;
+#include "../const.h"
 
 #define NOMOVE_INDEX 64
 #define PASS_INDEX 65
@@ -24,7 +23,8 @@ typedef struct HashData
     uint64_t own, opp;
     uint8 depth;
     uint8 bestMove, secondMove;
-    float lower, upper;
+    //int16_t lower, upper;
+    score_strict_t lower, upper;
 } HashData;
 
 // ハッシュテーブル
@@ -45,14 +45,19 @@ typedef struct HashTable
 
 // ハッシュキー生成用の乱数ビット列を初期化
 void InitHash();
+
 // ハッシュテーブルの初期化
 void InitHashTable(HashTable *table);
+
 // ハッシュテーブルの開放
 void FreeHashTable(HashTable *table);
+
 // ハッシュテーブル内のデータをリセット
 void ResetHashTable(HashTable *table);
+
 // ハッシュテーブル内の統計情報をリセット
 void ResetHashStatistics(HashTable *table);
+
 //inline uint64_t GetHashCode(uint64_t own, uint64_t opp);
 
 // ハッシュテーブル内を検索
@@ -60,12 +65,13 @@ HashData *GetHashData(HashTable *table, uint64_t own, uint64_t opp, uint8 depth,
 // ハッシュ内に含まれているか
 uint8 HashContains(HashTable *table, uint64_t own, uint64_t opp);
 
-bool CutWithHash(HashData *hashData, float *alpha, float *beta, float *score);
+bool CutWithHash(HashData *hashData, score_t *alpha, score_t *beta, score_t *score);
 
-void SaveHashData(HashTable *table, uint64_t hashCode, uint64_t own, uint64_t opp, uint8 bestMove, uint8 depth, float alpha, float beta, float maxScore);
+void SaveHashData(HashTable *table, uint64_t hashCode, uint64_t own, uint64_t opp, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore);
+
 /* 未使用（探索関数の中で実装されている機能）
-void HashOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, float lower, float upper, uint64_t hashCode);
-void HashPriorityOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, float lower, float upper, uint64_t hashCode);
+void HashOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, score_t lower, score_t upper, uint64_t hashCode);
+void HashPriorityOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, score_t lower, score_t upper, uint64_t hashCode);
 */
 
 #endif

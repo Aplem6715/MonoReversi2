@@ -61,7 +61,7 @@ void ResetTree(SearchTree *tree)
 
 uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
 {
-    float score, maxScore = -Const::MAX_VALUE;
+    score_t score, maxScore = -Const::MAX_VALUE;
     uint64_t mob, rev, pos;
     uint8 posIdx, bestPos = 64, secondPos = 64;
     SearchFunc_t SearchFunc;

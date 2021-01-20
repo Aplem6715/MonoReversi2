@@ -101,7 +101,7 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
             logfile << ",,,";
         }
         {
-            logfile << tree.score << ","
+            logfile << tree.score / (float)(STONE_VALUE) << ","
                     << xAscii << y << "\n";
         }
     }
