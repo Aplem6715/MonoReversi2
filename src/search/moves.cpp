@@ -57,6 +57,7 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64_t own, uint64_t opp, cons
         uint64_t next_own = opp ^ move->flip;
         uint64_t next_opp = own ^ move->flip ^ posBit;
         score_t score;
+        uint16_t mScore;
 
         // 着手位置でスコア付け(8~0bit)
         move->score = (uint32_t)VALUE_TABLE[move->posIdx];
@@ -65,11 +66,11 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64_t own, uint64_t opp, cons
         // 着手して相手のターンに進める
         UpdateEval(tree->eval, move->posIdx, move->flip);
         score = EvalNNet(tree->eval);
-        score = SCORE_MAX - score;
+        mScore = (uint16_t)((SCORE_MAX - score) / STONE_VALUE);
         assert(score >= 0);
 
-        // 相手のスコアを±反転してスコア加算
-        move->score += ((uint32_t)score * (1 << 8));
+        // 相手のスコアを±反転してスコア加算(精度は1石単位で)
+        move->score += (mScore * (1 << 8));
         UndoEval(tree->eval, move->posIdx, move->flip);
 
         // 相手の着手位置が多いとマイナス，少ないとプラス(14~8bit目)

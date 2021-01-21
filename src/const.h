@@ -10,30 +10,31 @@ typedef unsigned short uint16;
 */
 typedef unsigned char uint8;
 
+
 typedef int16_t score_t;
 typedef int16_t score_strict_t;
-
 // 1石の価値 (signed 16bit)
-#define STONE_VALUE (10)
+#define STONE_VALUE (100)
 // 評価関数の最大値 (50 x 64[stone])
-#define EVAL_MAX (640)
-#define EVAL_MIN (-640)
+#define EVAL_MAX (6400)
+#define EVAL_MIN (-6400)
 // 探索スコアの最大値 (EVAL_MAX + 1)
-#define SCORE_MAX (650)
-#define SCORE_MIN (-650)
+#define SCORE_MAX (6500)
+#define SCORE_MIN (-6500)
+
 
 /*
 typedef float score_t;
 typedef float score_strict_t;
 
 // 1石の価値 (signed 16bit)
-#define STONE_VALUE (1.0f)
+#define STONE_VALUE (10.0f)
 // 評価関数の最大値 (500 x 64[stone])
-#define EVAL_MAX (64.0f)
-#define EVAL_MIN (-64.0f)
+#define EVAL_MAX (640.0f)
+#define EVAL_MIN (-640.0f)
 // 探索スコアの最大値 (EVAL_MAX + 1)
-#define SCORE_MAX (65.0f)
-#define SCORE_MIN (-65.0f)
+#define SCORE_MAX (650.0f)
+#define SCORE_MIN (-650.0f)
 */
 
 struct Const

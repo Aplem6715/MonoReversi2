@@ -345,7 +345,7 @@ score_t EvalNNet(Evaluator *eval)
     }
 #elif USE_REGRESSION
     scoref = PredRegressor(&eval->regr[PHASE(eval->nbEmpty)], eval->FeatureStates, eval->player);
-    score = lroundf(scoref * STONE_VALUE);
+    score = (score_t)roundf(scoref * STONE_VALUE);
 #endif
 
     // 最小値以上，最大値以下に

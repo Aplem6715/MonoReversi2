@@ -17,7 +17,7 @@ int main()
     //char x;
     //int y;
     //CalcPosAscii(C7, x, y);
-    BenchSearching(depths, 0, 3, 4);
+    BenchSearching(depths, 1, 3, 4);
     //MakeBench(10, 10);
 
     return 1;

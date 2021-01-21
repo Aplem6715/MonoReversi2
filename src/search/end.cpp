@@ -9,7 +9,7 @@ inline score_t Judge(const SearchTree *tree, const uint64_t own, const uint64_t 
 {
     const uint8 nbOwn = CountBits(own);
     const uint8 nbOpp = 64 - tree->eval->nbEmpty - nbOwn;
-    return (score_t)(nbOwn - nbOpp) * STONE_VALUE;
+    return (score_t)((nbOwn - nbOpp) * STONE_VALUE);
 }
 
 score_t EndAlphaBetaDeep(SearchTree *tree, uint64_t own, uint64_t opp, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
