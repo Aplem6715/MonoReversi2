@@ -5,7 +5,7 @@
 #include "search.h"
 #include "../const.h"
 
-#define SEARCH_BENCH_FILE "./resources/bench/search.txt"
+#define SEARCH_BENCH_FILE "./resources/bench/search2.txt"
 #define BENCH_LOG_DIR "./resources/bench/"
 
 // ベンチマーク用のデータを作成（ランダム着手棋譜）
