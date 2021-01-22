@@ -150,7 +150,7 @@ void EvalInit(Evaluator *eval)
 #elif USE_REGRESSION
     eval->regr = (Regressor *)malloc(sizeof(Regressor) * NB_PHASE);
     InitRegr(eval->regr);
-    LoadRegressor(eval->regr, regrFolder);
+    RegrLoad(eval->regr, regrFolder);
 #endif
 }
 
@@ -341,7 +341,7 @@ score_t Evaluate(Evaluator *eval, uint8 nbEmpty)
         score = -Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates);
     }
 #elif USE_REGRESSION
-    scoref = PredRegressor(&eval->regr[PHASE(nbEmpty)], eval->FeatureStates, eval->player);
+    scoref = RegrPred(&eval->regr[PHASE(nbEmpty)], eval->FeatureStates, eval->player);
     score = (score_t)roundf(scoref * STONE_VALUE);
 #endif
 

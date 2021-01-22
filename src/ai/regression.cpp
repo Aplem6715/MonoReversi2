@@ -77,7 +77,7 @@ void DelRegr(Regressor regr[NB_PHASE])
     }
 }
 
-void InitRegrBeta(Regressor regr[NB_PHASE])
+void RegrInitBeta(Regressor regr[NB_PHASE])
 {
     int phase;
     for (phase = 0; phase < NB_PHASE; phase++)
@@ -88,7 +88,7 @@ void InitRegrBeta(Regressor regr[NB_PHASE])
     }
 }
 
-void ClearRegressorWeight(Regressor regr[NB_PHASE])
+void RegrClearWeight(Regressor regr[NB_PHASE])
 {
     int phase, feat;
     uint32_t i;
@@ -118,7 +118,7 @@ void RegrApplyWeightToOpp(Regressor *regr)
     }
 }
 
-float PredRegressor(Regressor *regr, const uint16_t features[FEAT_NUM], uint8 player)
+float RegrPred(Regressor *regr, const uint16_t features[FEAT_NUM], uint8 player)
 {
     int feat;
     float score = 0;
@@ -138,7 +138,7 @@ float PredRegressor(Regressor *regr, const uint16_t features[FEAT_NUM], uint8 pl
 
 #ifdef LEARN_MODE
 
-void DecreaseRegrBeta(Regressor regr[NB_PHASE], float mul)
+void RegrDecreaseBeta(Regressor regr[NB_PHASE], float mul)
 {
     int phase;
     for (phase = 0; phase < NB_PHASE; phase++)
@@ -243,11 +243,11 @@ void TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inpu
     for (i = 0; i < inputSize; i++)
     {
         teacher = inputs[i]->stoneDiff;
-        output = PredRegressor(regr, inputs[i]->featStats[OWN], OWN);
+        output = RegrPred(regr, inputs[i]->featStats[OWN], OWN);
         CalcWeightDelta(regr, inputs[i]->featStats[OWN], teacher - output);
 
         // 反転パターンも学習
-        output = PredRegressor(regr, inputs[i]->featStats[OPP], OWN); // ※featの方を反転しているのでplayerは0に
+        output = RegrPred(regr, inputs[i]->featStats[OPP], OWN); // ※featの方を反転しているのでplayerは0に
         CalcWeightDelta(regr, inputs[i]->featStats[OPP], (-teacher) - output);
         if (debug)
         {
@@ -260,7 +260,7 @@ void TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inpu
 }
 
 #ifdef LEARN_MODE
-void InitRegrTrain(Regressor regr[NB_PHASE])
+void RegrTrainInit(Regressor regr[NB_PHASE])
 {
     int phase, i;
 
@@ -347,7 +347,7 @@ void InitRegrTrain(Regressor regr[NB_PHASE])
 }
 #endif
 
-float TrainRegressor(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, FeatureRecord *testRecords, size_t nbTests)
+float RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, FeatureRecord *testRecords, size_t nbTests)
 {
     double loss, totalLoss;
     int i, phase, batchIdx, testCnt, totalCnt;
@@ -399,7 +399,7 @@ float TrainRegressor(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecord
         testCnt = 0;
         for (i = 0; i < testSize[phase]; i++)
         {
-            loss += fabsf(tests[phase][i]->stoneDiff - PredRegressor(&regr[phase], tests[phase][i]->featStats[0], 0));
+            loss += fabsf(tests[phase][i]->stoneDiff - RegrPred(&regr[phase], tests[phase][i]->featStats[0], 0));
             testCnt++;
             totalCnt++;
         }
@@ -415,7 +415,7 @@ float TrainRegressor(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecord
 }
 #endif
 
-void SaveRegressor(Regressor regr[NB_PHASE], const char *file)
+void RegrSave(Regressor regr[NB_PHASE], const char *file)
 {
     int phase, feat;
     size_t writed;
@@ -449,7 +449,7 @@ void SaveRegressor(Regressor regr[NB_PHASE], const char *file)
         }
     }
 }
-void LoadRegressor(Regressor regr[NB_PHASE], const char *file)
+void RegrLoad(Regressor regr[NB_PHASE], const char *file)
 {
     int phase, feat;
     size_t readed;

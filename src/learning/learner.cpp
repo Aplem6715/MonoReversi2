@@ -166,8 +166,8 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
 
 #ifdef USE_NN
 #elif USE_REGRESSION
-    InitRegrTrain(trees[0].eval->regr);
-    InitRegrTrain(trees[1].eval->regr);
+    RegrTrainInit(trees[0].eval->regr);
+    RegrTrainInit(trees[1].eval->regr);
 #endif
 
     if (resetWeight)
@@ -176,16 +176,16 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         InitWeight(trees[0].eval->net);
         InitWeight(trees[1].eval->net);
 #elif USE_REGRESSION
-        ClearRegressorWeight(trees[0].eval->regr);
-        ClearRegressorWeight(trees[1].eval->regr);
+        RegrClearWeight(trees[0].eval->regr);
+        RegrClearWeight(trees[1].eval->regr);
         printf("Weight Init(Reset)\n");
 #endif
     }
     else
     {
 #if USE_REGRESSION
-        InitRegrBeta(trees[0].eval->regr);
-        InitRegrBeta(trees[1].eval->regr);
+        RegrInitBeta(trees[0].eval->regr);
+        RegrInitBeta(trees[1].eval->regr);
 #endif
     }
 
@@ -231,7 +231,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
 #ifdef USE_NN
         loss = TrainNN(trees[1].eval->net, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
 #elif USE_REGRESSION
-        loss = TrainRegressor(trees[1].eval->regr, featRecords, testRecords.data(), testRecords.size());
+        loss = RegrTrain(trees[1].eval->regr, featRecords, testRecords.data(), testRecords.size());
 #endif
 
         // 新旧モデルで対戦
@@ -279,7 +279,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
                 trees[0].eval->net[phase] = trees[1].eval->net[phase];
             }
 #elif USE_REGRESSION
-            SaveRegressor(trees[1].eval->regr, modelDir.c_str());
+            RegrSave(trees[1].eval->regr, modelDir.c_str());
             // 旧ツリーに新Weightを上書きコピー
             for (int phase = 0; phase < NB_PHASE; phase++)
             {
@@ -446,7 +446,7 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
 #ifdef USE_NN
         loss = TrainNN(eval->net, featRecords.data(), testRecords.data(), featRecords.size(), testRecords.size());
 #elif USE_REGRESSION
-        loss = TrainRegressor(eval->regr, featRecords, testRecords.data(), testRecords.size());
+        loss = RegrTrain(eval->regr, featRecords, testRecords.data(), testRecords.size());
 #endif
         logFile << "Cycle: " << cycles << "\t "
                 << "Loss: " << setprecision(6) << loss << "%" << endl;
@@ -473,7 +473,7 @@ int main()
 
     InitTree(&tree, 4, 6, 100, 1, 6);
 #if USE_REGRESSION
-    InitRegrTrain(tree.eval->regr);
+    RegrTrainInit(tree.eval->regr);
 #endif
 
     /*
@@ -495,7 +495,7 @@ int main()
 #ifdef USE_NN
         InitWeight(tree.eval->net);
 #elif USE_REGRESSION
-        ClearRegressorWeight(tree.eval->regr);
+        RegrClearWeight(tree.eval->regr);
 #endif
     }
     for (int epoch = 0; epoch < epochs; epoch++)
@@ -514,13 +514,13 @@ int main()
 #ifdef USE_NN
         SaveNets(tree.eval->net, modelDir.c_str());
 #elif USE_REGRESSION
-        SaveRegressor(tree.eval->regr, modelDir.c_str());
+        RegrSave(tree.eval->regr, modelDir.c_str());
 #endif
 
 #ifdef USE_NN
         DecreaseNNlr(tree.eval->net);
 #elif USE_REGRESSION
-        DecreaseRegrBeta(tree.eval->regr, 0.75f);
+        RegrDecreaseBeta(tree.eval->regr, 0.75f);
 #endif
     }
 
