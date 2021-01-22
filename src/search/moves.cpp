@@ -5,13 +5,13 @@
 #include "search.h"
 #include "../bit_operation.h"
 
-void CreateMoveList(MoveList *moveList, uint64_t own, uint64_t opp)
+void CreateMoveList(MoveList *moveList, Stones *stones)
 {
     Move *prev = moveList->moves;
     Move *move = moveList->moves + 1;
     uint8 posIdx;
     uint64_t pos, rev;
-    uint64_t mob = CalcMobility(own, opp);
+    uint64_t mob = CalcMobility(stones);
 
     while (mob != 0)
     {
@@ -19,10 +19,11 @@ void CreateMoveList(MoveList *moveList, uint64_t own, uint64_t opp)
         pos = GetLSB(mob);
         posIdx = CalcPosIndex(pos);
         mob ^= pos;
-        rev = CalcFlipOptimized(own, opp, posIdx);
+        rev = CalcFlipOptimized(stones, posIdx);
 
         move->flip = rev;
         move->posIdx = posIdx;
+        move->score = 0;
         prev = prev->next = move;
         move++;
     }
@@ -30,12 +31,12 @@ void CreateMoveList(MoveList *moveList, uint64_t own, uint64_t opp)
     prev->next = NULL;
     moveList->nbMoves = (uint8)(move - moveList->moves - 1);
 
-    assert(moveList->nbMoves == CountBits(CalcMobility(own, opp)));
+    assert(moveList->nbMoves == CountBits(CalcMobility(stones)));
 }
 
-void EvaluateMove(SearchTree *tree, Move *move, uint64_t own, uint64_t opp, const HashData *hashData)
+void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *hashData)
 {
-    if (move->flip == opp)
+    if (move->flip == stones->opp)
     {
         // 完全勝利で最高得点
         move->score = (1 << 31);
@@ -53,9 +54,11 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64_t own, uint64_t opp, cons
     else
     {
         uint64_t posBit = CalcPosBit(move->posIdx);
-        uint64_t next_mob = CalcMobility(opp ^ move->flip, own ^ move->flip ^ posBit);
-        uint64_t next_own = opp ^ move->flip;
-        uint64_t next_opp = own ^ move->flip ^ posBit;
+        Stones nextStones[1];
+        nextStones->own = stones->opp ^ move->flip;
+        nextStones->opp = stones->own ^ move->flip ^ posBit;
+
+        uint64_t next_mob = CalcMobility(nextStones);
         score_t score;
         uint16_t mScore;
 
@@ -65,9 +68,9 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64_t own, uint64_t opp, cons
         // 一手読みのスコア付け（24~8bit目)
         // 着手して相手のターンに進める
         UpdateEval(tree->eval, move->posIdx, move->flip);
-        score = EvalNNet(tree->eval);
+        score = EvalNNet(tree->eval, tree->nbEmpty - 1);
         mScore = (uint16_t)((SCORE_MAX - score) / STONE_VALUE);
-        assert(score >= 0);
+        assert(SCORE_MAX - score >= 0);
 
         // 相手のスコアを±反転してスコア加算(精度は1石単位で)
         move->score += (mScore * (1 << 8));
@@ -77,19 +80,19 @@ void EvaluateMove(SearchTree *tree, Move *move, uint64_t own, uint64_t opp, cons
         move->score += (MAX_MOVES + 4 /*角分*/ - (CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 8);
 
         // 置換表に含まれていたらプラス(8bit目)
-        if (hashData != NULL && HashContains(tree->table, next_own, next_opp))
+        if (hashData != NULL && HashContains(tree->table, nextStones))
         {
             move->score += (1 << 8);
         }
     }
 }
 
-void EvaluateMoveList(SearchTree *tree, MoveList *movelist, uint64_t own, uint64_t opp, const HashData *hashData)
+void EvaluateMoveList(SearchTree *tree, MoveList *movelist, Stones *stones, const HashData *hashData)
 {
     Move *move;
     for (move = movelist->moves->next; move != NULL; move = move->next)
     {
-        EvaluateMove(tree, move, own, opp, hashData);
+        EvaluateMove(tree, move, tree->stones, hashData);
     }
 }
 

@@ -42,13 +42,13 @@ uint64_t Board::PutTT(uint8 pos)
     uint64_t flip;
     if (turn == Const::BLACK)
     {
-        flip = CalcFlipOptimized(black, white, pos);
+        flip = CalcFlipOptimized64(black, white, pos);
         black = black ^ flip ^ CalcPosBit(pos);
         white = white ^ flip;
     }
     else
     {
-        flip = CalcFlipOptimized(white, black, pos);
+        flip = CalcFlipOptimized64(white, black, pos);
         black = black ^ flip;
         white = white ^ flip ^ CalcPosBit(pos);
     }
@@ -213,11 +213,11 @@ uint64_t Board::GetMobility()
 {
     if (turn == Const::BLACK)
     {
-        return CalcMobility(black, white);
+        return CalcMobility64(black, white);
     }
     else
     {
-        return CalcMobility(white, black);
+        return CalcMobility64(white, black);
     }
 }
 
@@ -232,5 +232,5 @@ bool Board::IsFinished()
     {
         return true;
     }
-    return (CalcMobility(black, white) == 0) && (CalcMobility(white, black) == 0);
+    return (CalcMobility64(black, white) == 0) && (CalcMobility64(white, black) == 0);
 }

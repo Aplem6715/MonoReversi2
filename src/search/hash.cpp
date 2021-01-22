@@ -67,12 +67,12 @@ void ResetHashStatistics(HashTable *table)
 }
 
 // 乱数ビット列を統合してハッシュコードを取得する
-inline uint64_t GetHashCode(uint64_t own, uint64_t opp)
+inline uint64_t GetHashCode(Stones *stones)
 {
     uint64_t code;
 
     // own: 64bit -> 8x8bit
-    const uint8 *cursor = (uint8 *)(&own);
+    const uint8 *cursor = (uint8 *)(&stones->own);
     code = RawHash[0][cursor[0]];
     code ^= RawHash[1][cursor[1]];
     code ^= RawHash[2][cursor[2]];
@@ -83,7 +83,7 @@ inline uint64_t GetHashCode(uint64_t own, uint64_t opp)
     code ^= RawHash[7][cursor[7]];
 
     // opp: 64bit -> 8x8bit
-    cursor = (uint8 *)(&opp);
+    cursor = (uint8 *)(&stones->opp);
     code ^= RawHash[8][cursor[0]];
     code ^= RawHash[9][cursor[1]];
     code ^= RawHash[10][cursor[2]];
@@ -96,15 +96,15 @@ inline uint64_t GetHashCode(uint64_t own, uint64_t opp)
     return code;
 }
 
-HashData *GetHashData(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, uint64_t *hashCode)
+HashData *GetHashData(HashTable *table, Stones *stones, uint8 depth, uint64_t *hashCode)
 {
     // ハッシュコード取得
-    *hashCode = GetHashCode(own, opp);
+    *hashCode = GetHashCode(stones);
     // サイズでモジュロ演算(code % size)
     uint64_t index = *hashCode & (table->size - 1);
     HashData *data = &table->data[index];
 
-    if (data->own == own && data->opp == opp)
+    if (data->own == stones->own && data->opp == stones->opp)
     {
         if (data->depth == depth)
         {
@@ -115,15 +115,15 @@ HashData *GetHashData(HashTable *table, uint64_t own, uint64_t opp, uint8 depth,
     return NULL;
 }
 
-uint8 HashContains(HashTable *table, uint64_t own, uint64_t opp)
+uint8 HashContains(HashTable *table, Stones *stones)
 {
     // ハッシュコード取得
-    uint64_t hashCode = GetHashCode(own, opp);
+    uint64_t hashCode = GetHashCode(stones);
     // サイズでモジュロ演算(code % size)
     uint64_t index = hashCode & (table->size - 1);
     HashData *data = &table->data[index];
 
-    if (data->own == own && data->opp == opp)
+    if (data->own == stones->own && data->opp == stones->opp)
     {
         return 1;
     }
@@ -154,7 +154,7 @@ bool CutWithHash(HashData *hashData, score_t *alpha, score_t *beta, score_t *sco
     return false;
 }
 
-void SaveNewData(HashData *data, const uint64_t own, const uint64_t opp, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
+void SaveNewData(HashData *data, const Stones *stones, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
 {
     if (maxScore < beta)
         data->upper = maxScore;
@@ -171,13 +171,13 @@ void SaveNewData(HashData *data, const uint64_t own, const uint64_t opp, const u
     else
         data->bestMove = NOMOVE_INDEX;
 
-    data->own = own;
-    data->opp = opp;
+    data->own = stones->own;
+    data->opp = stones->opp;
     data->secondMove = NOMOVE_INDEX;
     data->depth = depth;
 }
 
-void UpdateData(HashData *data, const uint64_t own, const uint64_t opp, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
+void UpdateData(HashData *data, const Stones *stones, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
 {
     if (maxScore < beta && maxScore < data->upper)
         data->upper = maxScore;
@@ -192,19 +192,19 @@ void UpdateData(HashData *data, const uint64_t own, const uint64_t opp, const ui
     }
 }
 
-void SaveHashData(HashTable *table, uint64_t hashCode, uint64_t own, uint64_t opp, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore)
+void SaveHashData(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore)
 {
     uint64_t index = hashCode & (table->size - 1);
     HashData *hashData = &table->data[index];
     if ((hashData->own | hashData->opp) == 0)
     {
-        SaveNewData(hashData, own, opp, bestMove, depth, alpha, beta, maxScore);
+        SaveNewData(hashData, stones, bestMove, depth, alpha, beta, maxScore);
         table->nbUsed++;
     }
-    else if (hashData->own == own && hashData->opp == opp)
+    else if (hashData->own == stones->own && hashData->opp == stones->opp)
     {
         if (hashData->depth <= depth)
-            UpdateData(hashData, own, opp, bestMove, depth, alpha, beta, maxScore);
+            UpdateData(hashData, stones, bestMove, depth, alpha, beta, maxScore);
     }
     else
     {

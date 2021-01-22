@@ -101,7 +101,6 @@ typedef struct Evaluator
 {
     unsigned short FeatureStates[FEAT_NUM];
     uint8 player;
-    uint8 nbEmpty;
 #ifdef USE_NN
     NNet *net;
 #elif USE_REGRESSION
@@ -120,7 +119,7 @@ void UndoEval(Evaluator *eval, uint8 pos, uint64_t flip);
 void UpdateEvalPass(Evaluator *eval);
 //void SetWeights(Evaluator *eval, Weight *weights[NB_PHASE]);
 
-score_t EvalNNet(Evaluator *eval);
+score_t EvalNNet(Evaluator *eval, uint8 nbEmpty);
 score_t EvalPosTable(uint64_t own, uint64_t opp);
 
 #endif

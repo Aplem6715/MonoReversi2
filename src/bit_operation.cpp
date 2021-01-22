@@ -94,7 +94,7 @@ uint64_t CalcMobilityR(uint64_t aly, uint64_t masked_opp, uint64_t empty,
 }
 #endif
 
-uint64_t CalcMobility(const uint64_t aly, const uint64_t opp)
+inline uint64_t CalcMobility64(const uint64_t aly, const uint64_t opp)
 {
 #if defined(__AVX2__) && defined(USE_INTRIN)
     __m256i PP, mOO, MM, flip_l, flip_r, pre_l, pre_r, shift2;
@@ -140,6 +140,11 @@ uint64_t CalcMobility(const uint64_t aly, const uint64_t opp)
     mobilty |= CalcMobilityR(aly, mask_al, empty, 9);
     return mobilty;
 #endif
+}
+
+uint64_t CalcMobility(const Stones *stones)
+{
+    return CalcMobility64(stones->own, stones->opp);
 }
 
 /* 過去の遺産
@@ -222,7 +227,7 @@ FlipGenerator
 　　return flipped.x | flipped.y | flipped.z | flipped.w;
 */
 
-uint64_t CalcFlipOptimized(const uint64_t own, const uint64_t opp, const uint8 pos)
+inline uint64_t CalcFlipOptimized64(const uint64_t own, const uint64_t opp, const uint8 pos)
 {
     uint64_t flipped[4];
     uint64_t oppM[4];
@@ -283,6 +288,11 @@ uint64_t CalcFlipOptimized(const uint64_t own, const uint64_t opp, const uint8 p
     rev |= CalcFlipR(aly, blank_al, pos, 9);
     return rev;
     */
+}
+
+uint64_t CalcFlipOptimized(const Stones *stones, const uint8 pos)
+{
+    return CalcFlipOptimized64(stones->own, stones->opp, pos);
 }
 
 uint8 CountBits(uint64_t stone)
