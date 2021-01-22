@@ -11,10 +11,10 @@
  * @param digit インデックスの３進桁数
  * @return uint16 逆立場のインデックス
  */
-uint16 OpponentIndex(uint16 idx, uint8 digit)
+uint16_t OpponentIndex(uint16_t idx, uint8 digit)
 {
-    const uint16 oppN[] = {0, 2, 1};
-    uint16 ret = 0;
+    const uint16_t oppN[] = {0, 2, 1};
+    uint16_t ret = 0;
     uint8 shift;
     for (shift = 0; shift < digit; shift++)
     {
@@ -110,7 +110,7 @@ static const PosToFeature Pos2Feat[] = {
 };
 
 // ALL 211,734
-static const uint32 FeatMaxIndex[] = {
+static const uint32_t FeatMaxIndex[] = {
     POW3_8, POW3_8, POW3_8, POW3_8,     // LINE2  26244
     POW3_8, POW3_8, POW3_8, POW3_8,     // LINE3  26244
     POW3_8, POW3_8, POW3_8, POW3_8,     // LINE4  26244
@@ -162,7 +162,7 @@ void DeleteEval(Evaluator *eval)
 #endif
 }
 
-void ReloadEval(Evaluator *eval, uint64 own, uint64 opp, uint8 player)
+void ReloadEval(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player)
 {
     const PosToFeature *pos2f;
     uint8 pos;
@@ -171,7 +171,6 @@ void ReloadEval(Evaluator *eval, uint64 own, uint64 opp, uint8 player)
 
     // 自分の手番
     eval->player = player;
-    eval->nbEmpty = CountBits(~(own | opp));
     for (i = 0; i < FEAT_NUM; i++)
     {
         eval->FeatureStates[i] = 0;
@@ -204,7 +203,7 @@ void ReloadEval(Evaluator *eval, uint64 own, uint64 opp, uint8 player)
     assert(own == 0 && opp == 0);
 }
 
-void UpdateEval(Evaluator *eval, uint8 pos, uint64 flip)
+void UpdateEval(Evaluator *eval, uint8 pos, uint64_t flip)
 {
     const PosToFeature *pos2f = &(Pos2Feat[pos]);
     int nbFeat = pos2f->nbFeature;
@@ -261,10 +260,9 @@ void UpdateEval(Evaluator *eval, uint8 pos, uint64 flip)
         }
     }
     eval->player ^= 1;
-    eval->nbEmpty--;
 }
 
-void UndoEval(Evaluator *eval, uint8 pos, uint64 flip)
+void UndoEval(Evaluator *eval, uint8 pos, uint64_t flip)
 {
     const PosToFeature *pos2f = &(Pos2Feat[pos]);
     int nbFeat = pos2f->nbFeature;
@@ -272,7 +270,6 @@ void UndoEval(Evaluator *eval, uint8 pos, uint64 flip)
     uint8 flipIdx;
 
     eval->player ^= 1;
-    eval->nbEmpty++;
     if (eval->player == OWN)
     {
         // 着手箇所について
@@ -330,26 +327,34 @@ void UpdateEvalPass(Evaluator *eval)
     eval->player ^= 1;
 }
 
-float EvalNNet(Evaluator *eval)
+score_t EvalNNet(Evaluator *eval, uint8 nbEmpty)
 {
+    float scoref;
+    score_t score;
 #ifdef USE_NN
     if (eval->player)
     {
-        return Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates);
+        score = Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates);
     }
     else
     {
-        return -Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates);
+        score = -Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates);
     }
 #elif USE_REGRESSION
-    return PredRegressor(&eval->regr[PHASE(eval->nbEmpty)], eval->FeatureStates, eval->player);
+    scoref = PredRegressor(&eval->regr[PHASE(nbEmpty)], eval->FeatureStates, eval->player);
+    score = (score_t)roundf(scoref * STONE_VALUE);
 #endif
+
+    // 最小値以上，最大値以下に
+    score = MAX(score, EVAL_MIN);
+    score = MIN(score, EVAL_MAX);
+    return score;
 }
 
-float EvalPosTable(uint64 own, uint64 opp)
+score_t EvalPosTable(uint64_t own, uint64_t opp)
 {
     int i = 0;
-    float score = 0;
+    score_t score = 0;
     for (i = 0; i < Const::BOARD_SIZE * Const::BOARD_SIZE; i++)
     {
         score += ((own >> i) & 1) * VALUE_TABLE[i];

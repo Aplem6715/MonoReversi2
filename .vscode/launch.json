@@ -39,6 +39,18 @@
             "environment": [],
             "externalConsole": true,
             "preLaunchTask": "make-learn_release"
+        },
+        {
+            "name": "Release",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build\\MonoReversi.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "preLaunchTask": "make_release"
         }
     ]
 }

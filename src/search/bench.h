@@ -5,7 +5,7 @@
 #include "search.h"
 #include "../const.h"
 
-#define SEARCH_BENCH_FILE "./resources/bench/search.txt"
+#define SEARCH_BENCH_FILE "./resources/bench/search2.txt"
 #define BENCH_LOG_DIR "./resources/bench/"
 
 // ベンチマーク用のデータを作成（ランダム着手棋譜）
@@ -15,6 +15,6 @@ void MakeBench(int nbGames, uint8 nbRandomTurn);
 void Bench1Game(SearchTree &tree, std::vector<uint8> moves, int nbPut, std::ofstream &logfile);
 
 // 指定深度でベンチマークの実行
-void BenchSearching(std::vector<unsigned char> depths, unsigned char useHash, unsigned char hashDepth, unsigned char orderDepth);
+void BenchSearching(vector<unsigned char> depths, unsigned char useHash, unsigned char hashDepth, unsigned char orderDepth);
 
 #endif

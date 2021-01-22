@@ -5,131 +5,38 @@
 #include "../bit_operation.h"
 #include <assert.h>
 
-inline float Judge(const SearchTree *tree, const uint64 own, const uint64 opp)
+inline score_t Judge(const SearchTree *tree)
 {
-    const uint8 nbOwn = CountBits(own);
-    const uint8 nbOpp = 64 - tree->eval->nbEmpty - nbOwn;
-    return (float)(nbOwn - nbOpp);
+    const uint8 nbOwn = CountBits(tree->stones->own);
+    const uint8 nbOpp = 64 - tree->nbEmpty - nbOwn;
+    return (score_t)((nbOwn - nbOpp) * STONE_VALUE);
 }
 
-float EndAlphaBetaDeep(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed)
-{
-
-    assert(depth <= tree->orderDepth);
-
-    uint64 mob, pos, rev, hashCode;
-    uint8 posIdx;
-    uint8 bestMove;
-    HashData *hashData = NULL;
-    float score, maxScore, lower;
-
-    tree->nodeCount++;
-    if (depth <= 0)
-    {
-        //return EvalPosTable(own, opp);
-        //return EvalTinyDnn(tree, tree->nbEmpty);
-        return Judge(tree, own, opp);
-    }
-
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
-    {
-        hashData = GetHashData(tree->table, own, opp, depth, &hashCode);
-        if (hashData != NULL && CutWithHash(hashData, &alpha, &beta, &score))
-            return score;
-    }
-
-    mob = CalcMobility(own, opp);
-
-    // 手があるか
-    if (mob == 0)
-    {
-        // 2連続パスなら終了
-        if (passed == 1)
-        {
-            bestMove = NOMOVE_INDEX;
-            // 勝敗判定
-            return Judge(tree, own, opp);
-        }
-        else
-        {
-            // 手番を入れ替えて探索続行
-            bestMove = PASS_INDEX;
-            UpdateEvalPass(tree->eval);
-            maxScore = -EndAlphaBetaDeep(tree, opp, own, -beta, -alpha, depth, true);
-            UpdateEvalPass(tree->eval);
-        }
-    }
-    else
-    {
-        maxScore = -Const::MAX_VALUE;
-        lower = alpha;
-        // 打つ手がある時
-        while (mob != 0)
-        {
-            // 着手位置・反転位置を取得
-            pos = GetLSB(mob);
-            posIdx = CalcPosIndex(pos);
-            mob ^= pos;
-            rev = CalcFlip(own, opp, pos);
-
-            UpdateEval(tree->eval, posIdx, rev);
-            {
-                // 子ノードを探索
-                score = -EndAlphaBetaDeep(tree, opp ^ rev, own ^ rev ^ pos, -beta, -lower, depth - 1, false);
-            }
-            UndoEval(tree->eval, posIdx, rev);
-
-            if (score > maxScore)
-            {
-                maxScore = score;
-                bestMove = CalcPosIndex(pos);
-
-                // 上限突破したら
-                if (score >= beta)
-                {
-                    // 探索終了（カット）
-                    break;
-                }
-                else if (maxScore > lower)
-                {
-                    lower = maxScore;
-                }
-            }
-        }
-    }
-
-    if (tree->useHash == 1 && hashData != NULL)
-    {
-        SaveHashData(tree->table, hashCode, own, opp, bestMove, depth, alpha, beta, maxScore);
-    }
-    return maxScore;
-}
-
-float EndAlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float beta, unsigned char depth, unsigned char passed)
+score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
 {
     uint8 bestMove;
-    uint64 pos, hashCode;
+    uint64_t hashCode;
     SearchFunc_t NextSearch;
     MoveList moveList;
     Move *move;
     HashData *hashData = NULL;
-    float score, maxScore, lower;
+    score_t score, maxScore, lower;
 
     tree->nodeCount++;
     if (depth <= 0)
     {
         //return EvalPosTable(own, opp);
-        return Judge(tree, own, opp);
+        return Judge(tree);
     }
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        hashData = GetHashData(tree->table, own, opp, depth, &hashCode);
+        hashData = GetHashData(tree->table, tree->stones, depth, &hashCode);
         if (hashData != NULL && CutWithHash(hashData, &alpha, &beta, &score))
             return score;
     }
 
-    CreateMoveList(&moveList, own, opp);
+    CreateMoveList(&moveList, tree->stones);
 
     // 手があるか
     if (moveList.nbMoves <= 0)
@@ -139,14 +46,14 @@ float EndAlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
         {
             bestMove = NOMOVE_INDEX;
             // 勝敗判定
-            return Judge(tree, own, opp);
+            return Judge(tree);
         }
         else
         {
             // 手番を入れ替えて探索続行
-            UpdateEvalPass(tree->eval);
-            maxScore = -EndAlphaBeta(tree, opp, own, -beta, -alpha, depth, true);
-            UpdateEvalPass(tree->eval);
+            SearchPassEnd(tree);
+            maxScore = -EndAlphaBeta(tree, -beta, -alpha, depth, true);
+            SearchPassEnd(tree);
             bestMove = PASS_INDEX;
         }
     }
@@ -154,8 +61,8 @@ float EndAlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
     {
         if (depth >= tree->orderDepth)
         {
-            EvaluateMoveList(tree, &moveList, own, opp, alpha, hashData);
-            SortMoveList(&moveList);
+            EvaluateMoveList(tree, &moveList, tree->stones, hashData);
+            //SortMoveList(&moveList);
             NextSearch = EndAlphaBeta;
         }
         else
@@ -165,17 +72,14 @@ float EndAlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
         maxScore = -Const::MAX_VALUE;
         lower = alpha;
         // 打つ手がある時, 良い手から並べ替えつつループ
-        for (move = moveList.moves->next; move != NULL; move = move->next)
+        for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
         {
-            // 着手位置・反転位置を取得
-            pos = CalcPosBit(move->posIdx);
-
-            UpdateEval(tree->eval, move->posIdx, move->flip);
+            SearchUpdateEnd(tree, move);
             {
                 // 子ノードを探索
-                score = -NextSearch(tree, opp ^ move->flip, own ^ move->flip ^ pos, -beta, -lower, depth - 1, false);
+                score = -NextSearch(tree, -beta, -lower, depth - 1, false);
             }
-            UndoEval(tree->eval, move->posIdx, move->flip);
+            SearchRestoreEnd(tree, move);
 
             if (score > maxScore)
             {
@@ -185,6 +89,7 @@ float EndAlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
                 // 上限突破したら
                 if (score >= beta)
                 {
+                    tree->nbCut++;
                     // 探索終了（カット）
                     break;
                 }
@@ -198,7 +103,101 @@ float EndAlphaBeta(SearchTree *tree, uint64 own, uint64 opp, float alpha, float 
 
     if (tree->useHash == 1)
     {
-        SaveHashData(tree->table, hashCode, own, opp, bestMove, depth, alpha, beta, maxScore);
+        SaveHashData(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+    }
+    return maxScore;
+}
+
+score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
+{
+
+    assert(depth <= tree->orderDepth);
+
+    uint64_t mob, pos, flip, hashCode;
+    uint8 posIdx;
+    uint8 bestMove;
+    HashData *hashData = NULL;
+    score_t score, maxScore, lower;
+
+    tree->nodeCount++;
+    if (depth <= 0)
+    {
+        //return EvalPosTable(own, opp);
+        //return EvalTinyDnn(tree, tree->nbEmpty);
+        return Judge(tree);
+    }
+
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    {
+        hashData = GetHashData(tree->table, tree->stones, depth, &hashCode);
+        if (hashData != NULL && CutWithHash(hashData, &alpha, &beta, &score))
+            return score;
+    }
+
+    mob = CalcMobility(tree->stones);
+
+    // 手があるか
+    if (mob == 0)
+    {
+        // 2連続パスなら終了
+        if (passed == 1)
+        {
+            bestMove = NOMOVE_INDEX;
+            // 勝敗判定
+            return Judge(tree);
+        }
+        else
+        {
+            // 手番を入れ替えて探索続行
+            bestMove = PASS_INDEX;
+            SearchPassEnd(tree);
+            maxScore = -EndAlphaBetaDeep(tree, -beta, -alpha, depth, true);
+            SearchPassEnd(tree);
+        }
+    }
+    else
+    {
+        maxScore = -Const::MAX_VALUE;
+        lower = alpha;
+        // 打つ手がある時
+        while (mob != 0)
+        {
+            // 着手位置・反転位置を取得
+            pos = GetLSB(mob);
+            mob ^= pos;
+            posIdx = CalcPosIndex(pos);
+            flip = CalcFlipOptimized(tree->stones, posIdx);
+
+            SearchUpdateEndDeep(tree, pos, flip);
+            {
+                // 子ノードを探索
+                score = -EndAlphaBetaDeep(tree, -beta, -lower, depth - 1, false);
+            }
+            SearchRestoreEndDeep(tree, pos, flip);
+
+            if (score > maxScore)
+            {
+                maxScore = score;
+                bestMove = posIdx;
+
+                // 上限突破したら
+                if (score >= beta)
+                {
+                    tree->nbCut++;
+                    // 探索終了（カット）
+                    break;
+                }
+                else if (maxScore > lower)
+                {
+                    lower = maxScore;
+                }
+            }
+        }
+    }
+
+    if (tree->useHash == 1 && hashData != NULL)
+    {
+        SaveHashData(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }

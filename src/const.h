@@ -1,23 +1,54 @@
 #ifndef CONST_DEFINED
 #define CONST_DEFINED
 
-typedef unsigned long long uint64;
+#include <stdint.h>
+
+/* stdintの整数型へ変更
+typedef unsigned long long uint64_t;
 typedef unsigned int uint32;
 typedef unsigned short uint16;
+*/
 typedef unsigned char uint8;
+
+
+typedef int16_t score_t;
+typedef int16_t score_strict_t;
+// 1石の価値 (signed 16bit)
+#define STONE_VALUE (100)
+// 評価関数の最大値 (50 x 64[stone])
+#define EVAL_MAX (6400)
+#define EVAL_MIN (-6400)
+// 探索スコアの最大値 (EVAL_MAX + 1)
+#define SCORE_MAX (6500)
+#define SCORE_MIN (-6500)
+
+
+/*
+typedef float score_t;
+typedef float score_strict_t;
+
+// 1石の価値 (signed 16bit)
+#define STONE_VALUE (10.0f)
+// 評価関数の最大値 (500 x 64[stone])
+#define EVAL_MAX (640.0f)
+#define EVAL_MIN (-640.0f)
+// 探索スコアの最大値 (EVAL_MAX + 1)
+#define SCORE_MAX (650.0f)
+#define SCORE_MIN (-650.0f)
+*/
 
 struct Const
 {
-    static const uint8 WHITE;
-    static const uint8 BLACK;
-    static const uint8 EMPTY;
+    static const uint8_t WHITE;
+    static const uint8_t BLACK;
+    static const uint8_t EMPTY;
 
-    static const uint8 PASS;
-    static const uint8 UNDO;
+    static const uint8_t PASS;
+    static const uint8_t UNDO;
 
-    static const uint8 BOARD_SIZE;
+    static const uint8_t BOARD_SIZE;
 
-    static const float MAX_VALUE;
+    static const score_t MAX_VALUE;
 };
 
 // 1ターンでの最大着手可能位置数

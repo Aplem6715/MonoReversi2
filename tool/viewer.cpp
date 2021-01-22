@@ -4,12 +4,12 @@ using namespace std;
 
 int main()
 {
-    uint64 black, white, mob;
+    uint64_t black, white, mob;
     while (1)
     {
         cin >> black >> white >> mob;
 
-        uint64 cursor = 0x0000000000000001;
+        uint64_t cursor = 0x0000000000000001;
         printf("＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋\n");
         printf("｜　｜ A｜ B｜ C｜ D｜ E｜ F｜ G｜ H｜\n");
         for (int y = 0; y < 17; y++)

@@ -84,25 +84,23 @@
 #define FEAT_BMRAN_3 40
 #define FEAT_BMRAN_4 41
 
-extern const uint32 FeatMaxIndex[];
+extern const uint32_t FeatMaxIndex[];
 extern const uint8 FeatDigits[];
 
-const float VALUE_TABLE[] = {
-    120, -20, 20, 5, 5, 20, -20, 120,   //
-    -20, -40, -5, -5, -5, -5, -40, -20, //
-    20, -5, 15, 3, 3, 15, -5, 20,       //
-    5, -5, 3, 3, 3, 3, -5, 5,           //
-    5, -5, 3, 3, 3, 3, -5, 5,           //
-    20, -5, 15, 3, 3, 15, -5, 20,       //
-    -20, -40, -5, -5, -5, -5, -40, -20, //
-    120, -20, 20, 5, 5, 20, -20, 120,   //
-};
+const score_t VALUE_TABLE[] = {
+    20, 4, 18, 12, 12, 18, 4, 20,
+    4, 1, 6, 8, 8, 6, 1, 4,
+    18, 6, 15, 10, 10, 15, 6, 18,
+    12, 8, 10, 0, 0, 10, 8, 12,
+    12, 8, 10, 0, 0, 10, 8, 12,
+    18, 6, 15, 10, 10, 15, 6, 18,
+    4, 1, 6, 8, 8, 6, 1, 4,
+    20, 4, 18, 12, 12, 18, 4, 20};
 
 typedef struct Evaluator
 {
     unsigned short FeatureStates[FEAT_NUM];
     uint8 player;
-    uint8 nbEmpty;
 #ifdef USE_NN
     NNet *net;
 #elif USE_REGRESSION
@@ -111,17 +109,17 @@ typedef struct Evaluator
 
 } Evaluator;
 
-uint16 OpponentIndex(uint16 idx, uint8 digit);
+uint16_t OpponentIndex(uint16_t idx, uint8 digit);
 
 void InitEval(Evaluator *eval);
 void DeleteEval(Evaluator *eval);
-void ReloadEval(Evaluator *eval, uint64 own, uint64 opp, uint8 player);
-void UpdateEval(Evaluator *eval, uint8 pos, uint64 flip);
-void UndoEval(Evaluator *eval, uint8 pos, uint64 flip);
+void ReloadEval(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player);
+void UpdateEval(Evaluator *eval, uint8 pos, uint64_t flip);
+void UndoEval(Evaluator *eval, uint8 pos, uint64_t flip);
 void UpdateEvalPass(Evaluator *eval);
 //void SetWeights(Evaluator *eval, Weight *weights[NB_PHASE]);
 
-float EvalNNet(Evaluator *eval);
-float EvalPosTable(uint64 own, uint64 opp);
+score_t EvalNNet(Evaluator *eval, uint8 nbEmpty);
+score_t EvalPosTable(uint64_t own, uint64_t opp);
 
 #endif

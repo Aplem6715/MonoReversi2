@@ -5,67 +5,94 @@
 #include "search.h"
 #include "../bit_operation.h"
 
-void CreateMoveList(MoveList *moveList, uint64 own, uint64 opp)
+void CreateMoveList(MoveList *moveList, Stones *stones)
 {
     Move *prev = moveList->moves;
     Move *move = moveList->moves + 1;
-    uint64 pos, rev;
-    uint64 mob = CalcMobility(own, opp);
+    uint8 posIdx;
+    uint64_t pos, rev;
+    uint64_t mob = CalcMobility(stones);
 
     while (mob != 0)
     {
         // 着手位置・反転位置を取得
         pos = GetLSB(mob);
+        posIdx = CalcPosIndex(pos);
         mob ^= pos;
-        rev = CalcFlip(own, opp, pos);
+        rev = CalcFlipOptimized(stones, posIdx);
 
         move->flip = rev;
-        move->posIdx = CalcPosIndex(pos);
+        move->posIdx = posIdx;
+        move->score = 0;
         prev = prev->next = move;
         move++;
     }
+    // 12, 21, 22, 30, 37, 45, 47, 55, 62
     prev->next = NULL;
     moveList->nbMoves = (uint8)(move - moveList->moves - 1);
 
-    assert(moveList->nbMoves == CountBits(CalcMobility(own, opp)));
+    assert(moveList->nbMoves == CountBits(CalcMobility(stones)));
 }
 
-void EvaluateMove(SearchTree *tree, Move *move, uint64 own, uint64 opp, float alpha, const HashData *hashData)
+void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *hashData)
 {
-    if (move->flip == opp)
+    if (move->flip == stones->opp)
     {
-        move->score = (1 << 30);
+        // 完全勝利で最高得点
+        move->score = (1 << 31);
     }
     else if (hashData && move->posIdx == hashData->bestMove)
     {
-        move->score = (1 << 29);
+        // ハッシュで最善手記録があれば高得点
+        move->score = (1 << 30);
     }
     else if (hashData && move->posIdx == hashData->secondMove)
     {
-        move->score = (1 << 28);
+        // ハッシュで次善手記録があれば高得点
+        move->score = (1 << 29);
     }
     else
     {
-        // 着手位置でスコア付け
-        move->score = (int)VALUE_TABLE[move->posIdx];
+        uint64_t posBit = CalcPosBit(move->posIdx);
+        Stones nextStones[1];
+        nextStones->own = stones->opp ^ move->flip;
+        nextStones->opp = stones->own ^ move->flip ^ posBit;
 
-        // 相手の着手位置が多いとマイナス，少ないとプラス
-        uint64 posBit = CalcPosBit(move->posIdx);
-        uint64 next_mob = CalcMobility(opp ^ move->flip, own ^ move->flip ^ posBit);
-        move->score += (-(CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 12);
+        uint64_t next_mob = CalcMobility(nextStones);
+        score_t score;
+        uint16_t mScore;
 
+        // 着手位置でスコア付け(8~0bit)
+        move->score = (uint32_t)VALUE_TABLE[move->posIdx];
+
+        // 一手読みのスコア付け（24~8bit目)
+        // 着手して相手のターンに進める
         UpdateEval(tree->eval, move->posIdx, move->flip);
-        move->score += ((int)(-MidAlphaBeta(tree, opp ^ move->flip, own ^ move->flip ^ posBit, -Const::MAX_VALUE, -alpha, 0, 0)) * (1 << 15));
+        score = EvalNNet(tree->eval, tree->nbEmpty - 1);
+        mScore = (uint16_t)((SCORE_MAX - score) / STONE_VALUE);
+        assert(SCORE_MAX - score >= 0);
+
+        // 相手のスコアを±反転してスコア加算(精度は1石単位で)
+        move->score += (mScore * (1 << 8));
         UndoEval(tree->eval, move->posIdx, move->flip);
+
+        // 相手の着手位置が多いとマイナス，少ないとプラス(14~8bit目)
+        move->score += (MAX_MOVES + 4 /*角分*/ - (CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 8);
+
+        // 置換表に含まれていたらプラス(8bit目)
+        if (hashData != NULL && HashContains(tree->table, nextStones))
+        {
+            move->score += (1 << 8);
+        }
     }
 }
 
-void EvaluateMoveList(SearchTree *tree, MoveList *movelist, uint64 own, uint64 opp, float alpha, const HashData *hashData)
+void EvaluateMoveList(SearchTree *tree, MoveList *movelist, Stones *stones, const HashData *hashData)
 {
     Move *move;
-    for (move = movelist->moves->next; move; move = move->next)
+    for (move = movelist->moves->next; move != NULL; move = move->next)
     {
-        EvaluateMove(tree, move, own, opp, alpha, hashData);
+        EvaluateMove(tree, move, tree->stones, hashData);
     }
 }
 
@@ -99,6 +126,6 @@ Move *NextBestMoveWithSwap(Move *prev)
 void SortMoveList(MoveList *moveList)
 {
     Move *move;
-    for (move = moveList->moves->next; move != NULL; move = NextBestMoveWithSwap(move))
+    for (move = NextBestMoveWithSwap(moveList->moves); move != NULL; move = NextBestMoveWithSwap(move))
         ;
 }

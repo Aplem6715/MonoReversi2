@@ -6,6 +6,7 @@
 #include "../search/search.h"
 #include "../game.h"
 #include "../ai/nnet.h"
+#include "../ai/regression.h"
 #include <signal.h>
 #include <string>
 #include <assert.h>
@@ -53,7 +54,8 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor);
 
 uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, SearchTree *treeWhite, uint8 randomTurns, double randMoveRatio, double secondMoveRatio, bool useRecording)
 {
-    uint64 input, flip;
+    uint64_t flip;
+    uint8 pos;
     int nbEmpty = 60;
     uint8 useSecondMove;
     Board board;
@@ -88,7 +90,7 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
         if ((nbEmpty >= 60 - randomTurns) || rnd_prob(mt) < randMoveRatio)
         {
             // ランダム着手位置
-            input = board.GetRandomPosMoveable();
+            pos = board.GetRandomPosMoveable();
             //printf("Random!!!\n");
         }
         else
@@ -97,30 +99,28 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
             if (board.GetTurnColor() == Const::BLACK)
             {
                 // AIが着手位置を決める
-                input = Search(treeBlack, board.GetOwn(), board.GetOpp(), useSecondMove);
+                pos = Search(treeBlack, board.GetOwn(), board.GetOpp(), useSecondMove);
                 //printf("\n%f\n", treeBlack->score);
             }
             else
             {
                 // AIが着手位置を決める
-                input = Search(treeWhite, board.GetOwn(), board.GetOpp(), useSecondMove);
+                pos = Search(treeWhite, board.GetOwn(), board.GetOpp(), useSecondMove);
                 //printf("\n%f\n", treeWhite->score);
             }
         }
 
-        // 入力位置のインデックスを取得
-        uint8 posIdx = CalcPosIndex(input);
         // 合法手判定
-        assert(board.IsLegal(input));
+        assert(board.IsLegalTT(pos));
 
         // 実際に着手
-        flip = board.Put(input);
+        flip = board.PutTT(pos);
         nbEmpty--;
 
         if (useRecording)
         {
-            UpdateEval(&eval[0], posIdx, flip);
-            UpdateEval(&eval[1], posIdx, flip);
+            UpdateEval(&eval[0], pos, flip);
+            UpdateEval(&eval[1], pos, flip);
             // ランダムターン中の記録はなし
             if (60 - nbEmpty > randomTurns)
             {
@@ -306,7 +306,8 @@ uint8 move88ToIndex(uint8 move88)
 
 void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
 {
-    uint64 input, flip;
+    uint64_t flip;
+    uint8 pos;
     int nbEmpty = 60;
     int nbMoves = 0;
     Board board;
@@ -330,17 +331,17 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         }
 
         // 入力位置のインデックスを取得
-        uint8 posIdx = move88ToIndex(wthor.moves88[nbMoves]);
+        pos = move88ToIndex(wthor.moves88[nbMoves]);
         nbMoves++;
-        input = CalcPosBit(posIdx);
+
         // 合法手判定
-        assert(board.IsLegal(input));
+        assert(board.IsLegalTT(pos));
 
         // 実際に着手
-        flip = board.Put(input);
+        flip = board.PutTT(pos);
         nbEmpty--;
-        UpdateEval(&eval[0], posIdx, flip);
-        UpdateEval(&eval[1], posIdx, flip);
+        UpdateEval(&eval[0], pos, flip);
+        UpdateEval(&eval[1], pos, flip);
 
         //if (board.GetTurnColor() == Const::BLACK)
         //{
@@ -400,7 +401,7 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
     WthorHeaderWTB testHeader;
     WthorWTB wthorData;
 
-    uint32 loaded = 0;
+    uint32_t loaded = 0;
     int cycles = 0;
     int converted;
     float loss;
@@ -477,7 +478,7 @@ int main()
 
     /*
     Board board;
-    uint64 black, white;
+    uint64_t black, white;
     while (true)
     {
         black = 18014398509481984ULL;

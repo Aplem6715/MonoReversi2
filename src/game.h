@@ -25,8 +25,8 @@ private:
 public:
     Game(PlayerEnum black, PlayerEnum white, int mid, int end);
     ~Game();
-    uint64 Game::WaitPosAI(uint8 color);
-    uint64 Game::WaitPos(uint8 color);
+    uint8 Game::WaitPosAI(uint8 color);
+    uint8 Game::WaitPos(uint8 color);
 
     void Reset();
     void Start();

@@ -10,7 +10,7 @@ using namespace std;
 
 typedef struct FeatureRecord
 {
-    uint16 featStats[2][FEAT_NUM];
+    uint16_t featStats[2][FEAT_NUM];
     uint8 nbEmpty;
     uint8 color;
     signed char stoneDiff;
@@ -28,8 +28,8 @@ typedef struct WthorHeaderWTB
     uint8 year;
     uint8 month;
     uint8 day;
-    uint32 nbRecords;
-    uint16 tournamentYear;
+    uint32_t nbRecords;
+    uint16_t tournamentYear;
     uint8 boardSize;
     uint8 gameType;
     uint8 depth;
@@ -38,9 +38,9 @@ typedef struct WthorHeaderWTB
 
 typedef struct WthorWTB
 {
-    uint16 tourIdx;
-    uint16 blackPlayerIdx;
-    uint16 whitePlayerIdx;
+    uint16_t tourIdx;
+    uint16_t blackPlayerIdx;
+    uint16_t whitePlayerIdx;
     uint8 nbBlackStone;
     uint8 nbBlackAnalyzed;
     uint8 moves88[60];

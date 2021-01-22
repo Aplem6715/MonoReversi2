@@ -6,7 +6,7 @@
 
 #define HASH_TABLE_SIZE (1 << 24)
 // RawHash[8行x2色][列内8石のパターン]
-uint64 RawHash[8 * 2][1 << 8];
+uint64_t RawHash[8 * 2][1 << 8];
 
 void InitHash()
 {
@@ -53,8 +53,8 @@ void ResetHashTable(HashTable *table)
         table->data[i].depth = 0;
         table->data[i].bestMove = NOMOVE_INDEX;
         table->data[i].bestMove = NOMOVE_INDEX;
-        table->data[i].lower = 0.0;
-        table->data[i].upper = 0.0;
+        table->data[i].lower = 0;
+        table->data[i].upper = 0;
     }
     ResetHashStatistics(table);
 }
@@ -67,12 +67,12 @@ void ResetHashStatistics(HashTable *table)
 }
 
 // 乱数ビット列を統合してハッシュコードを取得する
-inline uint64 GetHashCode(uint64 own, uint64 opp)
+inline uint64_t GetHashCode(Stones *stones)
 {
-    uint64 code;
+    uint64_t code;
 
     // own: 64bit -> 8x8bit
-    const uint8 *cursor = (uint8 *)(&own);
+    const uint8 *cursor = (uint8 *)(&stones->own);
     code = RawHash[0][cursor[0]];
     code ^= RawHash[1][cursor[1]];
     code ^= RawHash[2][cursor[2]];
@@ -83,7 +83,7 @@ inline uint64 GetHashCode(uint64 own, uint64 opp)
     code ^= RawHash[7][cursor[7]];
 
     // opp: 64bit -> 8x8bit
-    cursor = (uint8 *)(&opp);
+    cursor = (uint8 *)(&stones->opp);
     code ^= RawHash[8][cursor[0]];
     code ^= RawHash[9][cursor[1]];
     code ^= RawHash[10][cursor[2]];
@@ -96,15 +96,15 @@ inline uint64 GetHashCode(uint64 own, uint64 opp)
     return code;
 }
 
-HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uint64 *hashCode)
+HashData *GetHashData(HashTable *table, Stones *stones, uint8 depth, uint64_t *hashCode)
 {
     // ハッシュコード取得
-    *hashCode = GetHashCode(own, opp);
+    *hashCode = GetHashCode(stones);
     // サイズでモジュロ演算(code % size)
-    uint64 index = *hashCode & (table->size - 1);
+    uint64_t index = *hashCode & (table->size - 1);
     HashData *data = &table->data[index];
 
-    if (data->own == own && data->opp == opp)
+    if (data->own == stones->own && data->opp == stones->opp)
     {
         if (data->depth == depth)
         {
@@ -115,7 +115,22 @@ HashData *GetHashData(HashTable *table, uint64 own, uint64 opp, uint8 depth, uin
     return NULL;
 }
 
-bool CutWithHash(HashData *hashData, float *alpha, float *beta, float *score)
+uint8 HashContains(HashTable *table, Stones *stones)
+{
+    // ハッシュコード取得
+    uint64_t hashCode = GetHashCode(stones);
+    // サイズでモジュロ演算(code % size)
+    uint64_t index = hashCode & (table->size - 1);
+    HashData *data = &table->data[index];
+
+    if (data->own == stones->own && data->opp == stones->opp)
+    {
+        return 1;
+    }
+    return 0;
+}
+
+bool CutWithHash(HashData *hashData, score_t *alpha, score_t *beta, score_t *score)
 {
     assert(hashData != NULL);
     if (hashData->upper <= *alpha)
@@ -134,12 +149,12 @@ bool CutWithHash(HashData *hashData, float *alpha, float *beta, float *score)
         return true;
     }
 
-    *alpha = maxf(*alpha, hashData->lower);
-    *beta = minf(*beta, hashData->upper);
+    *alpha = MAX(*alpha, hashData->lower);
+    *beta = MIN(*beta, hashData->upper);
     return false;
 }
 
-void SaveNewData(HashData *data, const uint64 own, const uint64 opp, const uint8 bestMove, const uint8 depth, const float alpha, const float beta, const float maxScore)
+void SaveNewData(HashData *data, const Stones *stones, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
 {
     if (maxScore < beta)
         data->upper = maxScore;
@@ -156,13 +171,13 @@ void SaveNewData(HashData *data, const uint64 own, const uint64 opp, const uint8
     else
         data->bestMove = NOMOVE_INDEX;
 
-    data->own = own;
-    data->opp = opp;
+    data->own = stones->own;
+    data->opp = stones->opp;
     data->secondMove = NOMOVE_INDEX;
     data->depth = depth;
 }
 
-void UpdateData(HashData *data, const uint64 own, const uint64 opp, const uint8 bestMove, const uint8 depth, const float alpha, const float beta, const float maxScore)
+void UpdateData(HashData *data, const Stones *stones, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
 {
     if (maxScore < beta && maxScore < data->upper)
         data->upper = maxScore;
@@ -177,19 +192,19 @@ void UpdateData(HashData *data, const uint64 own, const uint64 opp, const uint8 
     }
 }
 
-void SaveHashData(HashTable *table, uint64 hashCode, uint64 own, uint64 opp, uint8 bestMove, uint8 depth, float alpha, float beta, float maxScore)
+void SaveHashData(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore)
 {
-    uint64 index = hashCode & (table->size - 1);
+    uint64_t index = hashCode & (table->size - 1);
     HashData *hashData = &table->data[index];
     if ((hashData->own | hashData->opp) == 0)
     {
-        SaveNewData(hashData, own, opp, bestMove, depth, alpha, beta, maxScore);
+        SaveNewData(hashData, stones, bestMove, depth, alpha, beta, maxScore);
         table->nbUsed++;
     }
-    else if (hashData->own == own && hashData->opp == opp)
+    else if (hashData->own == stones->own && hashData->opp == stones->opp)
     {
         if (hashData->depth <= depth)
-            UpdateData(hashData, own, opp, bestMove, depth, alpha, beta, maxScore);
+            UpdateData(hashData, stones, bestMove, depth, alpha, beta, maxScore);
     }
     else
     {
@@ -198,9 +213,9 @@ void SaveHashData(HashTable *table, uint64 hashCode, uint64 own, uint64 opp, uin
 }
 
 /* 未使用（探索関数の中で実装されている機能）
-void HashOverwrite(HashTable *table, uint64 own, uint64 opp, uint8 depth, float lower, float upper, uint64 hashCode)
+void HashOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, score_t lower, score_t upper, uint64_t hashCode)
 {
-    uint64 index = hashCode & (table->size - 1);
+    uint64_t index = hashCode & (table->size - 1);
     HashData *data = &table->data[index];
 
     data->own = own;
@@ -210,9 +225,9 @@ void HashOverwrite(HashTable *table, uint64 own, uint64 opp, uint8 depth, float 
     data->upper = upper;
 }
 
-void HashPriorityOverwrite(HashTable *table, uint64 own, uint64 opp, uint8 depth, float lower, float upper, uint64 hashCode)
+void HashPriorityOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, score_t lower, score_t upper, uint64_t hashCode)
 {
-    uint64 index = hashCode & (table->size - 1);
+    uint64_t index = hashCode & (table->size - 1);
     HashData *data = &table->data[index];
 
     if (depth > data->depth)

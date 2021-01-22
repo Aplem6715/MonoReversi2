@@ -13,7 +13,7 @@ typedef struct Regressor
     // weight[player][feat_index][pattern_pow3-shape]
     float *weight[2][FEAT_NUM];
 #ifdef LEARN_MODE
-    uint32 *nbAppears[FEAT_NUM];
+    uint32_t *nbAppears[FEAT_NUM];
     float *del[FEAT_NUM];
     float beta;
 #endif
@@ -22,7 +22,7 @@ typedef struct Regressor
 void InitRegr(Regressor regr[NB_PHASE]);
 void DelRegr(Regressor regr[NB_PHASE]);
 void ClearRegressorWeight(Regressor regr[NB_PHASE]);
-float PredRegressor(Regressor *regr, const uint16 features[], uint8 player);
+float PredRegressor(Regressor *regr, const uint16_t features[], uint8 player);
 
 #ifdef LEARN_MODE
 void InitRegrTrain(Regressor regr[NB_PHASE]);

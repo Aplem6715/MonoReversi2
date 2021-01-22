@@ -7,16 +7,16 @@ const int HIST_LENGTH = 60;
 
 typedef struct History
 {
-    uint64 flip;
-    uint64 pos;
+    uint64_t flip;
+    uint64_t pos;
     uint8 color;
 } History;
 
 class Board
 {
 private:
-    uint64 white;
-    uint64 black;
+    uint64_t white;
+    uint64_t black;
     uint8 turn;
     History history[HIST_LENGTH];
     int nbPlayed;
@@ -25,23 +25,23 @@ public:
     Board();
     ~Board();
 
-    static void Draw(uint64 black, uint64 white, uint64 mobility);
+    static void Draw(uint64_t black, uint64_t white, uint64_t mobility);
 
-    uint64 GetBlack();
-    uint64 GetWhite();
-    uint64 GetOwn();
-    uint64 GetOpp();
-    uint64 GetMobility();
+    uint64_t GetBlack();
+    uint64_t GetWhite();
+    uint64_t GetOwn();
+    uint64_t GetOpp();
+    uint64_t GetMobility();
     uint8 GetTurnColor();
     void Reset();
-    uint64 Put(uint64 pos);
-    uint64 GetRandomPosMoveable();
+    uint64_t PutTT(uint8 pos);
+    uint8 GetRandomPosMoveable();
     void Undo();
     void UndoUntilColorChange();
     void Skip();
     void Draw();
     int GetStoneCount(uint8 color);
-    bool IsLegal(uint64 pos);
+    bool IsLegalTT(uint8 pos);
     bool IsFinished();
 };
 
