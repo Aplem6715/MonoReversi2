@@ -73,7 +73,7 @@ void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
 void SearchPassMid(SearchTree *tree)
 {
     EvalUpdatePass(tree->eval);
-    SwapStones(tree->stones);
+    StonesSwap(tree->stones);
 }
 
 void SearchUpdateMid(SearchTree *tree, Move *move)
@@ -110,7 +110,7 @@ void SearchRestoreMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 
 void SearchPassEnd(SearchTree *tree)
 {
-    SwapStones(tree->stones);
+    StonesSwap(tree->stones);
     EvalUpdatePass(tree->eval);
 }
 
