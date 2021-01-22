@@ -66,8 +66,8 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
     board.Reset();
     if (useRecording)
     {
-        ReloadEval(&eval[0], board.GetBlack(), board.GetWhite(), OWN);
-        ReloadEval(&eval[1], board.GetWhite(), board.GetBlack(), OPP);
+        EvalReload(&eval[0], board.GetBlack(), board.GetWhite(), OWN);
+        EvalReload(&eval[1], board.GetWhite(), board.GetBlack(), OPP);
     }
     while (!board.IsFinished())
     {
@@ -79,8 +79,8 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
         {
             if (useRecording)
             {
-                UpdateEvalPass(&eval[0]);
-                UpdateEvalPass(&eval[1]);
+                EvalUpdatePass(&eval[0]);
+                EvalUpdatePass(&eval[1]);
             }
             board.Skip();
             continue;
@@ -119,8 +119,8 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
 
         if (useRecording)
         {
-            UpdateEval(&eval[0], pos, flip);
-            UpdateEval(&eval[1], pos, flip);
+            EvalUpdate(&eval[0], pos, flip);
+            EvalUpdate(&eval[1], pos, flip);
             // ランダムターン中の記録はなし
             if (60 - nbEmpty > randomTurns)
             {
@@ -316,16 +316,16 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
     size_t topOfAddition = featRecords.size();
 
     board.Reset();
-    ReloadEval(&eval[0], board.GetBlack(), board.GetWhite(), OWN);
-    ReloadEval(&eval[1], board.GetWhite(), board.GetBlack(), OPP);
+    EvalReload(&eval[0], board.GetBlack(), board.GetWhite(), OWN);
+    EvalReload(&eval[1], board.GetWhite(), board.GetBlack(), OPP);
     while (!board.IsFinished())
     {
         //board.Draw();
         // 置ける場所がなかったらスキップ
         if (board.GetMobility() == 0)
         {
-            UpdateEvalPass(&eval[0]);
-            UpdateEvalPass(&eval[1]);
+            EvalUpdatePass(&eval[0]);
+            EvalUpdatePass(&eval[1]);
             board.Skip();
             continue;
         }
@@ -340,8 +340,8 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         // 実際に着手
         flip = board.PutTT(pos);
         nbEmpty--;
-        UpdateEval(&eval[0], pos, flip);
-        UpdateEval(&eval[1], pos, flip);
+        EvalUpdate(&eval[0], pos, flip);
+        EvalUpdate(&eval[1], pos, flip);
 
         //if (board.GetTurnColor() == Const::BLACK)
         //{
@@ -484,7 +484,7 @@ int main()
         black = 18014398509481984ULL;
         white = 35184372088832ULL;
         board.Draw(black, white, 0);
-        ReloadEval(tree.eval, black, white, 0);
+        EvalReload(tree.eval, black, white, 0);
         tree.eval->nbEmpty = 32;
         float val = EvalNNet(tree.eval);
         printf("val: %f\n", val);

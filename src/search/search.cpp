@@ -15,7 +15,7 @@ void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
     tree->useHash = useHash;
     tree->hashDepth = hashDepth;
 
-    InitEval(tree->eval);
+    EvalInit(tree->eval);
 
     if (useHash)
     {
@@ -32,7 +32,7 @@ void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
 
 void DeleteTree(SearchTree *tree)
 {
-    DeleteEval(tree->eval);
+    EvalDelete(tree->eval);
     if (tree->useHash)
     {
         FreeHashTable(tree->table);
@@ -60,7 +60,7 @@ void ResetTree(SearchTree *tree)
 void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
 {
     // 評価パターンの初期化
-    ReloadEval(tree->eval, own, opp, OWN);
+    EvalReload(tree->eval, own, opp, OWN);
 
     tree->nbEmpty = CountBits(~(own | opp));
     tree->nodeCount = 0;
@@ -72,14 +72,14 @@ void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
 
 void SearchPassMid(SearchTree *tree)
 {
-    UpdateEvalPass(tree->eval);
+    EvalUpdatePass(tree->eval);
     SwapStones(tree->stones);
 }
 
 void SearchUpdateMid(SearchTree *tree, Move *move)
 {
     uint64_t posBit = CalcPosBit(move->posIdx);
-    UpdateEval(tree->eval, move->posIdx, move->flip);
+    EvalUpdate(tree->eval, move->posIdx, move->flip);
     StonesUpdate(tree->stones, posBit, move->flip);
     tree->nbEmpty--;
 }
@@ -87,7 +87,7 @@ void SearchUpdateMid(SearchTree *tree, Move *move)
 void SearchRestoreMid(SearchTree *tree, Move *move)
 {
     uint64_t posBit = CalcPosBit(move->posIdx);
-    UndoEval(tree->eval, move->posIdx, move->flip);
+    EvalUndo(tree->eval, move->posIdx, move->flip);
     StonesRestore(tree->stones, posBit, move->flip);
     tree->nbEmpty++;
 }
@@ -95,7 +95,7 @@ void SearchRestoreMid(SearchTree *tree, Move *move)
 void SearchUpdateMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
     uint8 posIdx = CalcPosIndex(pos);
-    UpdateEval(tree->eval, posIdx, flip);
+    EvalUpdate(tree->eval, posIdx, flip);
     StonesUpdate(tree->stones, pos, flip);
     tree->nbEmpty--;
 }
@@ -103,7 +103,7 @@ void SearchUpdateMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 void SearchRestoreMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
     uint8 posIdx = CalcPosIndex(pos);
-    UndoEval(tree->eval, posIdx, flip);
+    EvalUndo(tree->eval, posIdx, flip);
     StonesRestore(tree->stones, pos, flip);
     tree->nbEmpty++;
 }
@@ -111,19 +111,19 @@ void SearchRestoreMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 void SearchPassEnd(SearchTree *tree)
 {
     SwapStones(tree->stones);
-    UpdateEvalPass(tree->eval);
+    EvalUpdatePass(tree->eval);
 }
 
 void SearchUpdateEnd(SearchTree *tree, Move *move)
 {
-    UpdateEval(tree->eval, move->posIdx, move->flip);
+    EvalUpdate(tree->eval, move->posIdx, move->flip);
     StonesUpdate(tree->stones, CalcPosBit(move->posIdx), move->flip);
     tree->nbEmpty--;
 }
 
 void SearchRestoreEnd(SearchTree *tree, Move *move)
 {
-    UndoEval(tree->eval, move->posIdx, move->flip);
+    EvalUndo(tree->eval, move->posIdx, move->flip);
     StonesRestore(tree->stones, CalcPosBit(move->posIdx), move->flip);
     tree->nbEmpty++;
 }

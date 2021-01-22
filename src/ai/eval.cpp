@@ -142,7 +142,7 @@ static const uint8 FeatDigits[] = {
 static const char modelFolder[] = "resources/model/model_2003-epoch1/";
 static const char regrFolder[] = "resources/regressor/best/"; //"resources/regressor/regr_1981_Loss1473/";
 
-void InitEval(Evaluator *eval)
+void EvalInit(Evaluator *eval)
 {
 #ifdef USE_NN
     eval->net = (NNet *)malloc(sizeof(NNet) * NB_PHASE);
@@ -154,7 +154,7 @@ void InitEval(Evaluator *eval)
 #endif
 }
 
-void DeleteEval(Evaluator *eval)
+void EvalDelete(Evaluator *eval)
 {
 #ifdef USE_NN
 #elif USE_REGRESSION
@@ -162,7 +162,7 @@ void DeleteEval(Evaluator *eval)
 #endif
 }
 
-void ReloadEval(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player)
+void EvalReload(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player)
 {
     const PosToFeature *pos2f;
     uint8 pos;
@@ -203,7 +203,7 @@ void ReloadEval(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player)
     assert(own == 0 && opp == 0);
 }
 
-void UpdateEval(Evaluator *eval, uint8 pos, uint64_t flip)
+void EvalUpdate(Evaluator *eval, uint8 pos, uint64_t flip)
 {
     const PosToFeature *pos2f = &(Pos2Feat[pos]);
     int nbFeat = pos2f->nbFeature;
@@ -262,7 +262,7 @@ void UpdateEval(Evaluator *eval, uint8 pos, uint64_t flip)
     eval->player ^= 1;
 }
 
-void UndoEval(Evaluator *eval, uint8 pos, uint64_t flip)
+void EvalUndo(Evaluator *eval, uint8 pos, uint64_t flip)
 {
     const PosToFeature *pos2f = &(Pos2Feat[pos]);
     int nbFeat = pos2f->nbFeature;
@@ -322,12 +322,12 @@ void UndoEval(Evaluator *eval, uint8 pos, uint64_t flip)
     }
 }
 
-void UpdateEvalPass(Evaluator *eval)
+void EvalUpdatePass(Evaluator *eval)
 {
     eval->player ^= 1;
 }
 
-score_t EvalNNet(Evaluator *eval, uint8 nbEmpty)
+score_t Evaluate(Evaluator *eval, uint8 nbEmpty)
 {
     float scoref;
     score_t score;

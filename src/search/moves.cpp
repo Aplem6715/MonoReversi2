@@ -67,14 +67,14 @@ void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *
 
         // 一手読みのスコア付け（24~8bit目)
         // 着手して相手のターンに進める
-        UpdateEval(tree->eval, move->posIdx, move->flip);
-        score = EvalNNet(tree->eval, tree->nbEmpty - 1);
+        EvalUpdate(tree->eval, move->posIdx, move->flip);
+        score = Evaluate(tree->eval, tree->nbEmpty - 1);
         mScore = (uint16_t)((SCORE_MAX - score) / STONE_VALUE);
         assert(SCORE_MAX - score >= 0);
 
         // 相手のスコアを±反転してスコア加算(精度は1石単位で)
         move->score += (mScore * (1 << 8));
-        UndoEval(tree->eval, move->posIdx, move->flip);
+        EvalUndo(tree->eval, move->posIdx, move->flip);
 
         // 相手の着手位置が多いとマイナス，少ないとプラス(14~8bit目)
         move->score += (MAX_MOVES + 4 /*角分*/ - (CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 8);
