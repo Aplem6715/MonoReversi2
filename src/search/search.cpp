@@ -176,7 +176,7 @@ SearchFunc_t DecideSearchFunc(SearchTree *tree)
 
 uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
 {
-    score_t score, maxScore = -Const::MAX_VALUE;
+    score_t score, lower, maxScore = -Const::MAX_VALUE;
     uint8 bestPos = 64, secondPos = 64;
     SearchFunc_t SearchFunc;
     MoveList moveList;
@@ -194,6 +194,8 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
     {
         EvaluateMoveList(tree, &moveList, tree->stones, NULL);
     }
+
+    lower = -Const::MAX_VALUE;
     for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
     {
         if (tree->isEndSearch)
@@ -201,7 +203,7 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
         else
             SearchUpdateMid(tree, move);
         {
-            score = -SearchFunc(tree, -Const::MAX_VALUE, Const::MAX_VALUE, tree->depth, false);
+            score = -SearchFunc(tree, -Const::MAX_VALUE, -lower, tree->depth, false);
         }
         if (tree->isEndSearch)
             SearchRestoreEnd(tree, move);
@@ -213,6 +215,10 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
             maxScore = score;
             secondPos = bestPos;
             bestPos = move->posIdx;
+            if (maxScore > lower)
+            {
+                lower = maxScore;
+            }
         }
     }
 
