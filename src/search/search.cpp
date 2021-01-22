@@ -26,7 +26,7 @@ void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
             return;
         }
 
-        InitHashTable(tree->table);
+        HashTableInit(tree->table);
     }
 }
 
@@ -35,7 +35,7 @@ void DeleteTree(SearchTree *tree)
     EvalDelete(tree->eval);
     if (tree->useHash)
     {
-        FreeHashTable(tree->table);
+        HashTableFree(tree->table);
         free(tree->table);
     }
 #ifdef USE_NN
@@ -54,7 +54,7 @@ void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth
 void ResetTree(SearchTree *tree)
 {
     if (tree->useHash)
-        ResetHashTable(tree->table);
+        HashTableReset(tree->table);
 }
 
 void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
