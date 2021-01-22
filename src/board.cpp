@@ -42,13 +42,13 @@ uint64_t Board::PutTT(uint8 pos)
     uint64_t flip;
     if (turn == Const::BLACK)
     {
-        flip = CalcFlipOptimized64(black, white, pos);
+        flip = CalcFlip64(black, white, pos);
         black = black ^ flip ^ CalcPosBit(pos);
         white = white ^ flip;
     }
     else
     {
-        flip = CalcFlipOptimized64(white, black, pos);
+        flip = CalcFlip64(white, black, pos);
         black = black ^ flip;
         white = white ^ flip ^ CalcPosBit(pos);
     }

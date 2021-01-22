@@ -178,7 +178,7 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
             pos = GetLSB(mob);
             mob ^= pos;
             posIdx = CalcPosIndex(pos);
-            flip = CalcFlipOptimized(tree->stones, posIdx);
+            flip = CalcFlip(tree->stones, posIdx);
 
             SearchUpdateMidDeep(tree, pos, flip);
             {

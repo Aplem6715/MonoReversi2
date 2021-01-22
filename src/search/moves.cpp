@@ -19,7 +19,7 @@ void CreateMoveList(MoveList *moveList, Stones *stones)
         pos = GetLSB(mob);
         posIdx = CalcPosIndex(pos);
         mob ^= pos;
-        rev = CalcFlipOptimized(stones, posIdx);
+        rev = CalcFlip(stones, posIdx);
 
         move->flip = rev;
         move->posIdx = posIdx;
