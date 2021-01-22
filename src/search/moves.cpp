@@ -68,7 +68,7 @@ void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *
         // 一手読みのスコア付け（24~8bit目)
         // 着手して相手のターンに進める
         UpdateEval(tree->eval, move->posIdx, move->flip);
-        score = EvalNNet(tree->eval);
+        score = EvalNNet(tree->eval, tree->nbEmpty - 1);
         mScore = (uint16_t)((SCORE_MAX - score) / STONE_VALUE);
         assert(SCORE_MAX - score >= 0);
 

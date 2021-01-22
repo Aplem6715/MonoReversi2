@@ -37,7 +37,7 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     if (depth <= 0)
     {
         //return EvalPosTable(own, opp);
-        return EvalNNet(tree->eval);
+        return EvalNNet(tree->eval, tree->nbEmpty);
     }
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
@@ -136,7 +136,7 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     {
         //return EvalPosTable(own, opp);
         //return EvalTinyDnn(tree, tree->nbEmpty);
-        return EvalNNet(tree->eval);
+        return EvalNNet(tree->eval, tree->nbEmpty);
     }
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)

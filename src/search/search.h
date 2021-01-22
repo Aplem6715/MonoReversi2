@@ -14,6 +14,7 @@ typedef struct SearchTree
     HashTable *table;
     Evaluator eval[1];
     Stones stones[1];
+    uint8 nbEmpty;
     unsigned char depth;
     unsigned char midDepth;
     unsigned char endDepth;

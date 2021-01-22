@@ -62,6 +62,7 @@ void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
     // 評価パターンの初期化
     ReloadEval(tree->eval, own, opp, OWN);
 
+    tree->nbEmpty = CountBits(~(own | opp));
     tree->nodeCount = 0;
     tree->nbCut = 0;
 
@@ -80,6 +81,7 @@ void SearchUpdateMid(SearchTree *tree, Move *move)
     uint64_t posBit = CalcPosBit(move->posIdx);
     UpdateEval(tree->eval, move->posIdx, move->flip);
     StonesUpdate(tree->stones, posBit, move->flip);
+    tree->nbEmpty--;
 }
 
 void SearchRestoreMid(SearchTree *tree, Move *move)
@@ -87,6 +89,7 @@ void SearchRestoreMid(SearchTree *tree, Move *move)
     uint64_t posBit = CalcPosBit(move->posIdx);
     UndoEval(tree->eval, move->posIdx, move->flip);
     StonesRestore(tree->stones, posBit, move->flip);
+    tree->nbEmpty++;
 }
 
 void SearchUpdateMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
@@ -94,6 +97,7 @@ void SearchUpdateMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
     uint8 posIdx = CalcPosIndex(pos);
     UpdateEval(tree->eval, posIdx, flip);
     StonesUpdate(tree->stones, pos, flip);
+    tree->nbEmpty--;
 }
 
 void SearchRestoreMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
@@ -101,6 +105,7 @@ void SearchRestoreMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
     uint8 posIdx = CalcPosIndex(pos);
     UndoEval(tree->eval, posIdx, flip);
     StonesRestore(tree->stones, pos, flip);
+    tree->nbEmpty++;
 }
 
 void SearchPassEnd(SearchTree *tree)
@@ -113,24 +118,60 @@ void SearchUpdateEnd(SearchTree *tree, Move *move)
 {
     UpdateEval(tree->eval, move->posIdx, move->flip);
     StonesUpdate(tree->stones, CalcPosBit(move->posIdx), move->flip);
+    tree->nbEmpty--;
 }
 
 void SearchRestoreEnd(SearchTree *tree, Move *move)
 {
     UndoEval(tree->eval, move->posIdx, move->flip);
     StonesRestore(tree->stones, CalcPosBit(move->posIdx), move->flip);
+    tree->nbEmpty++;
 }
 
 void SearchUpdateEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
     uint8 posIdx = CalcPosIndex(pos);
     StonesUpdate(tree->stones, pos, flip);
+    tree->nbEmpty--;
 }
 
 void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
     uint8 posIdx = CalcPosIndex(pos);
     StonesRestore(tree->stones, pos, flip);
+    tree->nbEmpty++;
+}
+
+SearchFunc_t DecideSearchFunc(SearchTree *tree)
+{
+    if (tree->nbEmpty < tree->endDepth)
+    {
+        tree->isEndSearch = 1;
+        tree->depth = tree->nbEmpty;
+        // オーダリングが不要な探索では探索関数を変える
+        if (tree->depth > tree->orderDepth)
+        {
+            return EndAlphaBeta;
+        }
+        else
+        {
+            return EndAlphaBetaDeep;
+        }
+    }
+    else
+    {
+        tree->isEndSearch = 0;
+        tree->depth = tree->midDepth;
+        // オーダリングが不要な探索では探索関数を変える
+        if (tree->depth > tree->orderDepth)
+        {
+            return MidAlphaBeta;
+        }
+        else
+        {
+            return MidAlphaBetaDeep;
+        }
+    }
 }
 
 uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
@@ -146,48 +187,26 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
 
     SearchSetup(tree, own, opp);
 
-    if (tree->eval->nbEmpty < tree->endDepth)
-    {
-        tree->isEndSearch = 1;
-        tree->depth = tree->eval->nbEmpty;
-        // オーダリングが不要な探索では探索関数を変える
-        if (tree->depth > tree->orderDepth)
-        {
-            SearchFunc = EndAlphaBeta;
-        }
-        else
-        {
-            SearchFunc = EndAlphaBetaDeep;
-        }
-    }
-    else
-    {
-        tree->isEndSearch = 0;
-        tree->depth = tree->midDepth;
-        // オーダリングが不要な探索では探索関数を変える
-        if (tree->depth > tree->orderDepth)
-        {
-            SearchFunc = MidAlphaBeta;
-        }
-        else
-        {
-            SearchFunc = MidAlphaBetaDeep;
-        }
-    }
-
+    SearchFunc = DecideSearchFunc(tree);
     CreateMoveList(&moveList, tree->stones);
+    assert(moveList.nbMoves > 0);
     if (tree->depth > tree->orderDepth)
     {
         EvaluateMoveList(tree, &moveList, tree->stones, NULL);
     }
-    assert(moveList.nbMoves > 0);
     for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
     {
-        SearchUpdateMid(tree, move);
+        if (tree->isEndSearch)
+            SearchUpdateEnd(tree, move);
+        else
+            SearchUpdateMid(tree, move);
         {
             score = -SearchFunc(tree, -Const::MAX_VALUE, Const::MAX_VALUE, tree->depth, false);
         }
-        SearchRestoreMid(tree, move);
+        if (tree->isEndSearch)
+            SearchRestoreEnd(tree, move);
+        else
+            SearchRestoreMid(tree, move);
 
         if (score > maxScore)
         {

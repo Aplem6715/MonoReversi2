@@ -171,7 +171,6 @@ void ReloadEval(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player)
 
     // 自分の手番
     eval->player = player;
-    eval->nbEmpty = CountBits(~(own | opp));
     for (i = 0; i < FEAT_NUM; i++)
     {
         eval->FeatureStates[i] = 0;
@@ -261,7 +260,6 @@ void UpdateEval(Evaluator *eval, uint8 pos, uint64_t flip)
         }
     }
     eval->player ^= 1;
-    eval->nbEmpty--;
 }
 
 void UndoEval(Evaluator *eval, uint8 pos, uint64_t flip)
@@ -272,7 +270,6 @@ void UndoEval(Evaluator *eval, uint8 pos, uint64_t flip)
     uint8 flipIdx;
 
     eval->player ^= 1;
-    eval->nbEmpty++;
     if (eval->player == OWN)
     {
         // 着手箇所について
@@ -330,7 +327,7 @@ void UpdateEvalPass(Evaluator *eval)
     eval->player ^= 1;
 }
 
-score_t EvalNNet(Evaluator *eval)
+score_t EvalNNet(Evaluator *eval, uint8 nbEmpty)
 {
     float scoref;
     score_t score;
@@ -344,7 +341,7 @@ score_t EvalNNet(Evaluator *eval)
         score = -Predict(&eval->net[PHASE(eval->nbEmpty)], eval->FeatureStates);
     }
 #elif USE_REGRESSION
-    scoref = PredRegressor(&eval->regr[PHASE(eval->nbEmpty)], eval->FeatureStates, eval->player);
+    scoref = PredRegressor(&eval->regr[PHASE(nbEmpty)], eval->FeatureStates, eval->player);
     score = (score_t)roundf(scoref * STONE_VALUE);
 #endif
 

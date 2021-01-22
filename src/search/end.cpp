@@ -8,7 +8,7 @@
 inline score_t Judge(const SearchTree *tree)
 {
     const uint8 nbOwn = CountBits(tree->stones->own);
-    const uint8 nbOpp = 64 - tree->eval->nbEmpty - nbOwn;
+    const uint8 nbOpp = 64 - tree->nbEmpty - nbOwn;
     return (score_t)((nbOwn - nbOpp) * STONE_VALUE);
 }
 
