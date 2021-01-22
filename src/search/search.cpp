@@ -57,98 +57,94 @@ void ResetTree(SearchTree *tree)
         ResetHashTable(tree->table);
 }
 
+void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
+{
+    // 評価パターンの初期化
+    ReloadEval(tree->eval, own, opp, OWN);
+
+    tree->nodeCount = 0;
+    tree->nbCut = 0;
+
+    tree->stones->own = own;
+    tree->stones->opp = opp;
+}
+
 void SearchPassMid(SearchTree *tree)
 {
     UpdateEvalPass(tree->eval);
-    tree->stones->opp = tree->stones->own;
-    tree->stones->own = tree->stones->opp;
+    SwapStones(tree->stones);
 }
 
 void SearchUpdateMid(SearchTree *tree, Move *move)
 {
     uint64_t posBit = CalcPosBit(move->posIdx);
     UpdateEval(tree->eval, move->posIdx, move->flip);
-    tree->stones->own = tree->stones->opp ^ move->flip;
-    tree->stones->opp = tree->stones->own ^ move->flip ^ posBit;
+    StonesUpdate(tree->stones, posBit, move->flip);
 }
 
 void SearchRestoreMid(SearchTree *tree, Move *move)
 {
     uint64_t posBit = CalcPosBit(move->posIdx);
     UndoEval(tree->eval, move->posIdx, move->flip);
-    tree->stones->own = tree->stones->opp ^ move->flip ^ posBit;
-    tree->stones->opp = tree->stones->own ^ move->flip;
+    StonesRestore(tree->stones, posBit, move->flip);
 }
 
-void SearchUpdateMidDeep(SearchTree *tree, uint64_t pos)
+void SearchUpdateMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
     uint8 posIdx = CalcPosIndex(pos);
-    uint64_t flip = CalcFlipOptimized(tree->stones->own, tree->stones->opp, posIdx);
     UpdateEval(tree->eval, posIdx, flip);
-    tree->stones->own = tree->stones->opp ^ flip;
-    tree->stones->opp = tree->stones->own ^ flip ^ pos;
+    StonesUpdate(tree->stones, pos, flip);
 }
 
-void SearchRestoreMidDeep(SearchTree *tree, uint64_t pos, uint64_t rev)
+void SearchRestoreMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
     uint8 posIdx = CalcPosIndex(pos);
-    uint64_t flip = CalcFlipOptimized(tree->stones->own, tree->stones->opp, posIdx);
     UndoEval(tree->eval, posIdx, flip);
-    tree->stones->own = tree->stones->opp ^ flip ^ pos;
-    tree->stones->opp = tree->stones->own ^ flip;
+    StonesRestore(tree->stones, pos, flip);
 }
 
 void SearchPassEnd(SearchTree *tree)
 {
-    tree->stones->own = tree->stones->opp;
-    tree->stones->opp = tree->stones->own;
+    SwapStones(tree->stones);
     UpdateEvalPass(tree->eval);
 }
 
 void SearchUpdateEnd(SearchTree *tree, Move *move)
 {
     UpdateEval(tree->eval, move->posIdx, move->flip);
-    tree->stones->own = tree->stones->opp ^ move->flip;
-    tree->stones->opp = tree->stones->own ^ move->flip ^ CalcPosBit(move->posIdx);
+    StonesUpdate(tree->stones, CalcPosBit(move->posIdx), move->flip);
 }
 
 void SearchRestoreEnd(SearchTree *tree, Move *move)
 {
     UndoEval(tree->eval, move->posIdx, move->flip);
-    tree->stones->own = tree->stones->opp ^ move->flip ^ CalcPosBit(move->posIdx);
-    tree->stones->opp = tree->stones->own ^ move->flip;
+    StonesRestore(tree->stones, CalcPosBit(move->posIdx), move->flip);
 }
 
-void SearchUpdateEndDeep(SearchTree *tree, uint64_t pos)
+void SearchUpdateEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
     uint8 posIdx = CalcPosIndex(pos);
-    uint64_t flip = CalcFlipOptimized(tree->stones->own, tree->stones->opp, posIdx);
-    tree->stones->own = tree->stones->opp ^ flip;
-    tree->stones->opp = tree->stones->own ^ flip ^ pos;
+    StonesUpdate(tree->stones, pos, flip);
 }
 
-void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos)
+void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
     uint8 posIdx = CalcPosIndex(pos);
-    uint64_t flip = CalcFlipOptimized(tree->stones->own, tree->stones->opp, posIdx);
-    tree->stones->own = tree->stones->opp ^ flip ^ pos;
-    tree->stones->opp = tree->stones->own ^ flip;
+    StonesRestore(tree->stones, pos, flip);
 }
 
 uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
 {
     score_t score, maxScore = -Const::MAX_VALUE;
-    uint64_t mob, rev, pos;
-    uint8 posIdx, bestPos = 64, secondPos = 64;
+    uint8 bestPos = 64, secondPos = 64;
     SearchFunc_t SearchFunc;
+    MoveList moveList;
+    Move *move;
 
     std::chrono::system_clock::time_point start, end;
     start = std::chrono::system_clock::now();
-    tree->nodeCount = 0;
-    tree->nbCut = 0;
 
-    // 評価パターンの初期化
-    ReloadEval(tree->eval, own, opp, OWN);
+    SearchSetup(tree, own, opp);
 
     if (tree->eval->nbEmpty < tree->endDepth)
     {
@@ -179,26 +175,25 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
         }
     }
 
-    mob = CalcMobility(own, opp);
-    assert(mob != 0);
-    while (mob != 0)
+    CreateMoveList(&moveList, tree->stones);
+    if (tree->depth > tree->orderDepth)
     {
-        pos = GetLSB(mob);
-        posIdx = CalcPosIndex(pos);
-        mob ^= pos;
-        rev = CalcFlipOptimized(own, opp, posIdx);
-
-        UpdateEval(tree->eval, posIdx, rev);
+        EvaluateMoveList(tree, &moveList, tree->stones, NULL);
+    }
+    assert(moveList.nbMoves > 0);
+    for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
+    {
+        SearchUpdateMid(tree, move);
         {
-            score = -SearchFunc(tree, opp ^ rev, own ^ rev ^ pos, -Const::MAX_VALUE, Const::MAX_VALUE, tree->depth, false);
+            score = -SearchFunc(tree, -Const::MAX_VALUE, Const::MAX_VALUE, tree->depth, false);
         }
-        UndoEval(tree->eval, posIdx, rev);
+        SearchRestoreMid(tree, move);
 
         if (score > maxScore)
         {
             maxScore = score;
             secondPos = bestPos;
-            bestPos = posIdx;
+            bestPos = move->posIdx;
         }
     }
 

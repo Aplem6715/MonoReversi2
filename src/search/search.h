@@ -3,9 +3,9 @@
 
 #define WIN_VALUE (1000000)
 
-#include "stones.h"
 #include "hash.h"
 #include "moves.h"
+#include "../stones.h"
 #include "../const.h"
 #include "../ai/eval.h"
 
@@ -36,17 +36,18 @@ void DeleteTree(SearchTree *tree);
 void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth);
 void ResetTree(SearchTree *tree);
 
+void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp);
 void SearchPassMid(SearchTree *tree);
 void SearchUpdateMid(SearchTree *tree, Move *move);
 void SearchRestoreMid(SearchTree *tree, Move *move);
-void SearchUpdateMidDeep(SearchTree *tree, uint64_t pos);
-void SearchRestoreMidDeep(SearchTree *tree, uint64_t pos);
+void SearchUpdateMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip);
+void SearchRestoreMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip);
 
 void SearchPassEnd(SearchTree *tree);
 void SearchUpdateEnd(SearchTree *tree, Move *move);
 void SearchRestoreEnd(SearchTree *tree, Move *move);
-void SearchUpdateEndDeep(SearchTree *tree, uint64_t pos);
-void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos);
+void SearchUpdateEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip);
+void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip);
 
 uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond);
 
