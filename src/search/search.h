@@ -3,7 +3,9 @@
 
 #define WIN_VALUE (1000000)
 
+#include "stones.h"
 #include "hash.h"
+#include "moves.h"
 #include "../const.h"
 #include "../ai/eval.h"
 
@@ -11,11 +13,7 @@ typedef struct SearchTree
 {
     HashTable *table;
     Evaluator eval[1];
-    struct
-    {
-        uint64_t own;
-        uint64_t opp;
-    } stones;
+    Stones stones[1];
     unsigned char depth;
     unsigned char midDepth;
     unsigned char endDepth;
@@ -31,7 +29,7 @@ typedef struct SearchTree
     uint8 isEndSearch;
 } SearchTree;
 
-typedef score_t (*SearchFunc_t)(SearchTree *tree, uint64_t own, uint64_t opp, score_t alpha, score_t beta, unsigned char depth, unsigned char passed);
+typedef score_t (*SearchFunc_t)(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed);
 
 void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth);
 void DeleteTree(SearchTree *tree);
