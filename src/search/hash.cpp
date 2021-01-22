@@ -8,7 +8,7 @@
 // RawHash[8行x2色][列内8石のパターン]
 uint64_t RawHash[8 * 2][1 << 8];
 
-void InitHash()
+void HashInit()
 {
     std::mt19937_64 mt(HASH_SEED);
 
@@ -24,7 +24,7 @@ void InitHash()
     }
 }
 
-void InitHashTable(HashTable *table)
+void HashTableInit(HashTable *table)
 {
     table->size = HASH_TABLE_SIZE;
     table->data = (HashData *)calloc(table->size, sizeof(HashData));
@@ -38,13 +38,13 @@ void InitHashTable(HashTable *table)
     assert(CountBits(table->size) == 1);
 }
 
-void FreeHashTable(HashTable *table)
+void HashTableFree(HashTable *table)
 {
     free(table->data);
     table->size = 0;
 }
 
-void ResetHashTable(HashTable *table)
+void HashTableReset(HashTable *table)
 {
     for (size_t i = 0; i < table->size; i++)
     {
@@ -56,10 +56,10 @@ void ResetHashTable(HashTable *table)
         table->data[i].lower = 0;
         table->data[i].upper = 0;
     }
-    ResetHashStatistics(table);
+    HashTableResetStats(table);
 }
 
-void ResetHashStatistics(HashTable *table)
+void HashTableResetStats(HashTable *table)
 {
     table->nbUsed = 0;
     table->nbCollide = 0;
@@ -96,7 +96,7 @@ inline uint64_t GetHashCode(Stones *stones)
     return code;
 }
 
-HashData *GetHashData(HashTable *table, Stones *stones, uint8 depth, uint64_t *hashCode)
+HashData *HashGetData(HashTable *table, Stones *stones, uint8 depth, uint64_t *hashCode)
 {
     // ハッシュコード取得
     *hashCode = GetHashCode(stones);
@@ -115,7 +115,7 @@ HashData *GetHashData(HashTable *table, Stones *stones, uint8 depth, uint64_t *h
     return NULL;
 }
 
-uint8 HashContains(HashTable *table, Stones *stones)
+uint8 HashTableContains(HashTable *table, Stones *stones)
 {
     // ハッシュコード取得
     uint64_t hashCode = GetHashCode(stones);
@@ -130,7 +130,7 @@ uint8 HashContains(HashTable *table, Stones *stones)
     return 0;
 }
 
-bool CutWithHash(HashData *hashData, score_t *alpha, score_t *beta, score_t *score)
+bool HashCut(HashData *hashData, score_t *alpha, score_t *beta, score_t *score)
 {
     assert(hashData != NULL);
     if (hashData->upper <= *alpha)
@@ -192,7 +192,7 @@ void UpdateData(HashData *data, const Stones *stones, const uint8 bestMove, cons
     }
 }
 
-void SaveHashData(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore)
+void HashSaveData(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore)
 {
     uint64_t index = hashCode & (table->size - 1);
     HashData *hashData = &table->data[index];

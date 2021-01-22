@@ -111,15 +111,15 @@ typedef struct Evaluator
 
 uint16_t OpponentIndex(uint16_t idx, uint8 digit);
 
-void InitEval(Evaluator *eval);
-void DeleteEval(Evaluator *eval);
-void ReloadEval(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player);
-void UpdateEval(Evaluator *eval, uint8 pos, uint64_t flip);
-void UndoEval(Evaluator *eval, uint8 pos, uint64_t flip);
-void UpdateEvalPass(Evaluator *eval);
+void EvalInit(Evaluator *eval);
+void EvalDelete(Evaluator *eval);
+void EvalReload(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player);
+void EvalUpdate(Evaluator *eval, uint8 pos, uint64_t flip);
+void EvalUndo(Evaluator *eval, uint8 pos, uint64_t flip);
+void EvalUpdatePass(Evaluator *eval);
 //void SetWeights(Evaluator *eval, Weight *weights[NB_PHASE]);
 
-score_t EvalNNet(Evaluator *eval, uint8 nbEmpty);
+score_t Evaluate(Evaluator *eval, uint8 nbEmpty);
 score_t EvalPosTable(uint64_t own, uint64_t opp);
 
 #endif

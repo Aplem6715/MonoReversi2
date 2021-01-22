@@ -31,8 +31,8 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        hashData = GetHashData(tree->table, tree->stones, depth, &hashCode);
-        if (hashData != NULL && CutWithHash(hashData, &alpha, &beta, &score))
+        hashData = HashGetData(tree->table, tree->stones, depth, &hashCode);
+        if (hashData != NULL && HashCut(hashData, &alpha, &beta, &score))
             return score;
     }
 
@@ -103,7 +103,7 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
 
     if (tree->useHash == 1)
     {
-        SaveHashData(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashSaveData(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -129,8 +129,8 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        hashData = GetHashData(tree->table, tree->stones, depth, &hashCode);
-        if (hashData != NULL && CutWithHash(hashData, &alpha, &beta, &score))
+        hashData = HashGetData(tree->table, tree->stones, depth, &hashCode);
+        if (hashData != NULL && HashCut(hashData, &alpha, &beta, &score))
             return score;
     }
 
@@ -166,7 +166,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
             pos = GetLSB(mob);
             mob ^= pos;
             posIdx = CalcPosIndex(pos);
-            flip = CalcFlipOptimized(tree->stones, posIdx);
+            flip = CalcFlip(tree->stones, posIdx);
 
             SearchUpdateEndDeep(tree, pos, flip);
             {
@@ -197,7 +197,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
 
     if (tree->useHash == 1 && hashData != NULL)
     {
-        SaveHashData(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashSaveData(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }

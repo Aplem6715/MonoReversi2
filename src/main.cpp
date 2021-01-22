@@ -8,7 +8,7 @@
 int main()
 {
     srand((unsigned int)time(NULL));
-    InitHash();
+    HashInit();
     Game game = Game(PlayerEnum::HUMAN, PlayerEnum::AI, 10, 21);
     //Game game = Game(PlayerEnum::AI, PlayerEnum::HUMAN, 10, 21);
     game.Start();

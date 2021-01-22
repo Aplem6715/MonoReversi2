@@ -32,10 +32,10 @@ typedef struct HashData
 typedef struct HashTable
 {
     HashData *data;
-    // 必ず2のべき乗
+    // サイズは2のべき乗
     size_t size;
 
-    //　↓以降↓ 測定用
+    /* 計測用 */
     uint64_t nbUsed;
     uint64_t nbHit;
     uint64_t nbCollide;
@@ -45,30 +45,31 @@ typedef struct HashTable
 #define MIN_RAWHASH_BIT (8)
 
 // ハッシュキー生成用の乱数ビット列を初期化
-void InitHash();
+void HashInit();
 
 // ハッシュテーブルの初期化
-void InitHashTable(HashTable *table);
+void HashTableInit(HashTable *table);
 
 // ハッシュテーブルの開放
-void FreeHashTable(HashTable *table);
+void HashTableFree(HashTable *table);
 
 // ハッシュテーブル内のデータをリセット
-void ResetHashTable(HashTable *table);
+void HashTableReset(HashTable *table);
 
 // ハッシュテーブル内の統計情報をリセット
-void ResetHashStatistics(HashTable *table);
+void HashTableResetStats(HashTable *table);
 
 //inline uint64_t GetHashCode(uint64_t own, uint64_t opp);
 
 // ハッシュテーブル内を検索
-HashData *GetHashData(HashTable *table, Stones *stones, uint8 depth, uint64_t *hashCode);
+HashData *HashGetData(HashTable *table, Stones *stones, uint8 depth, uint64_t *hashCode);
+
 // ハッシュ内に含まれているか
-uint8 HashContains(HashTable *table, Stones *stones);
+uint8 HashTableContains(HashTable *table, Stones *stones);
 
-bool CutWithHash(HashData *hashData, score_t *alpha, score_t *beta, score_t *score);
+bool HashCut(HashData *hashData, score_t *alpha, score_t *beta, score_t *score);
 
-void SaveHashData(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore);
+void HashSaveData(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore);
 
 /* 未使用（探索関数の中で実装されている機能）
 void HashOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, score_t lower, score_t upper, uint64_t hashCode);

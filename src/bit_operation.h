@@ -11,8 +11,8 @@
 inline uint64_t CalcMobility64(const uint64_t aly, const uint64_t opp);
 uint64_t CalcMobility(const Stones *stones);
 
-inline uint64_t CalcFlipOptimized64(const uint64_t own, const uint64_t opp, const uint8 pos);
-uint64_t CalcFlipOptimized(const Stones *stones, const uint8 pos);
+inline uint64_t CalcFlip64(const uint64_t own, const uint64_t opp, const uint8 pos);
+uint64_t CalcFlip(const Stones *stones, const uint8 pos);
 
 uint8 CountBits(uint64_t stone);
 
@@ -38,26 +38,5 @@ inline uint8 NextIndex(uint64_t *bits)
     return CalcPosIndex(*bits);
 }
 #pragma warning(pop)
-
-/*
-inline int max(const int x1, const int x2)
-{
-    return x1 > x2 ? x1 : x2;
-}
-
-inline float maxf(const float x1, const float x2)
-{
-    return x1 > x2 ? x1 : x2;
-}
-
-inline int min(const int x1, const int x2)
-{
-    return x1 < x2 ? x1 : x2;
-}
-
-inline float minf(const float x1, const float x2)
-{
-    return x1 < x2 ? x1 : x2;
-}*/
 
 #endif

@@ -227,7 +227,7 @@ FlipGenerator
 　　return flipped.x | flipped.y | flipped.z | flipped.w;
 */
 
-inline uint64_t CalcFlipOptimized64(const uint64_t own, const uint64_t opp, const uint8 pos)
+inline uint64_t CalcFlip64(const uint64_t own, const uint64_t opp, const uint8 pos)
 {
     uint64_t flipped[4];
     uint64_t oppM[4];
@@ -290,9 +290,9 @@ inline uint64_t CalcFlipOptimized64(const uint64_t own, const uint64_t opp, cons
     */
 }
 
-uint64_t CalcFlipOptimized(const Stones *stones, const uint8 pos)
+uint64_t CalcFlip(const Stones *stones, const uint8 pos)
 {
-    return CalcFlipOptimized64(stones->own, stones->opp, pos);
+    return CalcFlip64(stones->own, stones->opp, pos);
 }
 
 uint8 CountBits(uint64_t stone)
