@@ -16,24 +16,6 @@ LEARN_DIR	=.\src\learning
 
 INCLUDE_PATH=.\src
 
-OBJS=\
-	$(OUTDIR)\const.obj\
-	$(OUTDIR)\bit_operation.obj\
-	$(OUTDIR)\board.obj\
-	$(OUTDIR)\game.obj\
-	$(OUTDIR)\main.obj\
-	$(AI_OUTDIR)\eval.obj\
-	$(AI_OUTDIR)\ai_const.obj\
-	$(AI_OUTDIR)\nnet.obj\
-	$(AI_OUTDIR)\regression.obj\
-	$(SEARCH_OUTDIR)\bench.obj\
-	$(SEARCH_OUTDIR)\hash.obj\
-	$(SEARCH_OUTDIR)\moves.obj\
-	$(SEARCH_OUTDIR)\mid.obj\
-	$(SEARCH_OUTDIR)\end.obj\
-	$(SEARCH_OUTDIR)\search.obj
-
-
 LEARN_OBJS=\
 	$(OUTDIR)\const.obj\
 	$(OUTDIR)\bit_operation.obj\
@@ -66,16 +48,9 @@ CFLAGS=\
 	/I$(INCLUDE_PATH)\
 	/DUSE_REGRESSION\
 	/DUSE_INTRIN\
-	/Zi
-	#/DLEARN_MODE
+	/Zi\
+	/DLEARN_MODE
 	# /USE_SERIALIZER\ #
-
-LINK_FLAGS=\
-	/nologo\
-	/subsystem:console\
-	/pdb:"$(OUTDIR)\$(TARGET).pdb"\
-	/out:"$(OUTDIR)\$(TARGET).exe"\
-	/DEBUG
 
 LEARN_LINK_FLAGS=\
 	/nologo\
@@ -85,9 +60,9 @@ LEARN_LINK_FLAGS=\
 	/DEBUG
 
 
-reversi: $(OUTDIR)\$(TARGET).exe
+reversi: clean $(OUTDIR)\$(TARGET).exe
 
-learn: $(OUTDIR)\$(LEARN_TARGET).exe
+learn: clean $(OUTDIR)\$(LEARN_TARGET).exe
 
 all: reversi learn
 
@@ -109,9 +84,6 @@ $(SEARCH_OUTDIR):
 $(LEARN_OUTDIR):
 	@if not exist $(LEARN_OUTDIR) mkdir $(LEARN_OUTDIR)
 
-
-$(OUTDIR)\$(TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(SEARCH_OUTDIR) $(OBJS)
-	$(LINK) $(LINK_FLAGS) $(OBJS)
 
 $(OUTDIR)\$(LEARN_TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(SEARCH_OUTDIR) $(LEARN_OUTDIR) $(LEARN_OBJS)
 	$(LINK) $(LEARN_LINK_FLAGS) $(LEARN_OBJS)

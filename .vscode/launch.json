@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "デバッグ",
+            "name": "デバッグPlay",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}\\build\\debug\\play\\MonoReversi.exe",
@@ -29,19 +29,7 @@
             "preLaunchTask": "make-learn"
         },
         {
-            "name": "Learn",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}\\build\\release\\learn\\learn.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [],
-            "externalConsole": true,
-            "preLaunchTask": "make-learn_release"
-        },
-        {
-            "name": "Release",
+            "name": "Play_リリース",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}\\build\\release\\play\\MonoReversi.exe",
@@ -51,6 +39,18 @@
             "environment": [],
             "externalConsole": true,
             "preLaunchTask": "make_release"
+        },
+        {
+            "name": "Learn_リリース",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build\\release\\learn\\learn.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "preLaunchTask": "make-learn_release"
         }
     ]
 }

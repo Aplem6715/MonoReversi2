@@ -3,10 +3,11 @@ TARGET			=MonoReversi
 LEARN_TARGET	=learn
 LINK			=link.exe
 
-OUTDIR			=.\build
-AI_OUTDIR		=.\build\ai
-SEARCH_OUTDIR	=.\build\search
-LEARN_OUTDIR	=.\build\learning
+OUTDIR			=.\build\release\learn
+
+AI_OUTDIR		=$(OUTDIR)\ai
+SEARCH_OUTDIR	=$(OUTDIR)\search
+LEARN_OUTDIR	=$(OUTDIR)\learning
 
 SRC_DIR		=.\src
 AI_SRC_DIR	=.\src\ai
@@ -14,24 +15,6 @@ SEARCH_DIR	=.\src\search
 LEARN_DIR	=.\src\learning
 
 INCLUDE_PATH=.\src
-
-OBJS=\
-	$(OUTDIR)\const.obj\
-	$(OUTDIR)\bit_operation.obj\
-	$(OUTDIR)\board.obj\
-	$(OUTDIR)\game.obj\
-	$(OUTDIR)\main.obj\
-	$(AI_OUTDIR)\eval.obj\
-	$(AI_OUTDIR)\ai_const.obj\
-	$(AI_OUTDIR)\nnet.obj\
-	$(AI_OUTDIR)\regression.obj\
-	$(SEARCH_OUTDIR)\bench.obj\
-	$(SEARCH_OUTDIR)\hash.obj\
-	$(SEARCH_OUTDIR)\moves.obj\
-	$(SEARCH_OUTDIR)\mid.obj\
-	$(SEARCH_OUTDIR)\end.obj\
-	$(SEARCH_OUTDIR)\search.obj
-
 
 LEARN_OBJS=\
 	$(OUTDIR)\const.obj\
@@ -65,15 +48,10 @@ CFLAGS=\
 	/EHsc\
 	/I$(INCLUDE_PATH)\
 	/DNDEBUG\
+	/DLEARN_MODE\
 	/DUSE_INTRIN\
 	/DUSE_REGRESSION
-	#/DLEARN_MODE
 	# /USE_SERIALIZER\ #
-
-LINK_FLAGS=\
-	/nologo\
-	/subsystem:console\
-	/out:"$(OUTDIR)\$(TARGET).exe"\
 
 LEARN_LINK_FLAGS=\
 	/nologo\
@@ -81,16 +59,16 @@ LEARN_LINK_FLAGS=\
 	/out:"$(OUTDIR)\$(LEARN_TARGET).exe"\
 
 
-
-reversi: $(OUTDIR)\$(TARGET).exe
-
-learn: $(OUTDIR)\$(LEARN_TARGET).exe
+learn: clean $(OUTDIR)\$(LEARN_TARGET).exe
 
 all: reversi learn
 
 .PHONY: clean
 clean:
-	-@erase /Q $(OUTDIR)\* $(AI_OUTDIR)\* $(SEARCH_OUTDIR)\* $(LEARN_OUTDIR)\*
+	-@erase /Q $(OUTDIR)\*
+	-@erase /Q (AI_OUTDIR)\*
+	-@erase /Q $(SEARCH_OUTDIR)\*
+	-@erase /Q $(LEARN_OUTDIR)\*
 
 
 
@@ -106,9 +84,6 @@ $(SEARCH_OUTDIR):
 $(LEARN_OUTDIR):
 	@if not exist $(LEARN_OUTDIR) mkdir $(LEARN_OUTDIR)
 
-
-$(OUTDIR)\$(TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(SEARCH_OUTDIR) $(OBJS)
-	$(LINK) $(LINK_FLAGS) $(OBJS)
 
 $(OUTDIR)\$(LEARN_TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(SEARCH_OUTDIR) $(LEARN_OUTDIR) $(LEARN_OBJS)
 	$(LINK) $(LEARN_LINK_FLAGS) $(LEARN_OBJS)

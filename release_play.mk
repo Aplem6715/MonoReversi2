@@ -2,7 +2,7 @@
 TARGET			=MonoReversi
 LINK			=link.exe
 
-OUTDIR			=.\build\debug\play
+OUTDIR			=.\build\release\play
 
 AI_OUTDIR		=$(OUTDIR)\ai
 SEARCH_OUTDIR	=$(OUTDIR)\search
@@ -10,7 +10,6 @@ SEARCH_OUTDIR	=$(OUTDIR)\search
 SRC_DIR		=.\src
 AI_SRC_DIR	=.\src\ai
 SEARCH_DIR	=.\src\search
-
 INCLUDE_PATH=.\src
 
 OBJS=\
@@ -29,9 +28,9 @@ OBJS=\
 	$(SEARCH_OUTDIR)\mid.obj\
 	$(SEARCH_OUTDIR)\end.obj\
 	$(SEARCH_OUTDIR)\search.obj
-
 	
 CFLAGS=\
+	/Ox\
 	/arch:AVX2\
 	/nologo\
 	/W3\
@@ -43,30 +42,28 @@ CFLAGS=\
 	/bigobj\
 	/EHsc\
 	/I$(INCLUDE_PATH)\
-	/DUSE_REGRESSION\
+	/DNDEBUG\
 	/DUSE_INTRIN\
-	/Zi
+	/DUSE_REGRESSION
 	#/DLEARN_MODE
 	# /USE_SERIALIZER\ #
 
 LINK_FLAGS=\
 	/nologo\
 	/subsystem:console\
-	/pdb:"$(OUTDIR)\$(TARGET).pdb"\
 	/out:"$(OUTDIR)\$(TARGET).exe"\
-	/DEBUG
-
 
 
 reversi: clean $(OUTDIR)\$(TARGET).exe
 
-all: reversi learn
+all: reversi
 
 .PHONY: clean
 clean:
-	-erase /Q $(OUTDIR)\*
-	-erase /Q $(AI_OUTDIR)\*
-	-erase /Q $(SEARCH_OUTDIR)\*
+	-@erase /Q $(OUTDIR)\*
+	-@erase /Q $(AI_OUTDIR)\*
+	-@erase /Q $(SEARCH_OUTDIR)\*
+
 
 
 $(OUTDIR):
@@ -82,7 +79,6 @@ $(SEARCH_OUTDIR):
 $(OUTDIR)\$(TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(SEARCH_OUTDIR) $(OBJS)
 	$(LINK) $(LINK_FLAGS) $(OBJS)
 
-
 {$(SRC_DIR)}.cpp{$(OUTDIR)}.obj:
 	$(CPP) $(CFLAGS) /Fo"$(OUTDIR)\\" /Fd"$(OUTDIR)\\" $<
 
@@ -91,3 +87,5 @@ $(OUTDIR)\$(TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(SEARCH_OUTDIR) $(OBJS)
 	
 {$(SEARCH_DIR)}.cpp{$(SEARCH_OUTDIR)}.obj:
 	$(CPP) $(CFLAGS) /Fo"$(SEARCH_OUTDIR)\\" /Fd"$(SEARCH_OUTDIR)\\" $<
+
+	
