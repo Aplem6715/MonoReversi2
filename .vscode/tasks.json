@@ -6,7 +6,7 @@
             "label": "make",
             "command": "nmake.exe",
             "args": [
-                "/fmake_debug.mk",
+                "/fdebug_play.mk",
                 "reversi"
             ],
             "problemMatcher": [
@@ -22,7 +22,7 @@
             "label": "make-learn",
             "command": "nmake.exe",
             "args": [
-                "/fmake_debug.mk",
+                "/fdebug_learn.mk",
                 "learn"
             ],
             "problemMatcher": [
@@ -35,7 +35,7 @@
             "label": "make_release",
             "command": "nmake.exe",
             "args": [
-                "/fmake_release.mk",
+                "/frelease_play.mk",
                 "reversi"
             ],
             "problemMatcher": [
@@ -51,7 +51,7 @@
             "label": "make-learn_release",
             "command": "nmake.exe",
             "args": [
-                "/fmake_release.mk",
+                "/frelease_learn.mk",
                 "learn"
             ],
             "problemMatcher": [

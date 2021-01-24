@@ -3,10 +3,11 @@ TARGET			=MonoReversi
 LEARN_TARGET	=learn
 LINK			=link.exe
 
-OUTDIR			=.\build
-AI_OUTDIR		=.\build\ai
-SEARCH_OUTDIR	=.\build\search
-LEARN_OUTDIR	=.\build\learning
+OUTDIR			=.\build\debug\learn
+
+AI_OUTDIR		=$(OUTDIR)\ai
+SEARCH_OUTDIR	=$(OUTDIR)\search
+LEARN_OUTDIR	=$(OUTDIR)\learning
 
 SRC_DIR		=.\src
 AI_SRC_DIR	=.\src\ai
