@@ -94,6 +94,8 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
         {
             logfile << tree.table->nbUsed << ","
                     << tree.table->nbHit << ","
+                    << tree.table->nb2ndUsed << ","
+                    << tree.table->nb2ndHit << ","
                     << tree.table->nbCollide << ",";
         }
         else

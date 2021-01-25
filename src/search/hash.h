@@ -37,7 +37,9 @@ typedef struct HashTable
 
     /* 計測用 */
     uint64_t nbUsed;
+    uint64_t nb2ndUsed;
     uint64_t nbHit;
+    uint64_t nb2ndHit;
     uint64_t nbCollide;
 } HashTable;
 

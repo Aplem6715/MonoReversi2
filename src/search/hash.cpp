@@ -64,8 +64,10 @@ void HashTableReset(HashTable *table)
 void HashTableResetStats(HashTable *table)
 {
     table->nbUsed = 0;
+    table->nb2ndUsed = 0;
     table->nbCollide = 0;
     table->nbHit = 0;
+    table->nb2ndHit = 0;
 }
 
 // 乱数ビット列を統合してハッシュコードを取得する
@@ -122,7 +124,7 @@ HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64
     {
         if (data->depth == depth)
         {
-            table->nbHit++;
+            table->nb2ndHit++;
             return data;
         }
     }
@@ -279,7 +281,7 @@ void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 
         if ((hashData->own | hashData->opp) == 0)
         {
             HashDataSaveNew(hashData, stones, bestMove, depth, alpha, beta, maxScore);
-            table->nbUsed++;
+            table->nb2ndUsed++;
         }
         else if (hashData->own == stones->own && hashData->opp == stones->opp)
         {
