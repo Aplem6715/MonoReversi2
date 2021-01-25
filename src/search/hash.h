@@ -62,18 +62,15 @@ void HashTableResetStats(HashTable *table);
 //inline uint64_t GetHashCode(uint64_t own, uint64_t opp);
 
 // ハッシュテーブル内を検索
-HashData *HashGetData(HashTable *table, Stones *stones, uint8 depth, uint64_t *hashCode);
+HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64_t *hashCode);
 
 // ハッシュ内に含まれているか
-uint8 HashTableContains(HashTable *table, Stones *stones);
+uint8 IsHashTableContains(HashTable *table, Stones *stones);
 
-bool HashCut(HashData *hashData, score_t *alpha, score_t *beta, score_t *score);
+// ハッシュテーブルに追加
+void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore);
 
-void HashSaveData(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore);
-
-/* 未使用（探索関数の中で実装されている機能）
-void HashOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, score_t lower, score_t upper, uint64_t hashCode);
-void HashPriorityOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, score_t lower, score_t upper, uint64_t hashCode);
-*/
+// ハッシュによる枝刈りが起こるかを返し，ハッシュテーブルに登録されている情報をalpha・beta値などに適用する
+bool IsHashCut(HashData *hashData, score_t *alpha, score_t *beta, score_t *score);
 
 #endif
