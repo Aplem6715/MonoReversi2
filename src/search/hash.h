@@ -63,6 +63,9 @@ uint8 IsHashTableContains(HashTable *table, Stones *stones);
 void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore);
 
 // ハッシュによる枝刈りが起こるかを返し，ハッシュテーブルに登録されている情報をalpha・beta値などに適用する
-bool IsHashCut(HashData *hashData, score_t *alpha, score_t *beta, score_t *score);
+bool IsHashCut(HashData *hashData, const uint8 depth, score_t *alpha, score_t *beta, score_t *score);
+
+// ハッシュによる枝刈りが起こるかを返す
+bool IsHashCutNullWindow(HashData *hashData, const uint8 depth, const score_t alpha, score_t *score);
 
 #endif
