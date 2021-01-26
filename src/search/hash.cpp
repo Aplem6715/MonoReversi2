@@ -260,6 +260,16 @@ void HashDataLevelUP(HashData *data, const uint8 bestMove, const uint8 depth, co
     data->depth = depth;
 }
 
+uint8 HashDataPriorityOverwrite(HashData *data, const Stones *stones, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
+{
+    if (depth > data->depth)
+    {
+        HashDataSaveNew(data, stones, bestMove, depth, alpha, beta, maxScore);
+        return 1;
+    }
+    return 0;
+}
+
 void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore)
 {
     uint64_t index = hashCode & (table->size - 1);
@@ -290,7 +300,18 @@ void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 
         }
         else
         {
-            table->nbCollide++;
+            // 優先度が高いデータだったら上書き
+            hashData = &table->data[index];
+            if (!HashDataPriorityOverwrite(hashData, stones, bestMove, depth, alpha, beta, maxScore))
+            {
+                // 上書きされなかったら，次のインデックスで上書きを試す
+                hashData = &table->data[RETRY_HASH(index)];
+                if (!HashDataPriorityOverwrite(hashData, stones, bestMove, depth, alpha, beta, maxScore))
+                {
+                    // それでもだめなら衝突判定
+                    table->nbCollide++;
+                }
+            }
         }
     }
 }
