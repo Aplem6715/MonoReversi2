@@ -29,13 +29,6 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         return Judge(tree);
     }
 
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
-    {
-        hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
-        if (hashData != NULL && IsHashCut(hashData, &alpha, &beta, &score))
-            return score;
-    }
-
     CreateMoveList(&moveList, tree->stones);
 
     // 手があるか
@@ -59,6 +52,12 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     }
     else
     {
+        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        {
+            hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+            if (hashData != NULL && IsHashCut(hashData, &alpha, &beta, &score))
+                return score;
+        }
         if (depth >= tree->orderDepth)
         {
             EvaluateMoveList(tree, &moveList, tree->stones, hashData);
