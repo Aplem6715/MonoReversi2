@@ -10,6 +10,13 @@
 // RawHash[8行x2色][列内8石のパターン]
 uint64_t RawHash[8 * 2][1 << 8];
 
+static const HashData EMPTY_HASH_DATA = {
+    0, 0,                               // stones
+    0,                                  // depth
+    NOMOVE_INDEX, NOMOVE_INDEX,         // moves
+    -Const::MAX_VALUE, Const::MAX_VALUE // scores
+};
+
 void HashInit()
 {
     std::mt19937_64 mt(HASH_SEED);
@@ -50,13 +57,7 @@ void HashTableReset(HashTable *table)
 {
     for (size_t i = 0; i < table->size; i++)
     {
-        table->data[i].own = 0;
-        table->data[i].opp = 0;
-        table->data[i].depth = 0;
-        table->data[i].bestMove = NOMOVE_INDEX;
-        table->data[i].bestMove = NOMOVE_INDEX;
-        table->data[i].lower = 0;
-        table->data[i].upper = 0;
+        table->data[i] = EMPTY_HASH_DATA;
     }
     HashTableResetStats(table);
 }
@@ -112,22 +113,16 @@ HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64
     // データの衝突チェック（同じ盤面かどうかで確認）
     if (data->own == stones->own && data->opp == stones->opp)
     {
-        if (data->depth == depth)
-        {
-            table->nbHit++;
-            return data;
-        }
+        table->nbHit++;
+        return data;
     }
 
     // インデックスを再計算して再取得を試す
     secondData = &table->data[RETRY_HASH(index)];
     if (secondData->own == stones->own && secondData->opp == stones->opp)
     {
-        if (secondData->depth == depth)
-        {
-            table->nb2ndHit++;
-            return secondData;
-        }
+        table->nb2ndHit++;
+        return secondData;
     }
 
     return NULL;
@@ -157,6 +152,12 @@ uint8 IsHashTableContains(HashTable *table, Stones *stones)
 bool IsHashCut(HashData *hashData, score_t *alpha, score_t *beta, score_t *score)
 {
     assert(hashData != NULL);
+
+    if (hashData->lower == hashData->upper)
+    {
+        *score = hashData->upper;
+        return true;
+    }
     if (hashData->upper <= *alpha)
     {
         *score = hashData->upper;
@@ -167,14 +168,10 @@ bool IsHashCut(HashData *hashData, score_t *alpha, score_t *beta, score_t *score
         *score = hashData->lower;
         return true;
     }
-    if (hashData->lower == hashData->upper)
-    {
-        *score = hashData->upper;
-        return true;
-    }
 
     *alpha = MAX(*alpha, hashData->lower);
     *beta = MIN(*beta, hashData->upper);
+
     return false;
 }
 
@@ -211,7 +208,7 @@ void HashDataSaveNew(HashData *data, const Stones *stones, const uint8 bestMove,
  * @param beta ベータ値
  * @param maxScore 最善手のスコア
  */
-void HashDataUpdate(HashData *data, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
+void HashDataUpdate(HashData *data, const uint8 bestMove, const score_t alpha, const score_t beta, const score_t maxScore)
 {
     if (maxScore < beta && maxScore < data->upper)
         data->upper = maxScore;
@@ -296,9 +293,13 @@ void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 
     }
     else if (hashData->own == stones->own && hashData->opp == stones->opp)
     {
-        if (hashData->depth <= depth)
+        if (depth == hashData->depth)
         {
-            HashDataUpdate(hashData, bestMove, depth, alpha, beta, maxScore);
+            HashDataUpdate(hashData, bestMove, alpha, beta, maxScore);
+        }
+        else
+        {
+            HashDataLevelUP(hashData, bestMove, depth, alpha, beta, maxScore);
         }
     }
     else
@@ -312,9 +313,13 @@ void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 
         }
         else if (secondData->own == stones->own && secondData->opp == stones->opp)
         {
-            if (secondData->depth <= depth)
+            if (depth == secondData->depth)
             {
-                HashDataUpdate(secondData, bestMove, depth, alpha, beta, maxScore);
+                HashDataUpdate(secondData, bestMove, alpha, beta, maxScore);
+            }
+            else
+            {
+                HashDataLevelUP(secondData, bestMove, depth, alpha, beta, maxScore);
             }
         }
         else

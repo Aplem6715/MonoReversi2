@@ -7,16 +7,6 @@
 #define NOMOVE_INDEX 64
 #define PASS_INDEX 65
 
-// ハッシュデータ検索の際の検索結果
-enum HashHitState
-{
-    HASH_HIT,       // ヒット
-    HASH_EMPTY,     // 未使用領域がヒット
-    HASH_DEFFERENT, // 他盤面と衝突
-    HASH_DEEPER,    // より深い探索でのデータを発見
-    HASH_SHALLOWER  // より浅い探索でのデータを発見
-};
-
 // ハッシュテーブルに格納されるデータ
 // 8x2 + 1 + 1*2 + 4x2 = 27[byte]
 typedef struct HashData
