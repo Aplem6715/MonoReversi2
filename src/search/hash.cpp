@@ -107,6 +107,7 @@ HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64
     // サイズでモジュロ演算(code % size)
     uint64_t index = *hashCode & (table->size - 1);
     HashData *data = &table->data[index];
+    HashData *secondData;
 
     // データの衝突チェック（同じ盤面かどうかで確認）
     if (data->own == stones->own && data->opp == stones->opp)
@@ -119,13 +120,13 @@ HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64
     }
 
     // インデックスを再計算して再取得を試す
-    data = &table->data[RETRY_HASH(index)];
-    if (data->own == stones->own && data->opp == stones->opp)
+    secondData = &table->data[RETRY_HASH(index)];
+    if (secondData->own == stones->own && secondData->opp == stones->opp)
     {
-        if (data->depth == depth)
+        if (secondData->depth == depth)
         {
             table->nb2ndHit++;
-            return data;
+            return secondData;
         }
     }
 
@@ -260,6 +261,18 @@ void HashDataLevelUP(HashData *data, const uint8 bestMove, const uint8 depth, co
     data->depth = depth;
 }
 
+/**
+ * @brief 優先度をつけてハッシュデータを上書きする
+ * 
+ * @param data ハッシュデータ
+ * @param stones 盤面の状態
+ * @param bestMove 発見された最善手
+ * @param depth データ取得時の探索深度
+ * @param alpha アルファ値
+ * @param beta ベータ値
+ * @param maxScore 最善手のスコア
+ * @return uint8 上書きされたか
+ */
 uint8 HashDataPriorityOverwrite(HashData *data, const Stones *stones, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
 {
     if (depth > data->depth)
@@ -274,6 +287,8 @@ void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 
 {
     uint64_t index = hashCode & (table->size - 1);
     HashData *hashData = &table->data[index];
+    HashData *secondData;
+
     if ((hashData->own | hashData->opp) == 0)
     {
         HashDataSaveNew(hashData, stones, bestMove, depth, alpha, beta, maxScore);
@@ -282,31 +297,33 @@ void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 
     else if (hashData->own == stones->own && hashData->opp == stones->opp)
     {
         if (hashData->depth <= depth)
+        {
             HashDataUpdate(hashData, bestMove, depth, alpha, beta, maxScore);
+        }
     }
     else
     {
         // 見つからなかったらインデックスを再計算
-        hashData = &table->data[RETRY_HASH(index)];
-        if ((hashData->own | hashData->opp) == 0)
+        secondData = &table->data[RETRY_HASH(index)];
+        if ((secondData->own | secondData->opp) == 0)
         {
-            HashDataSaveNew(hashData, stones, bestMove, depth, alpha, beta, maxScore);
+            HashDataSaveNew(secondData, stones, bestMove, depth, alpha, beta, maxScore);
             table->nb2ndUsed++;
         }
-        else if (hashData->own == stones->own && hashData->opp == stones->opp)
+        else if (secondData->own == stones->own && secondData->opp == stones->opp)
         {
-            if (hashData->depth <= depth)
-                HashDataUpdate(hashData, bestMove, depth, alpha, beta, maxScore);
+            if (secondData->depth <= depth)
+            {
+                HashDataUpdate(secondData, bestMove, depth, alpha, beta, maxScore);
+            }
         }
         else
         {
             // 優先度が高いデータだったら上書き
-            hashData = &table->data[index];
             if (!HashDataPriorityOverwrite(hashData, stones, bestMove, depth, alpha, beta, maxScore))
             {
                 // 上書きされなかったら，次のインデックスで上書きを試す
-                hashData = &table->data[RETRY_HASH(index)];
-                if (!HashDataPriorityOverwrite(hashData, stones, bestMove, depth, alpha, beta, maxScore))
+                if (!HashDataPriorityOverwrite(secondData, stones, bestMove, depth, alpha, beta, maxScore))
                 {
                     // それでもだめなら衝突判定
                     table->nbCollide++;
