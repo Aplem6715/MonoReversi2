@@ -80,7 +80,7 @@ void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *
         move->score += (MAX_MOVES + 4 /*角分*/ - (CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 8);
 
         // 置換表に含まれていたらプラス(8bit目)
-        if (hashData != NULL && HashTableContains(tree->table, nextStones))
+        if (hashData != NULL && IsHashTableContains(tree->table, nextStones))
         {
             move->score += (1 << 8);
         }

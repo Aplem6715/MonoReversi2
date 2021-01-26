@@ -7,16 +7,6 @@
 #define NOMOVE_INDEX 64
 #define PASS_INDEX 65
 
-// ハッシュデータ検索の際の検索結果
-enum HashHitState
-{
-    HASH_HIT,       // ヒット
-    HASH_EMPTY,     // 未使用領域がヒット
-    HASH_DEFFERENT, // 他盤面と衝突
-    HASH_DEEPER,    // より深い探索でのデータを発見
-    HASH_SHALLOWER  // より浅い探索でのデータを発見
-};
-
 // ハッシュテーブルに格納されるデータ
 // 8x2 + 1 + 1*2 + 4x2 = 27[byte]
 typedef struct HashData
@@ -37,7 +27,9 @@ typedef struct HashTable
 
     /* 計測用 */
     uint64_t nbUsed;
+    uint64_t nb2ndUsed;
     uint64_t nbHit;
+    uint64_t nb2ndHit;
     uint64_t nbCollide;
 } HashTable;
 
@@ -62,18 +54,15 @@ void HashTableResetStats(HashTable *table);
 //inline uint64_t GetHashCode(uint64_t own, uint64_t opp);
 
 // ハッシュテーブル内を検索
-HashData *HashGetData(HashTable *table, Stones *stones, uint8 depth, uint64_t *hashCode);
+HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64_t *hashCode);
 
 // ハッシュ内に含まれているか
-uint8 HashTableContains(HashTable *table, Stones *stones);
+uint8 IsHashTableContains(HashTable *table, Stones *stones);
 
-bool HashCut(HashData *hashData, score_t *alpha, score_t *beta, score_t *score);
+// ハッシュテーブルに追加
+void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore);
 
-void HashSaveData(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore);
-
-/* 未使用（探索関数の中で実装されている機能）
-void HashOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, score_t lower, score_t upper, uint64_t hashCode);
-void HashPriorityOverwrite(HashTable *table, uint64_t own, uint64_t opp, uint8 depth, score_t lower, score_t upper, uint64_t hashCode);
-*/
+// ハッシュによる枝刈りが起こるかを返し，ハッシュテーブルに登録されている情報をalpha・beta値などに適用する
+bool IsHashCut(HashData *hashData, score_t *alpha, score_t *beta, score_t *score);
 
 #endif

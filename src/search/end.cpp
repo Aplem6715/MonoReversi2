@@ -31,8 +31,8 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        hashData = HashGetData(tree->table, tree->stones, depth, &hashCode);
-        if (hashData != NULL && HashCut(hashData, &alpha, &beta, &score))
+        hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+        if (hashData != NULL && IsHashCut(hashData, &alpha, &beta, &score))
             return score;
     }
 
@@ -103,7 +103,7 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
 
     if (tree->useHash == 1)
     {
-        HashSaveData(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -129,8 +129,8 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        hashData = HashGetData(tree->table, tree->stones, depth, &hashCode);
-        if (hashData != NULL && HashCut(hashData, &alpha, &beta, &score))
+        hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+        if (hashData != NULL && IsHashCut(hashData, &alpha, &beta, &score))
             return score;
     }
 
@@ -197,7 +197,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
 
     if (tree->useHash == 1 && hashData != NULL)
     {
-        HashSaveData(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
