@@ -143,95 +143,32 @@ void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
     tree->nbEmpty++;
 }
 
-SearchFunc_t DecideSearchFunc(SearchTree *tree)
-{
-    if (tree->nbEmpty < tree->endDepth)
-    {
-        tree->isEndSearch = 1;
-        tree->depth = tree->nbEmpty;
-        // オーダリングが不要な探索では探索関数を変える
-        if (tree->depth > tree->orderDepth)
-        {
-            return EndAlphaBeta;
-        }
-        else
-        {
-            return EndAlphaBetaDeep;
-        }
-    }
-    else
-    {
-        tree->isEndSearch = 0;
-        tree->depth = tree->midDepth;
-        // オーダリングが不要な探索では探索関数を変える
-        if (tree->depth > tree->orderDepth)
-        {
-            //return MidAlphaBeta;
-            return MidPVS;
-        }
-        else
-        {
-            return MidAlphaBetaDeep;
-        }
-    }
-}
-
 uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
 {
-    score_t score, lower, maxScore = -Const::MAX_VALUE;
-    uint8 bestPos = 64, secondPos = 64;
-    SearchFunc_t SearchFunc;
-    MoveList moveList;
-    Move *move;
+    uint8 pos = NOMOVE_INDEX;
+    uint8 nbEmpty = CountBits(~(own | opp));
 
     std::chrono::system_clock::time_point start, end;
     start = std::chrono::system_clock::now();
 
     SearchSetup(tree, own, opp);
 
-    SearchFunc = DecideSearchFunc(tree);
-    CreateMoveList(&moveList, tree->stones);
-    assert(moveList.nbMoves > 0);
-    if (tree->depth > tree->orderDepth)
+    if (nbEmpty <= tree->endDepth)
     {
-        EvaluateMoveList(tree, &moveList, tree->stones, NULL);
+        tree->isEndSearch = 1;
+        tree->depth = nbEmpty;
+        pos = EndRoot(tree, choiceSecond);
     }
-
-    lower = -Const::MAX_VALUE;
-    for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
+    else
     {
-        if (tree->isEndSearch)
-            SearchUpdateEnd(tree, move);
-        else
-            SearchUpdateMid(tree, move);
-        {
-            score = -SearchFunc(tree, -Const::MAX_VALUE, -lower, tree->depth, false);
-        }
-        if (tree->isEndSearch)
-            SearchRestoreEnd(tree, move);
-        else
-            SearchRestoreMid(tree, move);
-
-        if (score > maxScore)
-        {
-            maxScore = score;
-            secondPos = bestPos;
-            bestPos = move->posIdx;
-            if (maxScore > lower)
-            {
-                lower = maxScore;
-            }
-        }
+        tree->isEndSearch = 0;
+        tree->depth = tree->midDepth;
+        pos = MidRoot(tree, choiceSecond);
     }
 
     end = std::chrono::system_clock::now();
     tree->usedTime = static_cast<double>(
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000.0);
-    tree->score = maxScore;
 
-    if (choiceSecond == 1 && secondPos != 64)
-    {
-        return secondPos;
-    }
-    return bestPos;
+    return pos;
 }

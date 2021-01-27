@@ -200,3 +200,53 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     }
     return maxScore;
 }
+
+uint8 EndRoot(SearchTree *tree, uint8 choiceSecond)
+{
+    score_t score, lower, maxScore = -Const::MAX_VALUE;
+    uint8 bestPos = NOMOVE_INDEX, secondPos = NOMOVE_INDEX;
+    SearchFunc_t SearchFunc;
+    MoveList moveList;
+    Move *move;
+
+    CreateMoveList(&moveList, tree->stones);
+    assert(moveList.nbMoves > 0);
+    if (tree->depth > tree->orderDepth)
+    {
+        EvaluateMoveList(tree, &moveList, tree->stones, NULL);
+        SearchFunc = EndAlphaBeta;
+    }
+    else
+    {
+        SearchFunc = EndAlphaBetaDeep;
+    }
+
+    lower = -Const::MAX_VALUE;
+    for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
+    {
+        SearchUpdateEnd(tree, move);
+        {
+            score = -SearchFunc(tree, -Const::MAX_VALUE, -lower, tree->depth, false);
+        }
+        SearchRestoreEnd(tree, move);
+
+        if (score > maxScore)
+        {
+            maxScore = score;
+            secondPos = bestPos;
+            bestPos = move->posIdx;
+            if (maxScore > lower)
+            {
+                lower = maxScore;
+            }
+        }
+    }
+
+    tree->score = maxScore;
+
+    if (choiceSecond == 1 && secondPos != NOMOVE_INDEX)
+    {
+        return secondPos;
+    }
+    return bestPos;
+}
