@@ -396,7 +396,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         else
         { // パスして探索続行
             SearchPassMid(tree);
-            alpha = -NextSearch(tree, -in_beta, -in_alpha, depth - 1, true);
+            alpha = -NextSearch(tree, -in_beta, -in_alpha, depth, true);
             SearchPassMid(tree);
             bestMove = PASS_INDEX;
         }
