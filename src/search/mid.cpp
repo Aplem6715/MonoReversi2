@@ -53,9 +53,9 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
         }
         else
         {
-            // 手番を入れ替えて探索続行
+            // パスして探索続行
             SearchPassMid(tree);
-            maxScore = -MidAlphaBetaDeep(tree, -beta, -alpha, depth, true);
+            maxScore = -MidAlphaBetaDeep(tree, -beta, -alpha, depth - 1, true);
             SearchPassMid(tree);
             bestMove = PASS_INDEX;
         }
@@ -141,7 +141,7 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         else
         { // 手番を入れ替えて探索続行
             SearchPassMid(tree);
-            maxScore = -MidAlphaBeta(tree, -beta, -alpha, depth, true);
+            maxScore = -MidAlphaBeta(tree, -beta, -alpha, depth - 1, true);
             SearchPassMid(tree);
             bestMove = PASS_INDEX;
         }
@@ -226,7 +226,7 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
         else
         { // パスして探索続行
             SearchPassMid(tree);
-            maxScore = -MidNullWindowDeep(tree, -alpha, depth, true);
+            maxScore = -MidNullWindowDeep(tree, -alpha, depth - 1, true);
             SearchPassMid(tree);
             bestMove = PASS_INDEX;
         }
@@ -312,7 +312,7 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
         else
         { // パスして探索続行
             SearchPassMid(tree);
-            maxScore = -NextNullSearch(tree, -alpha, depth, true);
+            maxScore = -NextNullSearch(tree, -alpha, depth - 1, true);
             SearchPassMid(tree);
             bestMove = PASS_INDEX;
         }
@@ -396,7 +396,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         else
         { // パスして探索続行
             SearchPassMid(tree);
-            alpha = -NextSearch(tree, -in_beta, -in_alpha, depth, true);
+            alpha = -NextSearch(tree, -in_beta, -in_alpha, depth - 1, true);
             SearchPassMid(tree);
             bestMove = PASS_INDEX;
         }
