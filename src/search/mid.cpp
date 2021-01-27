@@ -258,10 +258,12 @@ score_t MidNullWindow(SearchTree *tree, const score_t alpha, unsigned char depth
             if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
                 return score;
         }
+
         if (depth >= tree->orderDepth)
         {
             EvaluateMoveList(tree, &moveList, tree->stones, hashData);
         }
+
         maxScore = -Const::MAX_VALUE;
         lower = alpha;
 
@@ -380,58 +382,6 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
                 foundPV = 1;
             }
         }
-        /*
-        SearchUpdateMid(tree, move);
-        {
-            score = -MidPVS(tree, -beta, -alpha, depth - 1, false);
-        }
-        SearchRestoreMid(tree, move);
-        if (score >= beta)
-        {
-            // betaカット
-            // これ以上の探索は必要ない
-            maxScore = score;
-            bestMove = move->posIdx;
-        }
-        else
-        { // 初回探索でbetaカットされなかった
-            // 探索範囲をできる限り狭める
-            if (score > alpha)
-                alpha = score;
-            // 打つ手がある時, 良い手から並べ替えつつループ
-            for (move = NextBestMoveWithSwap(move); move != NULL; move = NextBestMoveWithSwap(move))
-            {
-                SearchUpdateMid(tree, move);
-                {
-                    // 最善かどうかチェック 子ノードをNull Window探索
-                    score = -MidNullWindow(tree, -alpha - 1, depth - 1, false);
-                    if (alpha < score && score < beta)
-                    { // 予想が外れていたら
-                        // 通常の探索
-                        score = MidPVS(tree, -beta, -alpha, depth - 1, false);
-                    }
-                }
-                SearchRestoreMid(tree, move);
-
-                if (score > maxScore)
-                {
-                    maxScore = score;
-                    bestMove = move->posIdx;
-                    // 上限突破したら
-                    if (score >= beta)
-                    {
-                        tree->nbCut++;
-                        // 探索終了（カット）
-                        break;
-                    }
-                    else if (maxScore > alpha)
-                    {
-                        alpha = maxScore;
-                    }
-                }
-            }
-        }
-        */
     }
 
     if (tree->useHash == 1)
