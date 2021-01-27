@@ -20,6 +20,7 @@ typedef struct SearchTree
     unsigned char endDepth;
     unsigned char orderDepth;
     unsigned char hashDepth;
+    unsigned char pvsDepth;
     unsigned char useHash;
 
     /* For Stats */
@@ -31,8 +32,9 @@ typedef struct SearchTree
 } SearchTree;
 
 typedef score_t (*SearchFunc_t)(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed);
+typedef score_t (*SearchFuncNullWindow_t)(SearchTree *tree, score_t alpha, unsigned char depth, unsigned char passed);
 
-void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth);
+void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth, unsigned char pvsDepth);
 void DeleteTree(SearchTree *tree);
 void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth);
 void ResetTree(SearchTree *tree);

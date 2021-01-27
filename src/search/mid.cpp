@@ -27,25 +27,16 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
 {
     assert(depth <= tree->orderDepth);
 
+    HashData *hashData = NULL;
     uint64_t mob, pos, flip, hashCode;
+    score_t score, maxScore, lower;
     uint8 posIdx;
     uint8 bestMove;
-    HashData *hashData = NULL;
-    score_t score, maxScore, lower;
 
     tree->nodeCount++;
     if (depth <= 0)
     {
-        //return EvalPosTable(own, opp);
-        //return EvalTinyDnn(tree, tree->nbEmpty);
         return Evaluate(tree->eval, tree->nbEmpty);
-    }
-
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
-    {
-        hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
-        if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
-            return score;
     }
 
     mob = CalcMobility(tree->stones);
@@ -63,14 +54,20 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
         else
         {
             // 手番を入れ替えて探索続行
-            bestMove = PASS_INDEX;
             SearchPassMid(tree);
             maxScore = -MidAlphaBetaDeep(tree, -beta, -alpha, depth, true);
             SearchPassMid(tree);
+            bestMove = PASS_INDEX;
         }
     }
     else
     {
+        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        {
+            hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+            if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
+                return score;
+        }
         maxScore = -Const::MAX_VALUE;
         lower = alpha;
         // 打つ手がある時
@@ -129,34 +126,28 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     tree->nodeCount++;
     if (depth <= 0)
     {
-        //return EvalPosTable(own, opp);
         return Evaluate(tree->eval, tree->nbEmpty);
     }
 
     CreateMoveList(&moveList, tree->stones);
 
-    // 手があるか
-    if (moveList.nbMoves <= 0)
+    if (moveList.nbMoves <= 0) // 手があるか
     {
-        // 2連続パスなら終了
-        if (passed == 1)
+        if (passed == 1) // 2連続パスなら終了
         {
             bestMove = NOMOVE_INDEX;
-            // 勝敗判定
-            return WinJudge(tree->stones);
+            return WinJudge(tree->stones); // 勝敗判定
         }
         else
-        {
-            // 手番を入れ替えて探索続行
+        { // 手番を入れ替えて探索続行
             SearchPassMid(tree);
-            maxScore = -MidAlphaBeta(tree, -beta, -alpha, depth, true);
+            maxScore = -MidAlphaBeta(tree, -beta, -alpha, depth - 1, true);
             SearchPassMid(tree);
             bestMove = PASS_INDEX;
         }
     }
     else
     {
-
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         {
             hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
@@ -177,9 +168,8 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
 
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
         {
-            SearchUpdateMid(tree, move);
+            SearchUpdateMid(tree, move); // 子ノードを探索
             {
-                // 子ノードを探索
                 score = -NextSearch(tree, -beta, -lower, depth - 1, false);
             }
             SearchRestoreMid(tree, move);
@@ -189,12 +179,10 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
                 maxScore = score;
                 bestMove = move->posIdx;
 
-                // 上限突破したら
-                if (score >= beta)
+                if (score >= beta) // 上限突破したら
                 {
                     tree->nbCut++;
-                    // 探索終了（カット）
-                    break;
+                    break; // 探索終了（カット）
                 }
                 else if (maxScore > lower)
                 {
@@ -212,16 +200,14 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
 }
 
 // https://www.chessprogramming.org/Principal_Variation_Search
-score_t MidNullWindow(SearchTree *tree, const score_t alpha, unsigned char depth, unsigned char passed)
+score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed)
 {
-    SearchFunc_t NextSearch;
+    const score_t alpha = beta - 1;
     HashData *hashData = NULL;
-    MoveList moveList;
-    Move *move;
-    uint64_t hashCode;
+    uint64_t mob, pos, flip, hashCode;
+    score_t score, maxScore;
+    uint8 posIdx;
     uint8 bestMove;
-    score_t score, maxScore, lower;
-    score_t beta = alpha + 1;
 
     tree->nodeCount++;
     if (depth <= 0)
@@ -229,23 +215,18 @@ score_t MidNullWindow(SearchTree *tree, const score_t alpha, unsigned char depth
         return Evaluate(tree->eval, tree->nbEmpty);
     }
 
-    CreateMoveList(&moveList, tree->stones);
-
-    // 手があるか
-    if (moveList.nbMoves <= 0)
+    mob = CalcMobility(tree->stones);
+    if (mob == 0) // 手があるか
     {
-        // 2連続パスなら終了
         if (passed == 1)
-        {
+        { // 2連続パスなら終了
             bestMove = NOMOVE_INDEX;
-            // 勝敗判定
-            return WinJudge(tree->stones);
+            return WinJudge(tree->stones); // 勝敗判定
         }
         else
-        {
-            // 手番を入れ替えて探索続行
+        { // パスして探索続行
             SearchPassMid(tree);
-            maxScore = -MidNullWindow(tree, -beta, depth, true);
+            maxScore = -MidNullWindowDeep(tree, -alpha, depth, true);
             SearchPassMid(tree);
             bestMove = PASS_INDEX;
         }
@@ -259,40 +240,127 @@ score_t MidNullWindow(SearchTree *tree, const score_t alpha, unsigned char depth
                 return score;
         }
 
-        if (depth >= tree->orderDepth)
-        {
-            EvaluateMoveList(tree, &moveList, tree->stones, hashData);
-        }
-
         maxScore = -Const::MAX_VALUE;
-        lower = alpha;
-
-        for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
+        while (mob != 0)
         {
-            SearchUpdateMid(tree, move);
-            {
-                // 子ノードを探索
-                score = -MidNullWindow(tree, -beta, depth - 1, false);
-            }
-            SearchRestoreMid(tree, move);
+            // 着手位置・反転位置を取得
+            pos = GetLSB(mob);
+            mob ^= pos;
+            posIdx = CalcPosIndex(pos);
+            flip = CalcFlip(tree->stones, posIdx);
 
-            if (score >= beta)
+            SearchUpdateMidDeep(tree, pos, flip);
+            { // 子ノードを探索
+                score = -MidNullWindowDeep(tree, -alpha, depth - 1, false);
+            }
+            SearchRestoreMidDeep(tree, pos, flip);
+
+            if (score > maxScore)
             {
-                return beta;
+                maxScore = score;
+                bestMove = posIdx;
+                if (score >= beta)
+                {
+                    break; //探索終了
+                }
             }
         }
-    }
+    } // end of if(mob == 0) else
 
     if (tree->useHash == 1)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
-    return alpha;
+    return maxScore;
+}
+
+// https://www.chessprogramming.org/Principal_Variation_Search
+score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed)
+{
+    SearchFuncNullWindow_t NextNullSearch;
+    HashData *hashData = NULL;
+    MoveList moveList;
+    Move *move;
+    uint64_t hashCode;
+    uint8 bestMove;
+    score_t score, maxScore;
+    const score_t alpha = beta - 1;
+
+    tree->nodeCount++;
+    if (depth <= 0)
+    {
+        return Evaluate(tree->eval, tree->nbEmpty);
+    }
+
+    if (depth - 1 >= tree->orderDepth)
+    {
+        NextNullSearch = MidNullWindow;
+    }
+    else
+    {
+        NextNullSearch = MidNullWindowDeep;
+    }
+
+    CreateMoveList(&moveList, tree->stones);
+    if (moveList.nbMoves <= 0) // 手があるか
+    {
+        if (passed == 1)
+        { // 2連続パスなら終了
+            bestMove = NOMOVE_INDEX;
+            return WinJudge(tree->stones); // 勝敗判定
+        }
+        else
+        { // パスして探索続行
+            SearchPassMid(tree);
+            maxScore = -NextNullSearch(tree, -alpha, depth, true);
+            SearchPassMid(tree);
+            bestMove = PASS_INDEX;
+        }
+    }
+    else
+    {
+        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        {
+            hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+            if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
+                return score;
+        }
+
+        EvaluateMoveList(tree, &moveList, tree->stones, hashData);
+
+        maxScore = -Const::MAX_VALUE;
+
+        for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
+        {
+            SearchUpdateMid(tree, move);
+            { // 子ノードを探索
+                score = -NextNullSearch(tree, -alpha, depth - 1, false);
+            }
+            SearchRestoreMid(tree, move);
+
+            if (score > maxScore)
+            {
+                maxScore = score;
+                bestMove = move->posIdx;
+                if (score >= beta)
+                {
+                    break; //探索終了
+                }
+            }
+        }
+    } // end of if(moveList.nbMoves > 0)
+
+    if (tree->useHash == 1)
+    {
+        HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+    }
+    return maxScore;
 }
 
 // https://www.chessprogramming.org/Principal_Variation_Search
 score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, const unsigned char depth, const unsigned char passed)
 {
+    SearchFunc_t NextSearch;
     HashData *hashData = NULL;
     MoveList moveList;
     Move *move;
@@ -307,24 +375,28 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         return Evaluate(tree->eval, tree->nbEmpty);
     }
 
-    // 着手リストを作成
-    CreateMoveList(&moveList, tree->stones);
-
-    // 手があるか
-    if (moveList.nbMoves <= 0)
+    if (depth - 1 >= tree->pvsDepth)
     {
+        NextSearch = MidPVS;
+    }
+    else
+    {
+        NextSearch = MidAlphaBeta;
+    }
+
+    CreateMoveList(&moveList, tree->stones); // 着手リストを作成
+
+    if (moveList.nbMoves <= 0)
+    { // 手があるか
         if (passed == 1)
-        {
-            // 2連続パスなら終了
+        { // 2連続パスなら終了
             bestMove = NOMOVE_INDEX;
-            // 勝敗判定
-            return WinJudge(tree->stones);
+            return WinJudge(tree->stones); // 勝敗判定
         }
         else
-        {
-            // パスして探索続行
+        { // パスして探索続行
             SearchPassMid(tree);
-            alpha = -MidPVS(tree, -in_beta, -in_alpha, depth, true);
+            alpha = -NextSearch(tree, -in_beta, -in_alpha, depth - 1, true);
             SearchPassMid(tree);
             bestMove = PASS_INDEX;
         }
@@ -334,52 +406,44 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         alpha = in_alpha;
         beta = in_beta;
 
-        // ハッシュの記録をもとにカット/探索範囲の縮小
         if (tree->useHash == 1 && depth >= tree->hashDepth)
-        {
+        { // ハッシュの記録をもとにカット/探索範囲の縮小
             hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
                 return score;
         }
 
-        // 着手の事前評価
-        EvaluateMoveList(tree, &moveList, tree->stones, hashData);
+        EvaluateMoveList(tree, &moveList, tree->stones, hashData); // 着手の事前評価
 
-        // すべての着手についてループ
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
-        {
+        { // すべての着手についてループ
             SearchUpdateMid(tree, move);
-            if (foundPV)
-            { // PVが見つかっている
-                // 最善かどうかチェック 子ノードをNull Window探索
-                score = -MidNullWindow(tree, -alpha - 1, depth - 1, false);
-                if (alpha < score)
-                { // 予想が外れていたら
-                    // 通常のWindowで再探索
-                    score = -MidPVS(tree, -beta, -alpha, depth - 1, false);
-                }
+            if (!foundPV)
+            {                                                               // PVが見つかっていない
+                score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常探索
             }
             else
-            { // PVが見つかっていない
-                // 通常探索
-                score = -MidPVS(tree, -beta, -alpha, depth - 1, false);
+            {                                                           // PVが見つかっている
+                score = -MidNullWindow(tree, -alpha, depth - 1, false); // 最善かどうかチェック 子ノードをNull Window探索
+                if (score > alpha)                                      // 予想が外れていたら
+                {
+                    score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常のWindowで再探索
+                }
             }
             SearchRestoreMid(tree, move);
 
-            // 上限突破したら
-            if (score >= beta)
+            if (score >= beta) // 上限突破したら
             {
+                alpha = score;
                 tree->nbCut++;
-                // 探索終了（カット）
-                break;
+                break; // 探索終了（カット）
             }
 
-            if (score > alpha)
+            if (score > alpha) // alphaを上回る着手を発見したら
             {
                 alpha = score;
                 bestMove = move->posIdx;
-                // PVを発見した！
-                foundPV = 1;
+                foundPV = 1; // PVを発見した！
             }
         }
     }

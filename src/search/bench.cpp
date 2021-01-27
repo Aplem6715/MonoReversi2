@@ -109,7 +109,7 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
     }
 }
 
-void BenchSearching(vector<unsigned char> depths, unsigned char useHash, unsigned char hashDepth, unsigned char orderDepth)
+void BenchSearching(vector<unsigned char> depths, unsigned char useHash, unsigned char hashDepth, unsigned char orderDepth, unsigned char pvsDepth)
 {
     SearchTree tree;
     vector<vector<uint8>> records;
@@ -127,7 +127,7 @@ void BenchSearching(vector<unsigned char> depths, unsigned char useHash, unsigne
     logfile << "探索深度,思考時間,探索ノード数,探索速度,カット数,ハッシュ記録数,ハッシュヒット数,ハッシュ衝突数,推定CPUスコア,着手位置\n";
     LoadGameRecords(SEARCH_BENCH_FILE, records);
 
-    InitTree(&tree, 4, 4, orderDepth, useHash, hashDepth);
+    InitTree(&tree, 4, 4, orderDepth, useHash, hashDepth, pvsDepth);
     for (vector<uint8> moves : records)
     {
         for (uint8 move : moves)

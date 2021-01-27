@@ -7,13 +7,14 @@
 #include <chrono>
 #include <assert.h>
 
-void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth)
+void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth, unsigned char pvsDepth)
 {
     tree->midDepth = midDepth;
     tree->endDepth = endDepth;
     tree->orderDepth = orderDepth;
-    tree->useHash = useHash;
     tree->hashDepth = hashDepth;
+    tree->pvsDepth = pvsDepth;
+    tree->useHash = useHash;
 
     EvalInit(tree->eval);
 
@@ -165,7 +166,8 @@ SearchFunc_t DecideSearchFunc(SearchTree *tree)
         // オーダリングが不要な探索では探索関数を変える
         if (tree->depth > tree->orderDepth)
         {
-            return MidAlphaBeta;
+            //return MidAlphaBeta;
+            return MidPVS;
         }
         else
         {

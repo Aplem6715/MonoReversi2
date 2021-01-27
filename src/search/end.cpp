@@ -55,7 +55,7 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         {
             hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
-            if (hashData != NULL && IsHashCut(hashData, &alpha, &beta, &score))
+            if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
                 return score;
         }
         if (depth >= tree->orderDepth)
@@ -129,7 +129,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
         hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
-        if (hashData != NULL && IsHashCut(hashData, &alpha, &beta, &score))
+        if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
             return score;
     }
 
