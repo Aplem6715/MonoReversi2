@@ -141,7 +141,7 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         else
         { // 手番を入れ替えて探索続行
             SearchPassMid(tree);
-            maxScore = -MidAlphaBeta(tree, -beta, -alpha, depth - 1, true);
+            maxScore = -MidAlphaBeta(tree, -beta, -alpha, depth, true);
             SearchPassMid(tree);
             bestMove = PASS_INDEX;
         }

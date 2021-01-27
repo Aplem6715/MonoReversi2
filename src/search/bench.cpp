@@ -124,7 +124,7 @@ void BenchSearching(vector<unsigned char> depths, unsigned char useHash, unsigne
 
     logfile.setf(ios::fixed, ios::floatfield);
     logfile.precision(2);
-    logfile << "探索深度,思考時間,探索ノード数,探索速度,カット数,ハッシュ記録数,ハッシュヒット数,ハッシュ衝突数,推定CPUスコア,着手位置\n";
+    logfile << "探索深度,思考時間,探索ノード数,探索速度,カット数,ハッシュ記録数,ハッシュヒット数,2ndハッシュ記録数,2ndハッシュヒット数,ハッシュ衝突数,推定CPUスコア,着手位置\n";
     LoadGameRecords(SEARCH_BENCH_FILE, records);
 
     InitTree(&tree, 4, 4, orderDepth, useHash, hashDepth, pvsDepth);

@@ -13,7 +13,7 @@ int main()
     //Game game = Game(PlayerEnum::AI, PlayerEnum::HUMAN, 10, 21);
     //game.Start();
 
-    std::vector<unsigned char> depths = {8};
+    std::vector<unsigned char> depths = {8, 10, 12};
     //char x;
     //int y;
     //CalcPosAscii(C7, x, y);
