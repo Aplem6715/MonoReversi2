@@ -149,29 +149,50 @@ uint8 IsHashTableContains(HashTable *table, Stones *stones)
     return 0;
 }
 
-bool IsHashCut(HashData *hashData, score_t *alpha, score_t *beta, score_t *score)
+bool IsHashCut(HashData *hashData, const uint8 depth, score_t *alpha, score_t *beta, score_t *score)
+{
+    assert(hashData != NULL);
+    if (hashData->depth >= depth)
+    {
+        if (hashData->lower == hashData->upper)
+        {
+            *score = hashData->upper;
+            return true;
+        }
+        if (hashData->upper <= *alpha)
+        {
+            *score = hashData->upper;
+            return true;
+        }
+        if (hashData->lower >= *beta)
+        {
+            *score = hashData->lower;
+            return true;
+        }
+
+        *alpha = MAX(*alpha, hashData->lower);
+        *beta = MIN(*beta, hashData->upper);
+    }
+    return false;
+}
+
+bool IsHashCutNullWindow(HashData *hashData, const uint8 depth, const score_t alpha, score_t *score)
 {
     assert(hashData != NULL);
 
-    if (hashData->lower == hashData->upper)
+    if (hashData->depth >= depth)
     {
-        *score = hashData->upper;
-        return true;
+        if (hashData->upper <= alpha)
+        {
+            *score = hashData->upper;
+            return true;
+        }
+        if (hashData->lower > alpha)
+        {
+            *score = hashData->lower;
+            return true;
+        }
     }
-    if (hashData->upper <= *alpha)
-    {
-        *score = hashData->upper;
-        return true;
-    }
-    if (hashData->lower >= *beta)
-    {
-        *score = hashData->lower;
-        return true;
-    }
-
-    *alpha = MAX(*alpha, hashData->lower);
-    *beta = MIN(*beta, hashData->upper);
-
     return false;
 }
 
