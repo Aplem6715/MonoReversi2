@@ -474,7 +474,6 @@ uint8 EndRoot(SearchTree *tree, uint8 choiceSecond)
     SearchFunc_t NextSearch;
     score_t score, alpha, beta;
     uint8 bestMove = NOMOVE_INDEX, secondMove = NOMOVE_INDEX;
-    SearchFunc_t SearchFunc;
     uint8 foundPV = 0;
     uint8 depth = tree->depth;
     MoveList moveList;
