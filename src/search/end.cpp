@@ -471,50 +471,61 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
 
 uint8 EndRoot(SearchTree *tree, uint8 choiceSecond)
 {
-    score_t score, lower, maxScore = -Const::MAX_VALUE;
-    uint8 bestPos = NOMOVE_INDEX, secondPos = NOMOVE_INDEX;
+    SearchFunc_t NextSearch;
+    score_t score, alpha, beta;
+    uint8 bestMove = NOMOVE_INDEX, secondMove = NOMOVE_INDEX;
     SearchFunc_t SearchFunc;
+    uint8 foundPV = 0;
+    uint8 depth = tree->depth;
     MoveList moveList;
     Move *move;
 
-    CreateMoveList(&moveList, tree->stones);
-    assert(moveList.nbMoves > 0);
-    if (tree->depth > tree->orderDepth)
+    if (depth - 1 >= tree->pvsDepth)
     {
-        EvaluateMoveList(tree, &moveList, tree->stones, NULL);
-        SearchFunc = EndPVS;
+        NextSearch = EndPVS;
     }
     else
     {
-        SearchFunc = EndAlphaBetaDeep;
+        NextSearch = EndAlphaBeta;
     }
 
-    lower = -Const::MAX_VALUE;
+    alpha = -Const::MAX_VALUE;
+    beta = Const::MAX_VALUE;
+
+    CreateMoveList(&moveList, tree->stones);               // 着手リストを作成
+    EvaluateMoveList(tree, &moveList, tree->stones, NULL); // 着手の事前評価
+    assert(moveList.nbMoves > 0);
+
     for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
-    {
+    { // すべての着手についてループ
         SearchUpdateEnd(tree, move);
-        {
-            score = -SearchFunc(tree, -Const::MAX_VALUE, -lower, tree->depth, false);
+        if (!foundPV)
+        {                                                               // PVが見つかっていない
+            score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常探索
+        }
+        else
+        {                                                           // PVが見つかっている
+            score = -EndNullWindow(tree, -alpha, depth - 1, false); // 最善かどうかチェック 子ノードをNull Window探索
+            if (score > alpha)                                      // 予想が外れていたら
+            {
+                score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常のWindowで再探索
+            }
         }
         SearchRestoreEnd(tree, move);
 
-        if (score > maxScore)
+        if (score > alpha) // alphaを上回る着手を発見したら
         {
-            maxScore = score;
-            secondPos = bestPos;
-            bestPos = move->posIdx;
-            if (maxScore > lower)
-            {
-                lower = maxScore;
-            }
+            alpha = score;
+            bestMove = move->posIdx;
+            foundPV = 1; // PVを発見した！
         }
-    }
+    } // end of moves loop
 
-    tree->score = maxScore;
+    tree->score = alpha;
 
-    if (choiceSecond == 1 && secondPos != NOMOVE_INDEX)
+    if (choiceSecond == 1 && secondMove != NOMOVE_INDEX)
     {
-        return secondPos;
+        return secondMove;
     }
-    return bestPos;
+    return bestMove;
 }
