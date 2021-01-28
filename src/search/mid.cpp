@@ -522,6 +522,7 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
         if (score > alpha) // alphaを上回る着手を発見したら
         {
             alpha = score;
+            secondMove = bestMove;
             bestMove = move->posIdx;
             foundPV = 1; // PVを発見した！
         }
