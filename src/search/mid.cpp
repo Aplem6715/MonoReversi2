@@ -421,8 +421,9 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         { // ハッシュの記録をもとにカット/探索範囲の縮小
             hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
-            if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
-                return score;
+            // PVノードはカットしない(性能も殆ど変わらなかった)
+            //if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
+            //    return score;
         }
 
         EvaluateMoveList(tree, &moveList, tree->stones, hashData); // 着手の事前評価
@@ -498,13 +499,13 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
     { // すべての着手についてループ
         SearchUpdateMid(tree, move);
         if (!foundPV)
-        {                                                               // PVが見つかっていない
+        {                                                           // PVが見つかっていない
             score = -NextSearch(tree, -beta, -alpha, depth, false); // 通常探索
         }
         else
-        {                                                           // PVが見つかっている
+        {                                                       // PVが見つかっている
             score = -MidNullWindow(tree, -alpha, depth, false); // 最善かどうかチェック 子ノードをNull Window探索
-            if (score > alpha)                                      // 予想が外れていたら
+            if (score > alpha)                                  // 予想が外れていたら
             {
                 score = -NextSearch(tree, -beta, -alpha, depth, false); // 通常のWindowで再探索
             }
