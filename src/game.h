@@ -11,8 +11,6 @@ enum PlayerEnum
     AI,
 };
 
-void LoadGameRecords(char *file, std::vector<std::vector<uint8>> &moves);
-
 class Game
 {
 private:
@@ -32,5 +30,7 @@ public:
     void Start();
     SearchTree *GetTree(uint8 color);
 };
+
+void LoadGameRecords(const char *file, std::vector<std::vector<uint8>> &moves);
 
 #endif

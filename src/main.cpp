@@ -13,11 +13,11 @@ int main()
     //Game game = Game(PlayerEnum::AI, PlayerEnum::HUMAN, 12, 22);
     //game.Start();
 
-    std::vector<unsigned char> depths = {22};
+    std::vector<unsigned char> depths = {10, 12, 14};
     //char x;
     //int y;
     //CalcPosAscii(C7, x, y);
-    BenchSearching(depths, 1, 4, 8);
+    BenchSearching(depths, 1, 4, 8, "./resources/bench/search2.txt");
     //MakeBench(2, 38);
 
     return 1;

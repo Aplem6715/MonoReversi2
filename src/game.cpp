@@ -12,7 +12,7 @@
 
 using namespace std;
 
-void LoadGameRecords(char *file, vector<vector<uint8>> &records)
+void LoadGameRecords(const char *file, vector<vector<uint8>> &records)
 {
     ifstream infile(file);
     string str;
