@@ -7,13 +7,12 @@
 #include <chrono>
 #include <assert.h>
 
-void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char orderDepth, unsigned char useHash, unsigned char hashDepth, unsigned char pvsDepth)
+void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, unsigned char useHash)
 {
     tree->midDepth = midDepth;
     tree->endDepth = endDepth;
-    tree->orderDepth = orderDepth;
-    tree->hashDepth = hashDepth;
-    tree->pvsDepth = pvsDepth;
+    tree->midPvsDepth = midPvsDepth;
+    tree->endPvsDepth = endPvsDepth;
     tree->useHash = useHash;
 
     EvalInit(tree->eval);
@@ -157,12 +156,18 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
     {
         tree->isEndSearch = 1;
         tree->depth = nbEmpty;
+        tree->pvsDepth = tree->endPvsDepth;
+        tree->orderDepth = tree->pvsDepth;
+        tree->hashDepth = tree->pvsDepth - 1;
         pos = EndRoot(tree, choiceSecond);
     }
     else
     {
         tree->isEndSearch = 0;
         tree->depth = tree->midDepth;
+        tree->pvsDepth = tree->midPvsDepth;
+        tree->orderDepth = tree->pvsDepth;
+        tree->hashDepth = tree->pvsDepth - 1;
         pos = MidRoot(tree, choiceSecond);
     }
 
