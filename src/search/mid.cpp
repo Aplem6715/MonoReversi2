@@ -468,18 +468,15 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     return alpha;
 }
 
-uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
+uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *scoreOut, uint8 *secondMoveOut)
 {
     SearchFunc_t NextSearch;
-    score_t score, maxScore = -Const::MAX_VALUE;
-    score_t alpha, beta;
-    uint8 bestMove = NOMOVE_INDEX, secondMove = NOMOVE_INDEX;
+    score_t alpha, beta, score;
     uint8 foundPV = 0;
-    uint8 depth = tree->depth;
-    MoveList moveList;
+    uint8 bestMove = NOMOVE_INDEX;
     Move *move;
 
-    if (depth - 1 >= tree->pvsDepth)
+    if (depth >= tree->pvsDepth)
     {
         NextSearch = MidPVS;
     }
@@ -488,14 +485,10 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
         NextSearch = MidAlphaBeta;
     }
 
-    alpha = -Const::MAX_VALUE;
-    beta = Const::MAX_VALUE;
+    alpha = SCORE_MIN;
+    beta = SCORE_MAX;
 
-    CreateMoveList(&moveList, tree->stones);
-    EvaluateMoveList(tree, &moveList, tree->stones, NULL); // 着手の事前評価
-    assert(moveList.nbMoves > 0);
-
-    for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
+    for (move = NextBestMoveWithSwap(moveList->moves); move != NULL; move = NextBestMoveWithSwap(move))
     { // すべての着手についてループ
         SearchUpdateMid(tree, move);
         if (!foundPV)
@@ -512,27 +505,61 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
         }
         SearchRestoreMid(tree, move);
 
-        if (score >= beta) // 上限突破したら
-        {
-            alpha = score;
-            tree->nbCut++;
-            break; // 探索終了（カット）
-        }
-
         if (score > alpha) // alphaを上回る着手を発見したら
         {
             alpha = score;
-            secondMove = bestMove;
+            *secondMoveOut = bestMove;
             bestMove = move->posIdx;
             foundPV = 1; // PVを発見した！
         }
     } // end of moves loop
+    *scoreOut = alpha;
+    return bestMove;
+}
 
-    tree->score = alpha;
+uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
+{
+    MoveList moveList;
+    uint32_t score;
+    uint8 startDepth, endDepth;
+    uint8 bestMove, secondMove;
+    uint8 tmpDepth;
+    uint8 depths[10];
+    uint8 nDepths;
 
-    if (choiceSecond == 1 && secondMove != NOMOVE_INDEX)
+    CreateMoveList(&moveList, tree->stones);
+    EvaluateMoveList(tree, &moveList, tree->stones, NULL); // 着手の事前評価
+    assert(moveList.nbMoves > 0);
+
+    startDepth = 4;
+    endDepth = tree->depth;
+
+    nDepths = 0;
+    for (tmpDepth = endDepth; tmpDepth >= startDepth; tmpDepth -= (int)sqrt(tmpDepth))
+    {
+        depths[nDepths] = tmpDepth;
+        nDepths++;
+    }
+
+    // 反転
+    int i = 0;
+    for (i = 0; i < nDepths / 2; i++)
+    {
+        tmpDepth = depths[i];
+        depths[i] = depths[(nDepths - 1) - i];
+        depths[(nDepths - 1) - i] = tmpDepth;
+    }
+
+    for (i = 0; i < nDepths; i++)
+    {
+        bestMove = MidPVSRoot(tree, &moveList, depths[i], &tree->score, &secondMove);
+    }
+    bestMove = MidPVSRoot(tree, &moveList, endDepth, &tree->score, &secondMove);
+
+    if (choiceSecond && moveList.nbMoves >= 2)
     {
         return secondMove;
     }
+
     return bestMove;
 }
