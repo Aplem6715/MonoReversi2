@@ -60,9 +60,12 @@ HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64
 uint8 IsHashTableContains(HashTable *table, Stones *stones);
 
 // ハッシュテーブルに追加
-void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore);
+void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t in_alpha, score_t in_beta, score_t maxScore);
 
 // ハッシュによる枝刈りが起こるかを返し，ハッシュテーブルに登録されている情報をalpha・beta値などに適用する
-bool IsHashCut(HashData *hashData, score_t *alpha, score_t *beta, score_t *score);
+bool IsHashCut(HashData *hashData, const uint8 depth, score_t *alpha, score_t *beta, score_t *score);
+
+// ハッシュによる枝刈りが起こるかを返す
+bool IsHashCutNullWindow(HashData *hashData, const uint8 depth, const score_t alpha, score_t *score);
 
 #endif

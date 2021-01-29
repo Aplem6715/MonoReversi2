@@ -149,29 +149,52 @@ uint8 IsHashTableContains(HashTable *table, Stones *stones)
     return 0;
 }
 
-bool IsHashCut(HashData *hashData, score_t *alpha, score_t *beta, score_t *score)
+bool IsHashCut(HashData *hashData, const uint8 depth, score_t *alpha, score_t *beta, score_t *score)
 {
     assert(hashData != NULL);
-
-    if (hashData->lower == hashData->upper)
+    assert(hashData->lower <= hashData->upper);
+    if (hashData->depth >= depth)
     {
-        *score = hashData->upper;
-        return true;
-    }
-    if (hashData->upper <= *alpha)
-    {
-        *score = hashData->upper;
-        return true;
-    }
-    if (hashData->lower >= *beta)
-    {
-        *score = hashData->lower;
-        return true;
-    }
+        if (hashData->lower == hashData->upper)
+        {
+            *score = hashData->upper;
+            return true;
+        }
+        if (hashData->upper <= *alpha)
+        {
+            *score = hashData->upper;
+            return true;
+        }
+        if (hashData->lower >= *beta)
+        {
+            *score = hashData->lower;
+            return true;
+        }
 
-    *alpha = MAX(*alpha, hashData->lower);
-    *beta = MIN(*beta, hashData->upper);
+        *alpha = MAX(*alpha, hashData->lower);
+        *beta = MIN(*beta, hashData->upper);
+    }
+    return false;
+}
 
+bool IsHashCutNullWindow(HashData *hashData, const uint8 depth, const score_t alpha, score_t *score)
+{
+    assert(hashData != NULL);
+    assert(hashData->lower <= hashData->upper);
+
+    if (hashData->depth >= depth)
+    {
+        if (hashData->upper <= alpha)
+        {
+            *score = hashData->upper;
+            return true;
+        }
+        if (hashData->lower > alpha)
+        {
+            *score = hashData->lower;
+            return true;
+        }
+    }
     return false;
 }
 
@@ -196,6 +219,7 @@ void HashDataSaveNew(HashData *data, const Stones *stones, const uint8 bestMove,
     data->opp = stones->opp;
     data->secondMove = NOMOVE_INDEX;
     data->depth = depth;
+    assert(data->lower <= data->upper);
 }
 
 /**
@@ -256,6 +280,7 @@ void HashDataLevelUP(HashData *data, const uint8 bestMove, const uint8 depth, co
     }
 
     data->depth = depth;
+    assert(data->lower <= data->upper);
 }
 
 /**
@@ -280,7 +305,7 @@ uint8 HashDataPriorityOverwrite(HashData *data, const Stones *stones, const uint
     return 0;
 }
 
-void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t alpha, score_t beta, score_t maxScore)
+void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t in_alpha, score_t in_beta, score_t maxScore)
 {
     uint64_t index = hashCode & (table->size - 1);
     HashData *hashData = &table->data[index];
@@ -288,18 +313,22 @@ void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 
 
     if ((hashData->own | hashData->opp) == 0)
     {
-        HashDataSaveNew(hashData, stones, bestMove, depth, alpha, beta, maxScore);
+        HashDataSaveNew(hashData, stones, bestMove, depth, in_alpha, in_beta, maxScore);
         table->nbUsed++;
     }
     else if (hashData->own == stones->own && hashData->opp == stones->opp)
     {
         if (depth == hashData->depth)
         {
-            HashDataUpdate(hashData, bestMove, alpha, beta, maxScore);
+            HashDataUpdate(hashData, bestMove, in_alpha, in_beta, maxScore);
+            if (hashData->lower >= hashData->upper)
+            {
+                HashDataSaveNew(hashData, stones, bestMove, depth, in_alpha, in_beta, maxScore);
+            }
         }
         else
         {
-            HashDataLevelUP(hashData, bestMove, depth, alpha, beta, maxScore);
+            HashDataLevelUP(hashData, bestMove, depth, in_alpha, in_beta, maxScore);
         }
     }
     else
@@ -308,27 +337,31 @@ void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 
         secondData = &table->data[RETRY_HASH(index)];
         if ((secondData->own | secondData->opp) == 0)
         {
-            HashDataSaveNew(secondData, stones, bestMove, depth, alpha, beta, maxScore);
+            HashDataSaveNew(secondData, stones, bestMove, depth, in_alpha, in_beta, maxScore);
             table->nb2ndUsed++;
         }
         else if (secondData->own == stones->own && secondData->opp == stones->opp)
         {
             if (depth == secondData->depth)
             {
-                HashDataUpdate(secondData, bestMove, alpha, beta, maxScore);
+                HashDataUpdate(secondData, bestMove, in_alpha, in_beta, maxScore);
+                if (hashData->lower >= hashData->upper)
+                {
+                    HashDataSaveNew(secondData, stones, bestMove, depth, in_alpha, in_beta, maxScore);
+                }
             }
             else
             {
-                HashDataLevelUP(secondData, bestMove, depth, alpha, beta, maxScore);
+                HashDataLevelUP(secondData, bestMove, depth, in_alpha, in_beta, maxScore);
             }
         }
         else
         {
             // 優先度が高いデータだったら上書き
-            if (!HashDataPriorityOverwrite(hashData, stones, bestMove, depth, alpha, beta, maxScore))
+            if (!HashDataPriorityOverwrite(hashData, stones, bestMove, depth, in_alpha, in_beta, maxScore))
             {
                 // 上書きされなかったら，次のインデックスで上書きを試す
-                if (!HashDataPriorityOverwrite(secondData, stones, bestMove, depth, alpha, beta, maxScore))
+                if (!HashDataPriorityOverwrite(secondData, stones, bestMove, depth, in_alpha, in_beta, maxScore))
                 {
                     // それでもだめなら衝突判定
                     table->nbCollide++;

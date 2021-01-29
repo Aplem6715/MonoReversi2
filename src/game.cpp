@@ -12,7 +12,7 @@
 
 using namespace std;
 
-void LoadGameRecords(char *file, vector<vector<uint8>> &records)
+void LoadGameRecords(const char *file, vector<vector<uint8>> &records)
 {
     ifstream infile(file);
     string str;
@@ -43,11 +43,11 @@ Game::Game(PlayerEnum black, PlayerEnum white, int mid, int end)
     // AIの初期化
     if (player[Const::WHITE] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::WHITE], mid, end, 4, 1, 4);
+        InitTree(&tree[Const::WHITE], mid, end, 4, 8, 1);
     }
     if (player[Const::BLACK] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::BLACK], mid, end, 4, 1, 4);
+        InitTree(&tree[Const::BLACK], mid, end, 4, 8, 1);
     }
     Reset();
 }
