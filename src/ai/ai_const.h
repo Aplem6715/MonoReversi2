@@ -10,8 +10,8 @@
 
 // パターン種類
 #define NB_FEATURE_TYPES (11)
-#define FEAT_NUM 42
-#define NB_FEAT_COMB 445986
+#define FEAT_NUM 46
+#define NB_FEAT_COMB 892134
 
 // 3累乗
 #define POW0_0 0

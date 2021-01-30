@@ -18,7 +18,7 @@
 #define FEAT_TYPE_DIAG8 7
 #define FEAT_TYPE_EDGEX 8
 #define FEAT_TYPE_CORNR 9
-#define FEAT_TYPE_BMRAN 10
+#define FEAT_TYPE_BOX10 10
 
 // 3^9 x 4 = 78,732
 #define FEAT_LINE2_1 0 //3^9
@@ -79,10 +79,14 @@
 #define FEAT_CORNR_4 37
 
 // 3^8 x 4 = 708,588
-#define FEAT_BMRAN_1 38
-#define FEAT_BMRAN_2 39
-#define FEAT_BMRAN_3 40
-#define FEAT_BMRAN_4 41
+#define FEAT_BOX10_1 38
+#define FEAT_BOX10_2 39
+#define FEAT_BOX10_3 40
+#define FEAT_BOX10_4 41
+#define FEAT_BOX10_5 42
+#define FEAT_BOX10_6 43
+#define FEAT_BOX10_7 44
+#define FEAT_BOX10_8 45
 
 extern const uint32_t FeatMaxIndex[];
 extern const uint8 FeatDigits[];
