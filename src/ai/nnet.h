@@ -49,12 +49,12 @@ typedef struct NNet
 float Predict(NNet *net, const uint16_t features[]);
 
 #ifdef LEARN_MODE
-void InitWeight(NNet net[NB_PHASE]);
-void DecreaseNNlr(NNet net[NB_PHASE]);
-float TrainNN(NNet net[NB_PHASE], FeatureRecord *featRecords, FeatureRecord *testRecords, size_t nbRecords, size_t nbTests);
+void InitWeight(NNet *net);
+void DecreaseNNlr(NNet *net);
+float TrainNN(NNet *net, FeatureRecord *featRecords, FeatureRecord *testRecords, size_t nbRecords, size_t nbTests);
 #endif
 
-void SaveNets(NNet net[NB_PHASE], const char *file);
-void LoadNets(NNet net[NB_PHASE], const char *file);
+void SaveNets(NNet *net, const char *file);
+void LoadNets(NNet *net, const char *file);
 
 #endif

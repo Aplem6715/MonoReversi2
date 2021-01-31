@@ -147,7 +147,7 @@ float Predict(NNet *net, const uint16_t features[])
 
 #ifdef LEARN_MODE
 
-void InitWeight(NNet net[NB_PHASE])
+void InitWeight(NNet *net)
 {
     int i, j, phase;
     srand(WEIGHT_SEED);
@@ -187,7 +187,7 @@ void InitWeight(NNet net[NB_PHASE])
     }
 }
 
-void DecreaseNNlr(NNet net[NB_PHASE])
+void DecreaseNNlr(NNet *net)
 {
     int phase;
 
@@ -313,7 +313,7 @@ void trainBatch(NNet *net, FeatureRecord *inputs[BATCH_SIZE], int batchSize, uin
     update_weights(net, batchSize);
 }
 
-float TrainNN(NNet net[NB_PHASE], FeatureRecord *featRecords, FeatureRecord *testRecords, size_t nbRecords, size_t nbTests)
+float TrainNN(NNet *net, FeatureRecord *featRecords, FeatureRecord *testRecords, size_t nbRecords, size_t nbTests)
 {
     double loss, totalLoss;
     float teacher, output;
@@ -381,7 +381,7 @@ float TrainNN(NNet net[NB_PHASE], FeatureRecord *featRecords, FeatureRecord *tes
 }
 #endif
 
-void SaveNets(NNet net[NB_PHASE], const char *file)
+void SaveNets(NNet *net, const char *file)
 {
     int phase;
     size_t writed;
@@ -415,7 +415,7 @@ void SaveNets(NNet net[NB_PHASE], const char *file)
     }
 }
 
-void LoadNets(NNet net[NB_PHASE], const char *file)
+void LoadNets(NNet *net, const char *file)
 {
     int phase;
     size_t readed;
