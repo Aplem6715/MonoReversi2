@@ -21,15 +21,15 @@
 using namespace std;
 
 // 初期ランダム手数
-static const uint8 TRAIN_RANDOM_TURNS = 4;
+static const uint8 TRAIN_RANDOM_TURNS = 6;
 // ランダム行動割合（１試合に1回くらい）
 static const double TRAIN_RANDOM_RATIO = 1.0 / 60.0;
-// 次善手割合（１試合５回くらい
-static const double TRAIN_SECOND_RATIO = 5.0 / 60.0;
+// 次善手割合(PVS探索-orderingで次善手が探索されない事が多々ある→かなり高めの設定)
+static const double TRAIN_SECOND_RATIO = 2.0 / 60.0;
 
 // 学習結果確認の対戦回数（１色で50試合＝全体で100）
 static const int TRAIN_NB_VERSUS = 50;
-static const uint8 VERSUS_RANDOM_TURNS = 10;
+static const uint8 VERSUS_RANDOM_TURNS = 6;
 
 static const int nbTrainCycles = 4096;
 #ifdef USE_NN
@@ -38,10 +38,10 @@ static const string modelName = "model_";
 static const int nbGameOneCycle = 512; //1024;
 #elif USE_REGRESSION
 static const string modelFolder = "resources/regressor/";
-static const string modelName = "regr_";
-static const int nbGameOneCycle = 256; //1024;
+static const string modelName = "regrV2-3_";
+static const int nbGameOneCycle = 256;
 #endif
-static const string selfPlayLogFileName = "log/self_play.log";
+static const string selfPlayLogFileName = "log/self_play2.log";
 static const string recordLearnLogFileName = "log/record_learn.log";
 static const string testRecordDir = "./resources/record/WTH_7789/WTH_1982.wtb";
 static const int nbTest = 100;
@@ -73,6 +73,13 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
     {
         //board.Draw();
         //_sleep(750);
+
+        // 終盤探索は確定的に
+        if (nbEmpty <= treeBlack->endDepth)
+        {
+            randMoveRatio = 0;
+            secondMoveRatio = 0;
+        }
 
         // 置ける場所がなかったらスキップ
         if (board.GetMobility() == 0)
@@ -161,8 +168,8 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
 {
 
     SearchTree trees[2];
-    InitTree(&trees[0], midDepth, endDepth, 8, 1, 3); // 旧
-    InitTree(&trees[1], midDepth, endDepth, 8, 1, 3); // 新
+    InitTree(&trees[0], midDepth, endDepth, 4, 8, 1); // 旧
+    InitTree(&trees[1], midDepth, endDepth, 4, 8, 1); // 新
 
 #ifdef USE_NN
 #elif USE_REGRESSION
@@ -343,8 +350,6 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         EvalUpdate(&eval[0], pos, flip);
         EvalUpdate(&eval[1], pos, flip);
 
-        //if (board.GetTurnColor() == Const::BLACK)
-        //{
         //黒用レコード設定
         for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
         {
@@ -359,24 +364,6 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         // レコードを追加
         featRecords.push_back(record);
         assert(CountBits(~(board.GetBlack() | board.GetWhite())) == nbEmpty);
-        /**}
-        else
-        {
-            // 白用レコード設定
-            for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
-            {
-                record.featStats[OWN][featIdx] = eval[1].FeatureStates[featIdx];
-                record.featStats[OPP][featIdx] = OpponentIndex(eval[1].FeatureStates[featIdx], FeatDigits[featIdx]);
-                assert(record.featStats[OWN][featIdx] < FeatMaxIndex[featIdx]);
-                assert(record.featStats[OPP][featIdx] < FeatMaxIndex[featIdx]);
-            }
-            record.nbEmpty = nbEmpty;
-            record.stoneDiff = -1;
-            record.color = Const::WHITE;
-
-            // レコードを追加
-            featRecords.push_back(record);
-        }*/
 
     } //end of loop:　while (!board.IsFinished())
 
@@ -461,8 +448,7 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
 
 int main()
 {
-
-    SelfPlay(4, 8, false);
+    SelfPlay(6, 17, false);
     /*
     string recordDir = "./resources/record/";
     SearchTree tree;

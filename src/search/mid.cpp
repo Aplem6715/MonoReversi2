@@ -468,12 +468,13 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     return alpha;
 }
 
-uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *scoreOut, uint8 *secondMoveOut)
+uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, uint8 choiceSecond, score_t *scoreOut)
 {
     SearchFunc_t NextSearch;
     score_t alpha, beta, score;
     uint8 foundPV = 0;
     uint8 bestMove = NOMOVE_INDEX;
+    uint8 secondMove = NOMOVE_INDEX;
     Move *move;
 
     if (depth >= tree->pvsDepth)
@@ -485,8 +486,8 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
         NextSearch = MidAlphaBeta;
     }
 
-    alpha = SCORE_MIN;
-    beta = SCORE_MAX;
+    alpha = -Const::MAX_VALUE;
+    beta = Const::MAX_VALUE;
 
     for (move = NextBestMoveWithSwap(moveList->moves); move != NULL; move = NextBestMoveWithSwap(move))
     { // すべての着手についてループ
@@ -508,21 +509,25 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
         if (score > alpha) // alphaを上回る着手を発見したら
         {
             alpha = score;
-            *secondMoveOut = bestMove;
+            secondMove = bestMove;
             bestMove = move->posIdx;
-            foundPV = 1; // PVを発見した！
+            foundPV = 1;
         }
     } // end of moves loop
     *scoreOut = alpha;
+    if (choiceSecond && secondMove != NOMOVE_INDEX)
+    {
+        return secondMove;
+    }
+    assert(bestMove != NOMOVE_INDEX);
     return bestMove;
 }
 
 uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
 {
     MoveList moveList;
-    uint32_t score;
     uint8 startDepth, endDepth;
-    uint8 bestMove, secondMove;
+    uint8 bestMove;
     uint8 tmpDepth;
     uint8 depths[10];
     uint8 nDepths;
@@ -552,14 +557,9 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
 
     for (i = 0; i < nDepths; i++)
     {
-        bestMove = MidPVSRoot(tree, &moveList, depths[i], &tree->score, &secondMove);
+        bestMove = MidPVSRoot(tree, &moveList, depths[i], 0, &tree->score);
     }
-    bestMove = MidPVSRoot(tree, &moveList, endDepth, &tree->score, &secondMove);
-
-    if (choiceSecond && moveList.nbMoves >= 2)
-    {
-        return secondMove;
-    }
+    bestMove = MidPVSRoot(tree, &moveList, endDepth, choiceSecond, &tree->score);
 
     return bestMove;
 }

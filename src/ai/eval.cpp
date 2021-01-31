@@ -161,6 +161,7 @@ void EvalDelete(Evaluator *eval)
 #ifdef USE_NN
 #elif USE_REGRESSION
     DelRegr(eval->regr);
+    free(eval->regr);
 #endif
 }
 
