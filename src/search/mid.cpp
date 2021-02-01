@@ -565,7 +565,7 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
     return bestMove;
 }
 
-uint8 MidRootWithMpcLog(SearchTree *tree, FILE *logFile)
+uint8 MidRootWithMpcLog(SearchTree *tree, FILE *logFile, int matchIdx)
 {
     MoveList moveList;
     uint32_t score;
@@ -576,11 +576,21 @@ uint8 MidRootWithMpcLog(SearchTree *tree, FILE *logFile)
     EvaluateMoveList(tree, &moveList, tree->stones, NULL); // 着手の事前評価
     assert(moveList.nbMoves > 0);
 
+    tree->isEndSearch = 0;
+    tree->pvsDepth = tree->midPvsDepth;
+    tree->orderDepth = tree->pvsDepth;
+    tree->hashDepth = tree->pvsDepth - 1;
+
     for (depth = MPC_SHALLOW_MIN; depth <= MPC_DEEP_MAX; depth++)
     {
-        printf("Searching depth:%d \r", depth);
-        bestMove = MidPVSRoot(tree, &moveList, depth, &tree->score, &secondMove);
-        fprintf(logFile, "%d,%d,%d\n", tree->nbEmpty, depth, tree->score);
+        tree->depth = depth;
+        if (depth < tree->nbEmpty)
+        {
+            printf("Searching depth:%d \r", depth);
+            bestMove = MidPVSRoot(tree, &moveList, depth, &tree->score, &secondMove);
+            if (tree->score != SCORE_MAX)
+                fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, tree->nbEmpty, depth, tree->score);
+        }
     }
 
     return bestMove;

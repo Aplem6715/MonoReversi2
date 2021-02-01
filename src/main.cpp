@@ -10,7 +10,7 @@ int main()
     srand((unsigned int)time(NULL));
     HashInit();
     //Game game = Game(PlayerEnum::HUMAN, PlayerEnum::AI, 12, 22);
-    Game game = Game(PlayerEnum::AI, PlayerEnum::HUMAN, 12, 22);
+    Game game = Game(PlayerEnum::AI, PlayerEnum::HUMAN, 14, 22);
     game.Start();
 
     //std::vector<unsigned char> depths = {10, 12, 14};
