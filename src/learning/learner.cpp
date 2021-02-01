@@ -520,10 +520,19 @@ int main(int argc, char **argv)
     srand((unsigned int)time(NULL));
 
     char input[20];
+    int idxShift;
+    int nbPlay;
+
+    printf("ゲーム数を入力:");
+    gets_s(input);
+    nbPlay = atoi(input);
+
     printf("通し番号シフトを入力（複数実行による競合防止）:");
     gets_s(input);
+    idxShift = atoi(input);
+
     //SelfPlay(6, 17, false);
-    MPCSampling(10, 6, 1.0 / 60.0, 1, atoi(input));
+    MPCSampling(nbPlay, 6, 1.0 / 60.0, 1, idxShift);
     /*
     string recordDir = "./resources/record/";
     SearchTree tree;
