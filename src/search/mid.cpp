@@ -6,6 +6,8 @@
 #include "../bit_operation.h"
 #include <assert.h>
 
+score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed);
+
 inline score_t WinJudge(const Stones *stones)
 {
     uint8 ownCnt = CountBits(stones->own);
@@ -22,6 +24,41 @@ inline score_t WinJudge(const Stones *stones)
     {
         return 0;
     }
+}
+
+bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 depth, score_t *score)
+{
+    int i;
+    uint8 shallowDepth;
+    score_t beta = alpha + 1;
+    long bound;
+    const MPCPair *mpc;
+
+    if (depth >= MPC_DEEP_MIN && depth <= MPC_DEEP_MAX)
+    {
+        for (i = 0; i < MPC_NB_TRY; i++)
+        {
+            mpc = &mpcPairs[tree->nbEmpty][depth - MPC_DEEP_MIN][i];
+            shallowDepth = mpc->shallowDepth;
+            if (shallowDepth > 0)
+            {
+                bound = lround((MPC_T * mpc->std + beta - mpc->bias) / mpc->slope);
+                if (bound < SCORE_MAX && MidNullWindow(tree, (score_t)bound, shallowDepth, 0) >= bound)
+                {
+                    *score = beta;
+                    return 1;
+                }
+
+                bound = lround((-MPC_T * mpc->std + alpha - mpc->bias) / mpc->slope);
+                if (bound > SCORE_MIN && MidNullWindow(tree, (score_t)bound + 1, shallowDepth, 0) <= bound)
+                {
+                    *score = alpha;
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
 }
 
 score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
@@ -293,6 +330,13 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
         return Evaluate(tree->eval, tree->nbEmpty);
     }
 
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    {
+        hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+        if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
+            return score;
+    }
+
     if (depth - 1 >= tree->orderDepth)
     {
         NextNullSearch = MidNullWindow;
@@ -320,11 +364,9 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     }
     else
     {
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        if (NullWindowMultiProbCut(tree, alpha, depth, &score))
         {
-            hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
-            if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
-                return score;
+            return score;
         }
 
         EvaluateMoveList(tree, &moveList, tree->stones, hashData);
@@ -521,7 +563,6 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
 uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
 {
     MoveList moveList;
-    uint32_t score;
     uint8 startDepth, endDepth;
     uint8 bestMove, secondMove;
     uint8 tmpDepth;
@@ -568,7 +609,6 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
 uint8 MidRootWithMpcLog(SearchTree *tree, FILE *logFile, int matchIdx)
 {
     MoveList moveList;
-    uint32_t score;
     uint8 depth;
     uint8 bestMove, secondMove;
 

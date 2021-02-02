@@ -2,6 +2,7 @@
 #define CONST_DEFINED
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /* stdintの整数型へ変更
 typedef unsigned long long uint64_t;
@@ -9,7 +10,6 @@ typedef unsigned int uint32;
 typedef unsigned short uint16;
 */
 typedef unsigned char uint8;
-
 
 typedef int16_t score_t;
 typedef int16_t score_strict_t;
@@ -21,7 +21,6 @@ typedef int16_t score_strict_t;
 // 探索スコアの最大値 (EVAL_MAX + 1)
 #define SCORE_MAX (6500)
 #define SCORE_MIN (-6500)
-
 
 /*
 typedef float score_t;
