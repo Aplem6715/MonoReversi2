@@ -12,7 +12,7 @@
 #define MPC_DEEP_MAX 14
 #define MPC_NB_TRY 2
 
-#define MPC_T 1.65
+#define MPC_T 1.98
 
 typedef struct MPCPair
 {
