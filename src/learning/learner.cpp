@@ -457,7 +457,7 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
     FILE *logFile;
     int i;
 
-    InitTree(tree, 0, 14, 4, 8, 1);
+    InitTree(tree, 0, 16, 4, 8, 1);
     logFile = fopen(MPC_RAW_FILE, "a");
     fprintf(logFile, "matchIdx,nbEmpty,depth,score\n");
 
@@ -532,7 +532,7 @@ int main(int argc, char **argv)
     idxShift = atoi(input);
 
     //SelfPlay(6, 17, false);
-    MPCSampling(nbPlay, 6, 1.0 / 60.0, 1, idxShift);
+    MPCSampling(nbPlay, 6, 4.0 / 60.0, 1, idxShift);
     /*
     string recordDir = "./resources/record/";
     SearchTree tree;

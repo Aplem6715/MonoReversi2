@@ -2,6 +2,7 @@
 #define _MPC_H_
 
 #include "../const.h"
+#include "search.h"
 
 #define MPC_RAW_FILE "./resources/mpc/mpc_raw_tmp.csv"
 
@@ -11,14 +12,16 @@
 #define MPC_DEEP_MAX 14
 #define MPC_NB_TRY 2
 
+#define MPC_T 1.98
+
 typedef struct MPCPair
 {
     uint8 shallowDepth;
     double slope;
     double bias;
-    double sigma;
+    double std;
 } MPCPair;
 
-extern const MPCPair mpcPairs[60][MPC_DEEP_MAX][MPC_NB_TRY];
+extern const MPCPair mpcPairs[60][MPC_DEEP_MAX - MPC_DEEP_MIN + 1][MPC_NB_TRY];
 
 #endif // _MPC_H_

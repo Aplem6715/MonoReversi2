@@ -23,6 +23,7 @@ LEARN_OBJS=\
 	$(OUTDIR)\board.obj\
 	$(SEARCH_OUTDIR)\hash.obj\
 	$(SEARCH_OUTDIR)\moves.obj\
+	$(SEARCH_OUTDIR)\mpc_info.obj\
 	$(SEARCH_OUTDIR)\mid.obj\
 	$(SEARCH_OUTDIR)\end.obj\
 	$(SEARCH_OUTDIR)\search.obj\
