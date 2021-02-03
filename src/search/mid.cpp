@@ -565,7 +565,7 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
     return bestMove;
 }
 
-uint8 MidRootWithMpcLog(SearchTree *tree, FILE *logFile, int matchIdx)
+uint8 MidRootWithMpcLog(SearchTree *tree, FILE *logFile, int matchIdx, uint8 shallow, uint8 deep, uint8 minimumDepth)
 {
     MoveList moveList;
     uint32_t score;
@@ -581,16 +581,30 @@ uint8 MidRootWithMpcLog(SearchTree *tree, FILE *logFile, int matchIdx)
     tree->orderDepth = tree->pvsDepth;
     tree->hashDepth = tree->pvsDepth - 1;
 
-    for (depth = MPC_SHALLOW_MIN; depth <= MPC_DEEP_MAX; depth++)
+    // 浅い探索をしてスコアを記録
+    tree->depth = shallow;
+    if (depth < tree->nbEmpty)
     {
-        tree->depth = depth;
-        if (depth < tree->nbEmpty)
-        {
-            printf("Searching depth:%d \r", depth);
-            bestMove = MidPVSRoot(tree, &moveList, depth, &tree->score, &secondMove);
-            if (tree->score != SCORE_MAX)
-                fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, tree->nbEmpty, depth, tree->score);
-        }
+        printf("Searching depth:%d \r", depth);
+        bestMove = MidPVSRoot(tree, &moveList, depth, &tree->score, &secondMove);
+        if (tree->score != SCORE_MAX)
+            fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, tree->nbEmpty, depth, tree->score);
+    }
+
+    // 深い探索をしてスコアを記録
+    tree->depth = deep;
+    if (depth < tree->nbEmpty)
+    {
+        printf("Searching depth:%d \r", depth);
+        bestMove = MidPVSRoot(tree, &moveList, depth, &tree->score, &secondMove);
+        if (tree->score != SCORE_MAX)
+            fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, tree->nbEmpty, depth, tree->score);
+    }
+
+    // 最低限の深度で探索して最善手を予測
+    if (depth < minimumDepth)
+    {
+        bestMove = MidPVSRoot(tree, &moveList, minimumDepth, &tree->score, &secondMove);
     }
 
     return bestMove;

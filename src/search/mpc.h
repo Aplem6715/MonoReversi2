@@ -3,7 +3,7 @@
 
 #include "../const.h"
 
-#define MPC_RAW_FILE "./resources/mpc_raw.csv"
+#define MPC_RAW_FILE "./resources/mpc/mpc_raw_tmp.csv"
 
 #define MPC_SHALLOW_MIN 1
 #define MPC_SHALLOW_MAX 6

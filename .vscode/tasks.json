@@ -32,6 +32,19 @@
         },
         {
             "type": "shell",
+            "label": "make-mpc",
+            "command": "nmake.exe",
+            "args": [
+                "/fdebug_mpc.mk",
+                "learn"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
             "label": "make_release",
             "command": "nmake.exe",
             "args": [
@@ -52,6 +65,19 @@
             "command": "nmake.exe",
             "args": [
                 "/frelease_learn.mk",
+                "learn"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "make-mpc_release",
+            "command": "nmake.exe",
+            "args": [
+                "/frelease_mpc.mk",
                 "learn"
             ],
             "problemMatcher": [

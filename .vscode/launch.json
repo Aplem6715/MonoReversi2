@@ -36,6 +36,18 @@
             "preLaunchTask": "make-learn"
         },
         {
+            "name": "デバッグMPC",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build\\debug\\learn\\mpc_playout.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "preLaunchTask": "make-mpc"
+        },
+        {
             "name": "Play_リリース",
             "type": "cppvsdbg",
             "request": "launch",
@@ -58,6 +70,18 @@
             "environment": [],
             "externalConsole": true,
             "preLaunchTask": "make-learn_release"
+        },
+        {
+            "name": "MPC_リリース",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build\\release\\learn\\mpc_playout.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "preLaunchTask": "make-mpc_release"
         }
     ]
 }
