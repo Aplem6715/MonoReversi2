@@ -8,7 +8,7 @@
 #define PASS_INDEX 65
 
 // ハッシュテーブルに格納されるデータ
-// 8x2 + 1 + 1*2 + 4x2 = 27[byte]
+// 8x2 + 1 + 1*2 + 2x2 = 23[byte]
 typedef struct HashData
 {
     uint64_t own, opp;
