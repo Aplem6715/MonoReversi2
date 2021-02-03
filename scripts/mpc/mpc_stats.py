@@ -1,15 +1,26 @@
-
+import subprocess
+import pickle
+import os
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
 # import matplotlib.pyplot as plt
 from typing import List
 
+
 MPC_SHALLOW_MIN = 1
 MPC_SHALLOW_MAX = 6
 MPC_DEEP_MIN = 3
-MPC_DEEP_MAX = 14
+MPC_DEEP_MAX = 16
 MPC_NB_TRY = 2
+
+NB_PLAYOUT = 100
+MATCH_IDX_SHIFT = 10000
+
+mpc_stats_pkl_file = "./resources/mpc/mpc_stats.pkl"
+raw_csv_file = "./resources/mpc/mpc_raw_tmp.csv"
+target_c_file = "./src/search/mpc_info.cpp"
+mpc_playout_exe = "./build/release/learn/mpc_playout.exe"
 
 dummy_data_str = "\t{\n" + \
     ("\t\t{{0, -1, -1, -1}, {0, -1, -1, -1}},\n"
@@ -26,9 +37,11 @@ pair_list = [
     [(9, 3), (9, 5)],
     [(10, 4), (10, 6)],
     [(11, 3), (11, 5)],
-    [(12, 4)],
+    [(12, 6)],
     [(13, 5)],
     [(14, 6)],
+    [(15, 5)],
+    [(16, 6)]
 ]
 
 
@@ -40,29 +53,25 @@ class MPCPair:
         self.std = -1.0
 
 
-def calc_score_pair(score_df):
-    score_list = [
-        [[] for i in range(2)]for i in range(MPC_DEEP_MAX-MPC_DEEP_MIN+1)
-    ]
+def calc_score_pair(score_df, pair):
+    deep = pair[0]
+    shallow = pair[1]
+    score_list = []
 
     matchIdxList = score_df["matchIdx"].unique()
     for match in matchIdxList:
+
         match_df = score_df[score_df["matchIdx"] == match]
-        for pairs in pair_list:
-            # 最大２つ
-            for i in range(len(pairs)):
-                deep = pairs[i][0]
-                shallow = pairs[i][1]
 
-                d_score = match_df[match_df["depth"]
-                                   == deep]["score"]
-                s_score = match_df[match_df["depth"]
-                                   == shallow]["score"]
+        d_score = match_df[match_df["depth"]
+                           == deep]["score"]
+        s_score = match_df[match_df["depth"]
+                           == shallow]["score"]
 
-                if len(d_score) > 0 and len(s_score) > 0:
-                    score_list[deep-MPC_DEEP_MIN][i].append(
-                        [s_score.values[0], d_score.values[0]]
-                    )
+        if len(d_score) > 0 and len(s_score) > 0:
+            score_list.append(
+                [s_score.values[0], d_score.values[0]]
+            )
 
     return score_list
 
@@ -73,49 +82,40 @@ def learn_model(x, y):
     return model
 
 
-def get_stats_list(df):
-    mpc_info = [
-        [
-            MPCPair() for i in range(2)
-        ]for i in range(MPC_DEEP_MAX-MPC_DEEP_MIN+1)
-    ]
-    score_list = calc_score_pair(df)
-    for depth in range(MPC_DEEP_MAX-MPC_DEEP_MIN):
-        for tries in range(2):
-            score_array = np.array(
-                score_list[depth][tries])  # type: np.ndarray
-            if(len(score_array) <= 0):
-                break
-            x = score_array[:, 0].reshape(-1, 1)
-            y = score_array[:, 1].reshape(-1, 1)
+def get_stats_list(df, mpc_pair: MPCPair, pair):
+    score_list = calc_score_pair(df, pair)
 
-            model = learn_model(x, y)
-            preds = model.predict(x)
+    score_array = np.array(score_list)  # type: np.ndarray
+    if(len(score_array) <= 0):
+        return
+    x = score_array[:, 0].reshape(-1, 1)
+    y = score_array[:, 1].reshape(-1, 1)
 
-            '''
-            plt.title(
-                f'shallow:{pair_list[depth][tries][1]} '
-                f'deep:{depth+MPC_DEEP_MIN} '
-                f'a:{model.coef_[0][0]:.3f} b:{model.intercept_[0]:.3f}')
-            plt.plot(x, y, 'o')
-            plt.plot(x, preds)
-            plt.show()
-            '''
+    model = learn_model(x, y)
+    preds = model.predict(x)
 
-            diff = y - preds
+    '''
+    plt.title(
+        f'shallow:{pair_list[depth][tries][1]} '
+        f'deep:{depth+MPC_DEEP_MIN} '
+        f'a:{model.coef_[0][0]:.3f} b:{model.intercept_[0]:.3f}')
+    plt.plot(x, y, 'o')
+    plt.plot(x, preds)
+    plt.show()
+    '''
 
-            mpc_pair = mpc_info[depth][tries]  # type: MPCPair
-            mpc_pair.shallow = pair_list[depth][tries][1]
-            mpc_pair.slope = model.coef_[0][0]
-            mpc_pair.bias = model.intercept_[0]
-            mpc_pair.std = diff.std()
-            '''
-            print(mpc_pair.std)
+    diff = y - preds
 
-            plt.hist(diff, bins=25)
-            plt.show()
-            '''
-    return mpc_info
+    mpc_pair.shallow = pair[1]
+    mpc_pair.slope = model.coef_[0][0]
+    mpc_pair.bias = model.intercept_[0]
+    mpc_pair.std = diff.std()
+    '''
+    print(mpc_pair.std)
+
+    plt.hist(diff, bins=25)
+    plt.show()
+    '''
 
 
 def write_mpc_stats(mpc_stats: List[List[List[MPCPair]]], outfile):
@@ -130,8 +130,8 @@ def write_mpc_stats(mpc_stats: List[List[List[MPCPair]]], outfile):
                 f.write(dummy_data_str)
                 continue
             f.write(f"\t{{ /* nbEmpty:{nb_empty} */\n")
-            for depth in range(MPC_DEEP_MAX-MPC_DEEP_MIN):
-                f.write("\t\t{")
+            for depth in range(MPC_DEEP_MAX-MPC_DEEP_MIN+1):
+                f.write(f"\t\t/* {depth+MPC_DEEP_MIN:2} */ {{")
                 for tries in range(2):
                     mpc_stat = mpc_stats[nb_empty][depth][tries]
                     f.write(
@@ -142,16 +142,72 @@ def write_mpc_stats(mpc_stats: List[List[List[MPCPair]]], outfile):
         f.write("};\n")
 
 
-raw_csv_file = './resources/mpc_raw.csv'
+def read_mpc_games(pair, pair_i):
+    raw_df = pd.read_csv(raw_csv_file, sep=',')
+    nb_empty_min = 10
+    nb_empty_max = raw_df['nbEmpty'].max()+1
 
-raw_df = pd.read_csv(raw_csv_file, sep=',')
-nb_empty_min = 10
-nb_empty_max = raw_df['nbEmpty'].max()+1
-mpc_stats = [None] * 60
+    mpc_stats = None
+    if os.path.exists(mpc_stats_pkl_file):
+        mpc_stats = pickle.load(open(mpc_stats_pkl_file, "rb"))
 
-for nb_empty in range(nb_empty_min, nb_empty_max):
-    print("caluclating empty: "+str(nb_empty))
-    scores_df = raw_df[raw_df['nbEmpty'] == nb_empty]
-    mpc_stats[nb_empty] = get_stats_list(scores_df)
+    if not mpc_stats:
+        mpc_stats = [
+            [
+                [
+                    MPCPair() for i in range(MPC_NB_TRY)
+                ]for i in range(MPC_DEEP_MAX - MPC_DEEP_MIN + 1)
+            ] for i in range(60)
+        ]
 
-write_mpc_stats(mpc_stats, "./src/search/mpc_info.cpp")
+    for nb_empty in range(nb_empty_min, nb_empty_max):
+        print("caluclating empty: "+str(nb_empty))
+        scores_df = raw_df[raw_df['nbEmpty'] == nb_empty]
+        get_stats_list(
+            scores_df, mpc_stats[nb_empty][pair[0] - MPC_DEEP_MIN][pair_i], pair)
+
+    pickle.dump(mpc_stats, open(mpc_stats_pkl_file, "wb"))
+    write_mpc_stats(mpc_stats, target_c_file)
+
+
+def compile():
+    compile_proc = subprocess.run(("nmake", "-frelease_mpc.mk"))
+
+
+def playout(pair, matchIdx):
+    playout_proc = subprocess.run((mpc_playout_exe,
+                                   str(NB_PLAYOUT),
+                                   str(matchIdx),
+                                   str(pair[1]),
+                                   str(pair[0]),
+                                   "0"))
+
+
+def main():
+    matchIdx = MATCH_IDX_SHIFT
+
+    # pickleデータをリセット
+    pickle.dump(None, open(mpc_stats_pkl_file, "wb"))
+
+    # 空のダミーデータを記録
+    write_mpc_stats([None] * 60, target_c_file)
+
+    for pairs in pair_list:
+        pair_i = 0
+        for pair in pairs:
+            # ゲームデータをリセット
+            with open(raw_csv_file, "w") as f:
+                print("overwrite raw data")
+                f.write("matchIdx,nbEmpty,depth,score\n")
+
+            # コンパイルしてMPC情報を適用
+            compile()
+            playout(pair, matchIdx)
+            read_mpc_games(pair, pair_i)
+
+            matchIdx += MATCH_IDX_SHIFT
+            pair_i += 1
+
+
+if __name__ == '__main__':
+    main()

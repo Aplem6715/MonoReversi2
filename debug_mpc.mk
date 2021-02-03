@@ -1,6 +1,5 @@
 ﻿
-TARGET			=mpc_playout
-LEARN_TARGET	=learn
+LEARN_TARGET	=mpc_playout
 LINK			=link.exe
 
 OUTDIR			=.\build\debug\learn
@@ -23,6 +22,7 @@ LEARN_OBJS=\
 	$(OUTDIR)\board.obj\
 	$(SEARCH_OUTDIR)\hash.obj\
 	$(SEARCH_OUTDIR)\moves.obj\
+	$(SEARCH_OUTDIR)\mpc_info.obj\
 	$(SEARCH_OUTDIR)\mid.obj\
 	$(SEARCH_OUTDIR)\end.obj\
 	$(SEARCH_OUTDIR)\search.obj\

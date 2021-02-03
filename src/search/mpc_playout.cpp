@@ -27,9 +27,9 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
     FILE *logFile;
     int i;
 
-    InitTree(tree, 0, 8, 4, 8, 1);
+    minimum = deep > minimum ? deep : minimum;
+    InitTree(tree, 0, minimum, 4, 8, 1);
     logFile = fopen(MPC_RAW_FILE, "a");
-    fprintf(logFile, "matchIdx,nbEmpty,depth,score\n");
 
     for (i = 0; i < nbPlay; i++)
     {
@@ -37,6 +37,10 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
         board.Reset();
         while (!board.IsFinished())
         {
+            if (nbEmpty <= deep)
+            {
+                break;
+            }
             if (enableLog)
             {
                 board.Draw();
@@ -61,11 +65,6 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
             {
                 SearchSetup(tree, board.GetOwn(), board.GetOpp());
                 pos = MidRootWithMpcLog(tree, logFile, matchIdxShift + i, shallow, deep, minimum);
-                if (nbEmpty <= tree->endDepth)
-                {
-                    printf("EndSearching            \r");
-                    pos = Search(tree, board.GetOwn(), board.GetOpp(), 0);
-                }
                 if (enableLog)
                     printf("探索ノード数：%zu[Node]  推定CPUスコア：%.1f\n",
                            tree->nodeCount, tree->score / (float)(STONE_VALUE));
@@ -78,7 +77,7 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
             nbEmpty--;
 
         } //end of loop:　while (!board.IsFinished())
-        printf("Game %d Finished\n", i);
+        printf("Game %d Finished                 \n", i);
     }
 
     fclose(logFile);
@@ -92,12 +91,22 @@ int main(int argc, char **argv)
     int idxShift;
     int nbPlay;
     uint8 shallow, deep;
+    uint8 showBoard;
+
+    if (argc < 6)
+    {
+        printf("引数が足りません\n");
+        getchar();
+        return 0;
+    }
 
     nbPlay = atoi(argv[1]);
     idxShift = atoi(argv[2]);
     shallow = atoi(argv[3]);
     deep = atoi(argv[4]);
+    showBoard = atoi(argv[5]);
 
     //SelfPlay(6, 17, false);
-    MPCSampling(nbPlay, 6, 1.0 / 60.0, 1, idxShift, shallow, deep, 8);
+    MPCSampling(nbPlay, 6, 1.0 / 60.0, showBoard, idxShift, shallow, deep, 4);
+    return 0;
 }

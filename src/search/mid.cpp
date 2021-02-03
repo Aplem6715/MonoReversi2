@@ -528,8 +528,8 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
         NextSearch = MidAlphaBeta;
     }
 
-    alpha = SCORE_MIN;
-    beta = SCORE_MAX;
+    alpha = SCORE_MIN - 1;
+    beta = SCORE_MAX + 1;
 
     for (move = NextBestMoveWithSwap(moveList->moves); move != NULL; move = NextBestMoveWithSwap(move))
     { // すべての着手についてループ
@@ -609,7 +609,6 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
 uint8 MidRootWithMpcLog(SearchTree *tree, FILE *logFile, int matchIdx, uint8 shallow, uint8 deep, uint8 minimumDepth)
 {
     MoveList moveList;
-    uint8 depth;
     uint8 bestMove, secondMove;
 
     CreateMoveList(&moveList, tree->stones);
@@ -623,26 +622,26 @@ uint8 MidRootWithMpcLog(SearchTree *tree, FILE *logFile, int matchIdx, uint8 sha
 
     // 浅い探索をしてスコアを記録
     tree->depth = shallow;
-    if (depth < tree->nbEmpty)
+    if (shallow < tree->nbEmpty)
     {
-        printf("Searching depth:%d \r", depth);
-        bestMove = MidPVSRoot(tree, &moveList, depth, &tree->score, &secondMove);
-        if (tree->score != SCORE_MAX)
-            fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, tree->nbEmpty, depth, tree->score);
+        printf("Searching depth:%d \r", shallow);
+        bestMove = MidPVSRoot(tree, &moveList, shallow, &tree->score, &secondMove);
+        if (abs(tree->score) != SCORE_MAX)
+            fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, tree->nbEmpty, shallow, tree->score);
     }
 
     // 深い探索をしてスコアを記録
     tree->depth = deep;
-    if (depth < tree->nbEmpty)
+    if (deep < tree->nbEmpty)
     {
-        printf("Searching depth:%d \r", depth);
-        bestMove = MidPVSRoot(tree, &moveList, depth, &tree->score, &secondMove);
-        if (tree->score != SCORE_MAX)
-            fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, tree->nbEmpty, depth, tree->score);
+        printf("Searching depth:%d \r", deep);
+        bestMove = MidPVSRoot(tree, &moveList, deep, &tree->score, &secondMove);
+        if (abs(tree->score) != SCORE_MAX)
+            fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, tree->nbEmpty, deep, tree->score);
     }
 
     // 最低限の深度で探索して最善手を予測
-    if (depth < minimumDepth)
+    if (deep < minimumDepth)
     {
         bestMove = MidPVSRoot(tree, &moveList, minimumDepth, &tree->score, &secondMove);
     }

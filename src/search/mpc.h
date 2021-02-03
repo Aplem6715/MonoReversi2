@@ -9,7 +9,7 @@
 #define MPC_SHALLOW_MIN 1
 #define MPC_SHALLOW_MAX 6
 #define MPC_DEEP_MIN 3
-#define MPC_DEEP_MAX 14
+#define MPC_DEEP_MAX 16
 #define MPC_NB_TRY 2
 
 #define MPC_T 1.98
