@@ -321,7 +321,7 @@ void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 
         if (depth == hashData->depth)
         {
             HashDataUpdate(hashData, bestMove, in_alpha, in_beta, maxScore);
-            if (hashData->lower >= hashData->upper)
+            if (hashData->lower > hashData->upper)
             {
                 HashDataSaveNew(hashData, stones, bestMove, depth, in_alpha, in_beta, maxScore);
             }
