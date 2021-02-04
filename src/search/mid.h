@@ -7,5 +7,6 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
 score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed);
 score_t MidPVS(SearchTree *tree, const score_t alpha, const score_t beta, unsigned char depth, unsigned char passed);
 uint8 MidRoot(SearchTree *tree, uint8 choiceSecond);
+uint8 MidRootWithMpcLog(SearchTree *tree, FILE *logFile, int matchIdx, uint8 shallow, uint8 deep, uint8 minimumDepth);
 
 #endif // MID_H_

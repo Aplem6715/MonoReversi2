@@ -1,9 +1,12 @@
 #include "mid.h"
+#include "mpc.h"
 #include "hash.h"
 #include "moves.h"
 #include "../ai/eval.h"
 #include "../bit_operation.h"
 #include <assert.h>
+
+score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed);
 
 inline score_t WinJudge(const Stones *stones)
 {
@@ -21,6 +24,41 @@ inline score_t WinJudge(const Stones *stones)
     {
         return 0;
     }
+}
+
+bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 depth, score_t *score)
+{
+    int i;
+    uint8 shallowDepth;
+    score_t beta = alpha + 1;
+    long bound;
+    const MPCPair *mpc;
+
+    if (depth >= MPC_DEEP_MIN && depth <= MPC_DEEP_MAX)
+    {
+        for (i = 0; i < MPC_NB_TRY; i++)
+        {
+            mpc = &mpcPairs[tree->nbEmpty][depth - MPC_DEEP_MIN][i];
+            shallowDepth = mpc->shallowDepth;
+            if (shallowDepth > 0)
+            {
+                bound = lround((MPC_T * mpc->std + beta - mpc->bias) / mpc->slope);
+                if (bound < SCORE_MAX && MidNullWindow(tree, (score_t)bound, shallowDepth, 0) >= bound)
+                {
+                    *score = beta;
+                    return 1;
+                }
+
+                bound = lround((-MPC_T * mpc->std + alpha - mpc->bias) / mpc->slope);
+                if (bound > SCORE_MIN && MidNullWindow(tree, (score_t)bound + 1, shallowDepth, 0) <= bound)
+                {
+                    *score = alpha;
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
 }
 
 score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
@@ -292,6 +330,13 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
         return Evaluate(tree->eval, tree->nbEmpty);
     }
 
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    {
+        hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+        if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
+            return score;
+    }
+
     if (depth - 1 >= tree->orderDepth)
     {
         NextNullSearch = MidNullWindow;
@@ -319,11 +364,9 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     }
     else
     {
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        if (NullWindowMultiProbCut(tree, alpha, depth, &score))
         {
-            hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
-            if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
-                return score;
+            return score;
         }
 
         EvaluateMoveList(tree, &moveList, tree->stones, hashData);
@@ -468,13 +511,12 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     return alpha;
 }
 
-uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, uint8 choiceSecond, score_t *scoreOut)
+uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *scoreOut, uint8 *secondMoveOut)
 {
     SearchFunc_t NextSearch;
     score_t alpha, beta, score;
     uint8 foundPV = 0;
     uint8 bestMove = NOMOVE_INDEX;
-    uint8 secondMove = NOMOVE_INDEX;
     Move *move;
 
     if (depth >= tree->pvsDepth)
@@ -486,8 +528,8 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, uint8 choice
         NextSearch = MidAlphaBeta;
     }
 
-    alpha = -Const::MAX_VALUE;
-    beta = Const::MAX_VALUE;
+    alpha = SCORE_MIN - 1;
+    beta = SCORE_MAX + 1;
 
     for (move = NextBestMoveWithSwap(moveList->moves); move != NULL; move = NextBestMoveWithSwap(move))
     { // すべての着手についてループ
@@ -509,17 +551,12 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, uint8 choice
         if (score > alpha) // alphaを上回る着手を発見したら
         {
             alpha = score;
-            secondMove = bestMove;
+            *secondMoveOut = bestMove;
             bestMove = move->posIdx;
-            foundPV = 1;
+            foundPV = 1; // PVを発見した！
         }
     } // end of moves loop
     *scoreOut = alpha;
-    if (choiceSecond && secondMove != NOMOVE_INDEX)
-    {
-        return secondMove;
-    }
-    assert(bestMove != NOMOVE_INDEX);
     return bestMove;
 }
 
@@ -527,7 +564,7 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
 {
     MoveList moveList;
     uint8 startDepth, endDepth;
-    uint8 bestMove;
+    uint8 bestMove, secondMove;
     uint8 tmpDepth;
     uint8 depths[10];
     uint8 nDepths;
@@ -557,9 +594,57 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
 
     for (i = 0; i < nDepths; i++)
     {
-        bestMove = MidPVSRoot(tree, &moveList, depths[i], 0, &tree->score);
+        bestMove = MidPVSRoot(tree, &moveList, depths[i], &tree->score, &secondMove);
     }
-    bestMove = MidPVSRoot(tree, &moveList, endDepth, choiceSecond, &tree->score);
+    bestMove = MidPVSRoot(tree, &moveList, endDepth, &tree->score, &secondMove);
+
+    if (choiceSecond && moveList.nbMoves >= 2)
+    {
+        return secondMove;
+    }
+
+    return bestMove;
+}
+
+uint8 MidRootWithMpcLog(SearchTree *tree, FILE *logFile, int matchIdx, uint8 shallow, uint8 deep, uint8 minimumDepth)
+{
+    MoveList moveList;
+    uint8 bestMove, secondMove;
+
+    CreateMoveList(&moveList, tree->stones);
+    EvaluateMoveList(tree, &moveList, tree->stones, NULL); // 着手の事前評価
+    assert(moveList.nbMoves > 0);
+
+    tree->isEndSearch = 0;
+    tree->pvsDepth = tree->midPvsDepth;
+    tree->orderDepth = tree->pvsDepth;
+    tree->hashDepth = tree->pvsDepth - 1;
+
+    // 浅い探索をしてスコアを記録
+    tree->depth = shallow;
+    if (shallow < tree->nbEmpty)
+    {
+        printf("Searching depth:%d \r", shallow);
+        bestMove = MidPVSRoot(tree, &moveList, shallow, &tree->score, &secondMove);
+        if (abs(tree->score) != SCORE_MAX)
+            fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, tree->nbEmpty, shallow, tree->score);
+    }
+
+    // 深い探索をしてスコアを記録
+    tree->depth = deep;
+    if (deep < tree->nbEmpty)
+    {
+        printf("Searching depth:%d \r", deep);
+        bestMove = MidPVSRoot(tree, &moveList, deep, &tree->score, &secondMove);
+        if (abs(tree->score) != SCORE_MAX)
+            fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, tree->nbEmpty, deep, tree->score);
+    }
+
+    // 最低限の深度で探索して最善手を予測
+    if (deep < minimumDepth)
+    {
+        bestMove = MidPVSRoot(tree, &moveList, minimumDepth, &tree->score, &secondMove);
+    }
 
     return bestMove;
 }

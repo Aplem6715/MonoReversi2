@@ -7,6 +7,8 @@
 #include <chrono>
 #include <assert.h>
 
+static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
+
 void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, unsigned char useHash)
 {
     tree->midDepth = midDepth;
@@ -59,6 +61,7 @@ void ResetTree(SearchTree *tree)
 
 void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
 {
+    //ResetTree(tree);
     // 評価パターンの初期化
     EvalReload(tree->eval, own, opp, OWN);
 
@@ -152,7 +155,11 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
 
     SearchSetup(tree, own, opp);
 
-    if (nbEmpty <= tree->endDepth)
+    if (tree->nbEmpty == 60)
+    {
+        pos = FIRST_MOVES_INDEX[rand() % 4];
+    }
+    else if (nbEmpty <= tree->endDepth)
     {
         tree->isEndSearch = 1;
         tree->depth = nbEmpty;

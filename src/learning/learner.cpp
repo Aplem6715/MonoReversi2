@@ -7,6 +7,8 @@
 #include "../game.h"
 #include "../ai/nnet.h"
 #include "../ai/regression.h"
+#include "../search/mid.h"
+#include "../search/mpc.h"
 #include <signal.h>
 #include <string>
 #include <assert.h>
@@ -446,9 +448,91 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
     fclose(tfp);
 }
 
-int main()
+void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enableLog, int matchIdxShift)
 {
-    SelfPlay(6, 17, false);
+    SearchTree tree[1];
+    Board board;
+    uint8 pos;
+    uint8 nbEmpty;
+    FILE *logFile;
+    int i;
+
+    InitTree(tree, 0, 16, 4, 8, 1);
+    logFile = fopen(MPC_RAW_FILE, "a");
+    fprintf(logFile, "matchIdx,nbEmpty,depth,score\n");
+
+    for (i = 0; i < nbPlay; i++)
+    {
+        nbEmpty = 60;
+        board.Reset();
+        while (!board.IsFinished())
+        {
+            if (enableLog)
+            {
+                board.Draw();
+                //_sleep(500);
+            }
+
+            // 置ける場所がなかったらスキップ
+            if (board.GetMobility() == 0)
+            {
+                board.Skip();
+                continue;
+            }
+
+            // 着手
+            if (nbEmpty > tree->endDepth && ((nbEmpty >= 60 - randomTurns) || rnd_prob(mt) < randMoveRatio))
+            {
+                // ランダム着手位置
+                pos = board.GetRandomPosMoveable();
+                //printf("Random!!!\n");
+            }
+            else
+            {
+                SearchSetup(tree, board.GetOwn(), board.GetOpp());
+                pos = MidRootWithMpcLog(tree, logFile, matchIdxShift + i);
+                if (nbEmpty <= tree->endDepth)
+                {
+                    printf("EndSearching            \r");
+                    pos = Search(tree, board.GetOwn(), board.GetOpp(), 0);
+                }
+                if (enableLog)
+                    printf("探索ノード数：%zu[Node]  推定CPUスコア：%.1f\n",
+                           tree->nodeCount, tree->score / (float)(STONE_VALUE));
+            }
+            // 合法手判定
+            assert(board.IsLegalTT(pos));
+
+            // 実際に着手
+            board.PutTT(pos);
+            nbEmpty--;
+
+        } //end of loop:　while (!board.IsFinished())
+        printf("Game %d Finished\n", i);
+    }
+
+    fclose(logFile);
+}
+
+int main(int argc, char **argv)
+{
+    HashInit();
+    srand((unsigned int)time(NULL));
+
+    char input[20];
+    int idxShift;
+    int nbPlay;
+
+    printf("ゲーム数を入力:");
+    gets_s(input);
+    nbPlay = atoi(input);
+
+    printf("通し番号シフトを入力（複数実行による競合防止）:");
+    gets_s(input);
+    idxShift = atoi(input);
+
+    //SelfPlay(6, 17, false);
+    MPCSampling(nbPlay, 6, 4.0 / 60.0, 1, idxShift);
     /*
     string recordDir = "./resources/record/";
     SearchTree tree;
