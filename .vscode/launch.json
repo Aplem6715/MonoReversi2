@@ -24,6 +24,18 @@
             "preLaunchTask": "make"
         },
         {
+            "name": "デバッグClient",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build\\debug\\play\\MonoReversiClient.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "preLaunchTask": "make-client"
+        },
+        {
             "name": "デバッグLearn",
             "type": "cppvsdbg",
             "request": "launch",
@@ -64,6 +76,18 @@
             "environment": [],
             "externalConsole": true,
             "preLaunchTask": "make_release"
+        },
+        {
+            "name": "Client_リリース",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build\\release\\play\\MonoReversiClient.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "preLaunchTask": "make-client_release"
         },
         {
             "name": "Learn_リリース",
