@@ -10,23 +10,28 @@
 
 uint8 WaitMoveResponse(HANDLE pipe)
 {
-    char buff[1];
+    char buff[100];
     DWORD readedSize;
     if (!ReadFile(pipe, buff, sizeof(buff), &readedSize, NULL))
     {
         fprintf(stderr, "Couldn't read NamedPipe.\n");
     }
-    return buff[0];
+    return buff[0] - 1;
 }
 
 void SendMove(HANDLE pipe, uint8 pos)
 {
     char buff[1];
-    buff[0] = pos;
+    buff[0] = pos + 1;
     DWORD writtenSize;
+
     if (!WriteFile(pipe, buff, strlen(buff), &writtenSize, NULL))
     {
         fprintf(stderr, "Couldn't write NamedPipe.\n");
+    }
+    if (writtenSize != 1)
+    {
+        printf("written %d bytes\n", writtenSize);
     }
 }
 
@@ -38,12 +43,11 @@ void Match(HANDLE pipe, uint8 myColor)
     int nbEmpty = 60;
     Board board;
 
-    InitTree(tree, 12, 20, 4, 8, 1);
+    InitTree(tree, 10, 16, 4, 8, 1);
     board.Reset();
     while (!board.IsFinished())
     {
         board.Draw();
-        _sleep(750);
 
         // 置ける場所がなかったらスキップ
         if (board.GetMobility() == 0)
@@ -55,9 +59,9 @@ void Match(HANDLE pipe, uint8 myColor)
         if (board.GetTurnColor() == myColor)
         {
             printf("※考え中・・・\r");
+            _sleep(750);
             // AIが着手位置を決める
             pos = Search(tree, board.GetOwn(), board.GetOpp(), 0);
-            SendMove(pipe, pos);
             printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
                    tree->usedTime, tree->nodeCount, tree->nodeCount / tree->usedTime, tree->score / (float)(STONE_VALUE));
             if (tree->isEndSearch)
@@ -65,11 +69,12 @@ void Match(HANDLE pipe, uint8 myColor)
                 printf("(WLD)");
             }
             printf("\n");
+            SendMove(pipe, pos);
+            printf("Sended\n");
             //printf("\n%f\n", treeBlack->score);
         }
         else
         {
-            Sleep(100);
             // AIが着手位置を決める
             pos = WaitMoveResponse(pipe);
             //printf("\n%f\n", treeWhite->score);
