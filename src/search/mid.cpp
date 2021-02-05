@@ -364,6 +364,7 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     }
     else
     {
+        
         if (NullWindowMultiProbCut(tree, alpha, depth, &score))
         {
             return score;
