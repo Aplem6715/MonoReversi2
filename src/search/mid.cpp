@@ -144,7 +144,7 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
         }
     }
 
-    if (tree->useHash == 1 && hashData != NULL)
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
@@ -230,7 +230,7 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         }
     }
 
-    if (tree->useHash == 1)
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
@@ -305,7 +305,7 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
         }
     } // end of if(mob == 0) else
 
-    if (tree->useHash == 1)
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
@@ -364,8 +364,8 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     }
     else
     {
-        
-        if (NullWindowMultiProbCut(tree, alpha, depth, &score))
+
+        if (tree->useMPC && NullWindowMultiProbCut(tree, alpha, depth, &score))
         {
             return score;
         }
@@ -394,7 +394,7 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
         }
     } // end of if(moveList.nbMoves > 0)
 
-    if (tree->useHash == 1)
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
@@ -505,7 +505,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         } // end of moves loop
     }
 
-    if (tree->useHash == 1)
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, alpha);
     }
