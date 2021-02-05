@@ -85,7 +85,7 @@ uint8 Board::GetRandomPosMoveable()
     return CalcPosIndex(posBit);
 }
 
-void Board::Undo()
+int Board::Undo()
 {
     uint64_t flip, pos;
     uint8 hist_turn;
@@ -110,7 +110,9 @@ void Board::Undo()
     else
     {
         printf("これ以上戻せません\n");
+        return 0;
     }
+    return 1;
 }
 
 void Board::UndoUntilColorChange()
@@ -211,7 +213,12 @@ int Board::GetStoneCount(uint8 color)
 
 uint64_t Board::GetMobility()
 {
-    if (turn == Const::BLACK)
+    return GetMobility(turn);
+}
+
+uint64_t Board::GetMobility(uint8 color)
+{
+    if (color == Const::BLACK)
     {
         return CalcMobility64(black, white);
     }

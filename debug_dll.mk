@@ -37,7 +37,6 @@ CFLAGS=\
 	/nologo\
 	/W3\
 	/c\
-	/D_WIN32_WINNT=0x0600\
 	/DUNICODE\
 	/D_UNICODE\
 	/source-charset:utf-8\
@@ -47,17 +46,20 @@ CFLAGS=\
 	/DUSE_REGRESSION\
 	/DUSE_INTRIN\
 	/Zi\
-	/LD
+	/DWIN32\
+	/D_WINDOWS\
+	/D_USRDLL\
+	/D_WINDLL\
 	#/DLEARN_MODE
 	# /USE_SERIALIZER\ #
 
 LINK_FLAGS=\
 	/nologo\
-	/subsystem:console\
+	/subsystem:windows\
 	/pdb:"$(OUTDIR)\$(TARGET).pdb"\
 	/out:"$(OUTDIR)\$(TARGET).dll"\
-	/DEBUG\
-	/DLL
+	/DLL\
+	/DEBUG
 
 
 

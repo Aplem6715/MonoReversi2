@@ -32,11 +32,12 @@ public:
     uint64_t GetOwn();
     uint64_t GetOpp();
     uint64_t GetMobility();
+    uint64_t GetMobility(uint8 color);
     uint8 GetTurnColor();
     void Reset();
     uint64_t PutTT(uint8 pos);
     uint8 GetRandomPosMoveable();
-    void Undo();
+    int Undo();
     void UndoUntilColorChange();
     void Skip();
     void Draw();

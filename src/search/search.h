@@ -33,6 +33,8 @@ typedef struct SearchTree
     double usedTime;
     score_t score;
     uint8 isEndSearch;
+
+    char msg[1024];
 } SearchTree;
 
 typedef score_t (*SearchFunc_t)(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed);
