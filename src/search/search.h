@@ -28,6 +28,7 @@ typedef struct SearchTree
     unsigned char useHash;
 
     unsigned char useMPC;
+    uint8 nbMpcNested;
 
     /* For Stats */
     size_t nodeCount;
