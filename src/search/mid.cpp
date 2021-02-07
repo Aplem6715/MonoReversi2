@@ -5,6 +5,8 @@
 #include "../ai/eval.h"
 #include "../bit_operation.h"
 #include <assert.h>
+#include <math.h>
+#include <stdio.h>
 
 score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed);
 
@@ -31,6 +33,7 @@ bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 d
     int i;
     uint8 shallowDepth;
     score_t beta = alpha + 1;
+    score_t shallowScore;
     long bound;
     const MPCPair *mpc;
 
@@ -43,17 +46,31 @@ bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 d
             if (shallowDepth > 0)
             {
                 bound = lround((MPC_T * mpc->std + beta - mpc->bias) / mpc->slope);
-                if (bound < SCORE_MAX && MidNullWindow(tree, (score_t)bound, shallowDepth, 0) >= bound)
-                {
-                    *score = beta;
-                    return 1;
+                if (bound < SCORE_MAX ){
+                    tree->nbMpcNested++;
+                    {
+                        shallowScore = MidNullWindow(tree, (score_t)bound, shallowDepth, 0);
+                    }
+                    tree->nbMpcNested--;
+                    if(shallowScore >= bound)
+                    {
+                        *score = beta;
+                        return 1;
+                    }
                 }
 
                 bound = lround((-MPC_T * mpc->std + alpha - mpc->bias) / mpc->slope);
-                if (bound > SCORE_MIN && MidNullWindow(tree, (score_t)bound + 1, shallowDepth, 0) <= bound)
+                if (bound > SCORE_MIN)
                 {
-                    *score = alpha;
-                    return 1;
+                    tree->nbMpcNested++;
+                    {
+                        shallowScore = MidNullWindow(tree, (score_t)bound + 1, shallowDepth, 0);
+                    }
+                    tree->nbMpcNested--;
+                    if( shallowScore <= bound){
+                        *score = alpha;
+                        return 1;
+                    }
                 }
             }
         }
@@ -100,7 +117,7 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     }
     else
     {
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
         {
             hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
@@ -144,7 +161,7 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
         }
     }
 
-    if (tree->useHash == 1 && hashData != NULL)
+    if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
@@ -186,7 +203,7 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     }
     else
     {
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
         {
             hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
@@ -230,7 +247,7 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         }
     }
 
-    if (tree->useHash == 1)
+    if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
@@ -271,7 +288,7 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
     }
     else
     {
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
         {
             hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
@@ -305,7 +322,7 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
         }
     } // end of if(mob == 0) else
 
-    if (tree->useHash == 1)
+    if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
@@ -330,7 +347,7 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
         return Evaluate(tree->eval, tree->nbEmpty);
     }
 
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
     {
         hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
         if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
@@ -394,7 +411,7 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
         }
     } // end of if(moveList.nbMoves > 0)
 
-    if (tree->useHash == 1)
+    if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
@@ -462,7 +479,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         alpha = in_alpha;
         beta = in_beta;
 
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
         { // ハッシュの記録をもとにカット/探索範囲の縮小
             hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
             // PVノードはカットしない(性能も殆ど変わらなかった)
@@ -505,10 +522,12 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         } // end of moves loop
     }
 
-    if (tree->useHash == 1)
+    if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, alpha);
     }
+
+    assert(tree->nbMpcNested == 0);
     return alpha;
 }
 

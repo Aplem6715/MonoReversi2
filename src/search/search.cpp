@@ -68,6 +68,7 @@ void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
     tree->nbEmpty = CountBits(~(own | opp));
     tree->nodeCount = 0;
     tree->nbCut = 0;
+    tree->nbMpcNested = 0;
 
     tree->stones->own = own;
     tree->stones->opp = opp;
@@ -188,5 +189,6 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
             tree->nodeCount / tree->usedTime,
             tree->score / (float)(STONE_VALUE));
 
+    assert(tree->nbMpcNested == 0);
     return pos;
 }
