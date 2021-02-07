@@ -46,13 +46,14 @@ bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 d
             if (shallowDepth > 0)
             {
                 bound = lround((MPC_T * mpc->std + beta - mpc->bias) / mpc->slope);
-                if (bound < SCORE_MAX ){
+                if (bound < SCORE_MAX)
+                {
                     tree->nbMpcNested++;
                     {
                         shallowScore = MidNullWindow(tree, (score_t)bound, shallowDepth, 0);
                     }
                     tree->nbMpcNested--;
-                    if(shallowScore >= bound)
+                    if (shallowScore >= bound)
                     {
                         *score = beta;
                         return 1;
@@ -67,7 +68,8 @@ bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 d
                         shallowScore = MidNullWindow(tree, (score_t)bound + 1, shallowDepth, 0);
                     }
                     tree->nbMpcNested--;
-                    if( shallowScore <= bound){
+                    if (shallowScore <= bound)
+                    {
                         *score = alpha;
                         return 1;
                     }
@@ -381,8 +383,8 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     }
     else
     {
-        
-        if (NullWindowMultiProbCut(tree, alpha, depth, &score))
+
+        if (tree->useMPC && NullWindowMultiProbCut(tree, alpha, depth, &score))
         {
             return score;
         }

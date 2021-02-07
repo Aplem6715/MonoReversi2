@@ -9,13 +9,14 @@
 
 static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
 
-void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, unsigned char useHash)
+void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, unsigned char useHash, unsigned char useMPC)
 {
     tree->midDepth = midDepth;
     tree->endDepth = endDepth;
     tree->midPvsDepth = midPvsDepth;
     tree->endPvsDepth = endPvsDepth;
     tree->useHash = useHash;
+    tree->useMPC = useMPC;
 
     EvalInit(tree->eval);
 
@@ -183,11 +184,11 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
     tree->usedTime = static_cast<double>(
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000.0);
 
-    sprintf(tree->msg, "思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
-            tree->usedTime,
-            tree->nodeCount,
-            tree->nodeCount / tree->usedTime,
-            tree->score / (float)(STONE_VALUE));
+    sprintf_s(tree->msg, "思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
+              tree->usedTime,
+              tree->nodeCount,
+              tree->nodeCount / tree->usedTime,
+              tree->score / (float)(STONE_VALUE));
 
     assert(tree->nbMpcNested == 0);
     return pos;
