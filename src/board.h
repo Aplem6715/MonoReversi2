@@ -35,6 +35,7 @@ public:
     uint64_t GetMobility(uint8 color);
     uint8 GetTurnColor();
     void Reset();
+    void SetStones(uint64_t black, uint64_t white, uint8 turn);
     uint64_t PutTT(uint8 pos);
     uint8 GetRandomPosMoveable();
     int Undo();

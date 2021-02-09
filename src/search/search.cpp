@@ -41,11 +41,6 @@ void DeleteTree(SearchTree *tree)
         HashTableFree(tree->table);
         free(tree->table);
     }
-#ifdef USE_NN
-    free(tree->eval->net);
-#elif USE_REGRESSION
-    free(tree->eval->regr);
-#endif
 }
 
 void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth)

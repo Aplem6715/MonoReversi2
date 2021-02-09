@@ -12,7 +12,7 @@
 #define MPC_DEEP_MAX 16
 #define MPC_NB_TRY 2
 
-#define MPC_T 1.98
+#define MPC_NEST_MAX 4
 
 typedef struct MPCPair
 {
@@ -23,5 +23,19 @@ typedef struct MPCPair
 } MPCPair;
 
 extern const MPCPair mpcPairs[60][MPC_DEEP_MAX - MPC_DEEP_MIN + 1][MPC_NB_TRY];
+
+const double MPC_T[MPC_NEST_MAX] = {
+    1.036, // 85%
+    1.405, // 92%
+    2.054, // 98%
+    99999, // LAST
+};
+/*
+const double MPC_T[MPC_NEST_MAX] = {
+    1.98,  // 80%
+    1.98,  // 92%
+    1.98,  // 98%
+    99999, // LAST
+};*/
 
 #endif // _MPC_H_

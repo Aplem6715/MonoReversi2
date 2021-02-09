@@ -20,7 +20,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": true,
+            "console": "externalTerminal",
             "preLaunchTask": "make"
         },
         {
@@ -32,7 +32,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": true,
+            "console": "externalTerminal",
             "preLaunchTask": "make-client"
         },
         {
@@ -44,7 +44,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": true,
+            "console": "externalTerminal",
             "preLaunchTask": "make-learn"
         },
         {
@@ -62,7 +62,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": true,
+            "console": "externalTerminal",
             "preLaunchTask": "make-mpc"
         },
         {
@@ -74,7 +74,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": true,
+            "console": "externalTerminal",
             "preLaunchTask": "make_release"
         },
         {
@@ -86,7 +86,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": true,
+            "console": "externalTerminal",
             "preLaunchTask": "make-client_release"
         },
         {
@@ -98,7 +98,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": true,
+            "console": "externalTerminal",
             "preLaunchTask": "make-learn_release"
         },
         {
@@ -116,7 +116,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": true,
+            "console": "externalTerminal",
             "preLaunchTask": "make-mpc_release"
         }
     ]

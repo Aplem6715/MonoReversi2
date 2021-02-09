@@ -61,6 +61,13 @@ uint64_t Board::PutTT(uint8 pos)
     return flip;
 }
 
+void Board::SetStones(uint64_t black, uint64_t white, uint8 turn)
+{
+    this->black = black;
+    this->white = white;
+    this->turn = turn;
+}
+
 uint8 Board::GetRandomPosMoveable()
 {
     uint64_t mob = GetMobility();

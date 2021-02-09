@@ -34,18 +34,20 @@ bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 d
     uint8 shallowDepth;
     score_t beta = alpha + 1;
     score_t shallowScore;
+    double thresh;
     long bound;
     const MPCPair *mpc;
 
-    if (depth >= MPC_DEEP_MIN && depth <= MPC_DEEP_MAX)
+    if (depth >= MPC_DEEP_MIN && depth <= MPC_DEEP_MAX && tree->nbMpcNested < MPC_NEST_MAX)
     {
+        thresh = MPC_T[tree->nbMpcNested];
         for (i = 0; i < MPC_NB_TRY; i++)
         {
             mpc = &mpcPairs[tree->nbEmpty][depth - MPC_DEEP_MIN][i];
             shallowDepth = mpc->shallowDepth;
             if (shallowDepth > 0)
             {
-                bound = lround((MPC_T * mpc->std + beta - mpc->bias) / mpc->slope);
+                bound = lround((thresh * mpc->std + beta - mpc->bias) / mpc->slope);
                 if (bound < SCORE_MAX)
                 {
                     tree->nbMpcNested++;
@@ -60,7 +62,7 @@ bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 d
                     }
                 }
 
-                bound = lround((-MPC_T * mpc->std + alpha - mpc->bias) / mpc->slope);
+                bound = lround((-thresh * mpc->std + alpha - mpc->bias) / mpc->slope);
                 if (bound > SCORE_MIN)
                 {
                     tree->nbMpcNested++;
@@ -628,44 +630,44 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
     return bestMove;
 }
 
-uint8 MidRootWithMpcLog(SearchTree *tree, FILE *logFile, int matchIdx, uint8 shallow, uint8 deep, uint8 minimumDepth)
+uint8 MidRootWithMpcLog(SearchTree *deepTree, SearchTree *shallowTree, FILE *logFile, int matchIdx, uint8 shallow, uint8 deep, uint8 minimumDepth)
 {
     MoveList moveList;
     uint8 bestMove, secondMove;
 
-    CreateMoveList(&moveList, tree->stones);
-    EvaluateMoveList(tree, &moveList, tree->stones, NULL); // 着手の事前評価
+    CreateMoveList(&moveList, deepTree->stones);
+    CreateMoveList(&moveList, shallowTree->stones);
+    EvaluateMoveList(deepTree, &moveList, deepTree->stones, NULL);       // 着手の事前評価
+    EvaluateMoveList(shallowTree, &moveList, shallowTree->stones, NULL); // 着手の事前評価
     assert(moveList.nbMoves > 0);
 
-    tree->isEndSearch = 0;
-    tree->pvsDepth = tree->midPvsDepth;
-    tree->orderDepth = tree->pvsDepth;
-    tree->hashDepth = tree->pvsDepth - 1;
+    deepTree->isEndSearch = 0;
+    deepTree->pvsDepth = deepTree->midPvsDepth;
+    deepTree->orderDepth = deepTree->pvsDepth;
+    deepTree->hashDepth = deepTree->pvsDepth - 1;
+    shallowTree->isEndSearch = 0;
+    shallowTree->pvsDepth = shallowTree->midPvsDepth;
+    shallowTree->orderDepth = shallowTree->pvsDepth;
+    shallowTree->hashDepth = shallowTree->pvsDepth - 1;
 
     // 浅い探索をしてスコアを記録
-    tree->depth = shallow;
-    if (shallow < tree->nbEmpty)
+    shallowTree->depth = shallow;
+    if (shallow < deepTree->nbEmpty)
     {
         printf("Searching depth:%d \r", shallow);
-        bestMove = MidPVSRoot(tree, &moveList, shallow, &tree->score, &secondMove);
-        if (abs(tree->score) != SCORE_MAX)
-            fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, tree->nbEmpty, shallow, tree->score);
+        bestMove = MidPVSRoot(shallowTree, &moveList, shallow, &shallowTree->score, &secondMove);
+        if (abs(shallowTree->score) != SCORE_MAX)
+            fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, shallowTree->nbEmpty, shallow, shallowTree->score);
     }
 
     // 深い探索をしてスコアを記録
-    tree->depth = deep;
-    if (deep < tree->nbEmpty)
+    deepTree->depth = deep;
+    if (deep < deepTree->nbEmpty)
     {
         printf("Searching depth:%d \r", deep);
-        bestMove = MidPVSRoot(tree, &moveList, deep, &tree->score, &secondMove);
-        if (abs(tree->score) != SCORE_MAX)
-            fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, tree->nbEmpty, deep, tree->score);
-    }
-
-    // 最低限の深度で探索して最善手を予測
-    if (deep < minimumDepth)
-    {
-        bestMove = MidPVSRoot(tree, &moveList, minimumDepth, &tree->score, &secondMove);
+        bestMove = MidPVSRoot(deepTree, &moveList, deep, &deepTree->score, &secondMove);
+        if (abs(deepTree->score) != SCORE_MAX)
+            fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, deepTree->nbEmpty, deep, deepTree->score);
     }
 
     return bestMove;

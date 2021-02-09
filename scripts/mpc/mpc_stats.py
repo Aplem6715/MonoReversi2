@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from typing import List
 
 
@@ -16,6 +16,8 @@ MPC_NB_TRY = 2
 
 NB_PLAYOUT = 100
 MATCH_IDX_SHIFT = 10000
+
+use_plt = False
 
 mpc_stats_pkl_file = "./resources/mpc/mpc_stats.pkl"
 raw_csv_file = "./resources/mpc/mpc_raw_tmp.csv"
@@ -94,15 +96,14 @@ def get_stats_list(df, mpc_pair: MPCPair, pair):
     model = learn_model(x, y)
     preds = model.predict(x)
 
-    '''
-    plt.title(
-        f'shallow:{pair_list[depth][tries][1]} '
-        f'deep:{depth+MPC_DEEP_MIN} '
-        f'a:{model.coef_[0][0]:.3f} b:{model.intercept_[0]:.3f}')
-    plt.plot(x, y, 'o')
-    plt.plot(x, preds)
-    plt.show()
-    '''
+    if use_plt:
+        plt.title(
+            f'shallow:{pair[1]} '
+            f'deep:{pair[0]} '
+            f'a:{model.coef_[0][0]:.3f} b:{model.intercept_[0]:.3f}')
+        plt.plot(x, y, 'o')
+        plt.plot(x, preds)
+        plt.show()
 
     diff = y - preds
 
@@ -110,12 +111,12 @@ def get_stats_list(df, mpc_pair: MPCPair, pair):
     mpc_pair.slope = model.coef_[0][0]
     mpc_pair.bias = model.intercept_[0]
     mpc_pair.std = diff.std()
-    '''
+
     print(mpc_pair.std)
 
-    plt.hist(diff, bins=25)
-    plt.show()
-    '''
+    if use_plt:
+        plt.hist(diff, bins=25)
+        plt.show()
 
 
 def write_mpc_stats(mpc_stats: List[List[List[MPCPair]]], outfile):
@@ -164,23 +165,26 @@ def read_mpc_games(pair, pair_i):
         print("caluclating empty: "+str(nb_empty))
         scores_df = raw_df[raw_df['nbEmpty'] == nb_empty]
         get_stats_list(
-            scores_df, mpc_stats[nb_empty][pair[0] - MPC_DEEP_MIN][pair_i], pair)
+            scores_df,
+            mpc_stats[nb_empty][pair[0] - MPC_DEEP_MIN][pair_i],
+            pair
+        )
 
     pickle.dump(mpc_stats, open(mpc_stats_pkl_file, "wb"))
     write_mpc_stats(mpc_stats, target_c_file)
 
 
 def compile():
-    compile_proc = subprocess.run(("nmake", "-frelease_mpc.mk"))
+    subprocess.run(("nmake", "-frelease_mpc.mk"))
 
 
 def playout(pair, matchIdx):
-    playout_proc = subprocess.run((mpc_playout_exe,
-                                   str(NB_PLAYOUT),
-                                   str(matchIdx),
-                                   str(pair[1]),
-                                   str(pair[0]),
-                                   "0"))
+    subprocess.run((mpc_playout_exe,
+                    str(NB_PLAYOUT),
+                    str(matchIdx),
+                    str(pair[1]),
+                    str(pair[0]),
+                    "0"))
 
 
 def main():

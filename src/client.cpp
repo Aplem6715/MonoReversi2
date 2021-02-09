@@ -8,13 +8,29 @@
 #define PIPE1 "\\\\.\\pipe\\monoPipe1"
 #define PIPE2 "\\\\.\\pipe\\monoPipe2"
 
-uint8 WaitMoveResponse(HANDLE pipe)
+#define ERROR_POS 127
+
+uint8 BoardDownload(HANDLE pipe, uint64_t *black, uint64_t *white)
 {
-    char buff[100];
+    uint64_t buff[5];
     DWORD readedSize;
-    if (!ReadFile(pipe, buff, sizeof(buff), &readedSize, NULL))
+    if (!ReadFile(pipe, buff, sizeof(uint64_t) * 5, &readedSize, NULL))
     {
         fprintf(stderr, "Couldn't read NamedPipe.\n");
+    }
+    *black = buff[0];
+    *white = buff[1];
+    return (uint8)buff[2];
+}
+
+uint8 WaitMoveResponse(HANDLE pipe)
+{
+    char buff[1];
+    DWORD readedSize;
+    if (!ReadFile(pipe, buff, 1, &readedSize, NULL))
+    {
+        fprintf(stderr, "Couldn't read NamedPipe.\n");
+        return ERROR_POS;
     }
     return buff[0] - 1;
 }
@@ -25,7 +41,7 @@ void SendMove(HANDLE pipe, uint8 pos)
     buff[0] = pos + 1;
     DWORD writtenSize;
 
-    if (!WriteFile(pipe, buff, strlen(buff), &writtenSize, NULL))
+    if (!WriteFile(pipe, buff, 1, &writtenSize, NULL))
     {
         fprintf(stderr, "Couldn't write NamedPipe.\n");
     }
@@ -35,7 +51,7 @@ void SendMove(HANDLE pipe, uint8 pos)
     }
 }
 
-void Match(HANDLE pipe, uint8 myColor)
+int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn)
 {
     SearchTree tree[1];
     uint64_t flip;
@@ -43,8 +59,9 @@ void Match(HANDLE pipe, uint8 myColor)
     int nbEmpty = 60;
     Board board;
 
-    InitTree(tree, 10, 16, 4, 8, 1);
+    InitTree(tree, 16, 16, 4, 8, 1, 1);
     board.Reset();
+    board.SetStones(black, white, turn);
     while (!board.IsFinished())
     {
         board.Draw();
@@ -59,7 +76,6 @@ void Match(HANDLE pipe, uint8 myColor)
         if (board.GetTurnColor() == myColor)
         {
             printf("※考え中・・・\r");
-            _sleep(750);
             // AIが着手位置を決める
             pos = Search(tree, board.GetOwn(), board.GetOpp(), 0);
             printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
@@ -77,6 +93,11 @@ void Match(HANDLE pipe, uint8 myColor)
         {
             // AIが着手位置を決める
             pos = WaitMoveResponse(pipe);
+            if (pos == ERROR_POS)
+            {
+                DeleteTree(tree);
+                return ERROR_POS;
+            }
             //printf("\n%f\n", treeWhite->score);
         }
 
@@ -85,7 +106,7 @@ void Match(HANDLE pipe, uint8 myColor)
         if (!board.IsLegalTT(pos))
         {
             printf("error!!!!!! iligal move!!\n");
-            return;
+            return ERROR_POS;
         }
 
         // 実際に着手
@@ -93,6 +114,8 @@ void Match(HANDLE pipe, uint8 myColor)
         nbEmpty--;
 
     } //end of loop:　while (!board.IsFinished())
+    DeleteTree(tree);
+    return 0;
 }
 
 int main()
@@ -131,10 +154,21 @@ int main()
         printf("白 として接続\n");
     }
 
+    uint64_t black, white;
+    uint8 turn;
+
     srand((unsigned int)time(NULL));
     HashInit();
 
-    Match(hPipe, myColor);
+    while (1)
+    {
+        turn = BoardDownload(hPipe, &black, &white);
+        if (Match(hPipe, myColor, black, white, turn) == ERROR_POS)
+        {
+            // エラー終了
+            break;
+        }
+    }
 
     CloseHandle(hPipe);
 }

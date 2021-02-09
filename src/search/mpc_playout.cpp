@@ -20,7 +20,7 @@ static uniform_real_distribution<double> rnd_prob(0.0, 1.0);
 
 void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enableLog, int matchIdxShift, uint8 shallow, uint8 deep, uint8 minimum)
 {
-    SearchTree tree[1];
+    SearchTree deepTree[1], shallowTree[1];
     Board board;
     uint8 pos;
     uint8 nbEmpty;
@@ -28,7 +28,8 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
     int i;
 
     minimum = deep > minimum ? deep : minimum;
-    InitTree(tree, 0, minimum, 4, 8, 1);
+    InitTree(shallowTree, 0, minimum, 4, 8, 1, 1);
+    InitTree(deepTree, 0, minimum, 4, 8, 1, 1);
     logFile = fopen(MPC_RAW_FILE, "a");
 
     for (i = 0; i < nbPlay; i++)
@@ -55,7 +56,7 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
             }
 
             // 着手
-            if (nbEmpty > tree->endDepth && ((nbEmpty >= 60 - randomTurns) || rnd_prob(mt) < randMoveRatio))
+            if (nbEmpty > deepTree->endDepth && ((nbEmpty >= 60 - randomTurns) || rnd_prob(mt) < randMoveRatio))
             {
                 // ランダム着手位置
                 pos = board.GetRandomPosMoveable();
@@ -63,7 +64,8 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
             }
             else
             {
-                SearchSetup(tree, board.GetOwn(), board.GetOpp());
+                SearchSetup(deepTree, board.GetOwn(), board.GetOpp());
+                SearchSetup(shallowTree, board.GetOwn(), board.GetOpp());
                 pos = MidRootWithMpcLog(tree, logFile, matchIdxShift + i, shallow, deep, minimum);
                 if (enableLog)
                     printf("探索ノード数：%zu[Node]  推定CPUスコア：%.1f\n",
@@ -80,6 +82,8 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
         printf("Game %d Finished                 \n", i);
     }
 
+    DeleteTree(deepTree);
+    DeleteTree(shallowTree);
     fclose(logFile);
 }
 
