@@ -66,10 +66,10 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
             {
                 SearchSetup(deepTree, board.GetOwn(), board.GetOpp());
                 SearchSetup(shallowTree, board.GetOwn(), board.GetOpp());
-                pos = MidRootWithMpcLog(tree, logFile, matchIdxShift + i, shallow, deep, minimum);
+                pos = MidRootWithMpcLog(deepTree, shallowTree, logFile, matchIdxShift + i, shallow, deep, minimum);
                 if (enableLog)
                     printf("探索ノード数：%zu[Node]  推定CPUスコア：%.1f\n",
-                           tree->nodeCount, tree->score / (float)(STONE_VALUE));
+                           deepTree->nodeCount, deepTree->score / (float)(STONE_VALUE));
             }
             // 合法手判定
             assert(board.IsLegalTT(pos));

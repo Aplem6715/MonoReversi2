@@ -59,7 +59,7 @@ int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn
     int nbEmpty = 60;
     Board board;
 
-    InitTree(tree, 16, 16, 4, 8, 1, 1);
+    InitTree(tree, 17, 18, 4, 8, 1, 1);
     board.Reset();
     board.SetStones(black, white, turn);
     while (!board.IsFinished())
