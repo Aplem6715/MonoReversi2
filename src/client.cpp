@@ -10,6 +10,9 @@
 
 #define ERROR_POS 127
 
+#define MID_DEPTH 15
+#define USE_MPC 1
+
 uint8 BoardDownload(HANDLE pipe, uint64_t *black, uint64_t *white)
 {
     uint64_t buff[5];
@@ -59,7 +62,7 @@ int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn
     int nbEmpty = 60;
     Board board;
 
-    InitTree(tree, 17, 18, 4, 8, 1, 1);
+    InitTree(tree, MID_DEPTH, 18, 4, 8, 1, USE_MPC);
     board.Reset();
     board.SetStones(black, white, turn);
     while (!board.IsFinished())
@@ -160,6 +163,8 @@ int main()
     srand((unsigned int)time(NULL));
     HashInit();
 
+    printf("Mid:%d MPC:%d", MID_DEPTH, USE_MPC);
+
     while (1)
     {
         turn = BoardDownload(hPipe, &black, &white);
@@ -170,5 +175,7 @@ int main()
         }
     }
 
+    getchar();
+    getchar();
     CloseHandle(hPipe);
 }
