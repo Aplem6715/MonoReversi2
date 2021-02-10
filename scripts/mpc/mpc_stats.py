@@ -14,7 +14,7 @@ MPC_DEEP_MIN = 3
 MPC_DEEP_MAX = 16
 MPC_NB_TRY = 2
 
-NB_PLAYOUT = 100
+NB_PLAYOUT = 150
 MATCH_IDX_SHIFT = 10000
 
 use_plt = False
@@ -42,8 +42,8 @@ pair_list = [
     [(12, 6)],
     [(13, 5)],
     [(14, 6)],
-    # [(15, 5)],
-    # [(16, 6)]
+    [(15, 5)],
+    [(16, 6)]
 ]
 
 
