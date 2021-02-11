@@ -9,16 +9,16 @@
 #include "../ai/regression.h"
 #include "../search/mid.h"
 #include "../search/mpc.h"
+
 #include <signal.h>
-#include <string>
 #include <assert.h>
+
+#include <string>
 #include <random>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <direct.h>
-#include <chrono>
-#include <thread>
 
 using namespace std;
 

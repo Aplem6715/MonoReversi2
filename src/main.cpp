@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <time.h>
-#include <vector>
 #include "game.h"
 #include "search/bench.h"
 #include "bit_operation.h"

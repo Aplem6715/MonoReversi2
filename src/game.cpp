@@ -1,13 +1,10 @@
 ﻿#include <fstream>
-#include <iostream>
 #include <string>
-#include <stdio.h>
-#include <chrono>
-#include <thread>
+
 #include <assert.h>
+#include <stdio.h>
 
 #include "game.h"
-//#include "ai/mcts.h"
 #include "bit_operation.h"
 
 using namespace std;
@@ -19,7 +16,7 @@ void LoadGameRecords(const char *file, vector<vector<uint8>> &records)
 
     if (infile.fail())
     {
-        cerr << "Failed to open file." << endl;
+        fprintf(stderr, "Failed to open file.");
         return;
     }
 
@@ -67,13 +64,13 @@ void GameFree(Game *game)
 
 uint8 WaitPosHumanInput(Game *game)
 {
-    string str_pos;
+    char str_pos[5];
     int x, y;
 
     while (true)
     {
-        cout << "位置を入力してください（A1～H8）:";
-        cin >> str_pos;
+        printf("位置を入力してください（A1～H8）:");
+        fgets(str_pos, 5, stdin);
         if (str_pos[0] == 'U')
         {
             return UNDO;
@@ -88,7 +85,7 @@ uint8 WaitPosHumanInput(Game *game)
         }
         else
         {
-            cout << x << "," << y << " には置けません\n";
+            printf("(%d, %d) には置けません\n", x, y);
         }
     }
 }
@@ -144,9 +141,12 @@ void GameStart(Game *game)
         BoardDraw(game->board);
         if (BoardGetMobility(game->board) == 0)
         {
-            cout << (BoardGetTurnColor(game->board) == BLACK ? "○の" : "●の")
-                 << "置く場所がありません！スキップ！\n";
-            this_thread::sleep_for(chrono::seconds(1));
+            if (BoardGetTurnColor(game->board) == BLACK)
+                printf("○の");
+            else
+                printf("●の");
+            printf("置く場所がありません！スキップ！(確認できたらEnterを！)\n");
+            getchar();
             BoardSkip(game->board);
             continue;
         }
@@ -162,19 +162,17 @@ void GameStart(Game *game)
         // 合法手判定
         if (!BoardIsLegalTT(game->board, pos))
         {
-            cout
-                << (char)('A' + pos % 8)
-                << pos / 8 + 1
-                << "には置けません\n";
+            printf("%c%dには置けません\n",
+                   (char)('A' + pos % 8),
+                   pos / 8 + 1);
             continue;
         }
         else
         {
-            cout
-                << (BoardGetTurnColor(game->board) == BLACK ? "○が" : "●が")
-                << (char)('A' + pos % 8)
-                << pos / 8 + 1
-                << "に置きました\n";
+            printf("%cが%c%dに置きました\n",
+                   (BoardGetTurnColor(game->board) == BLACK ? '○' : '●'),
+                   (char)('A' + pos % 8),
+                   pos / 8 + 1);
             game->moves.push_back(pos);
             game->turn++;
         }
@@ -188,9 +186,9 @@ void GameStart(Game *game)
     BoardDraw(game->board);
     int numBlack = BoardGetStoneCount(game->board, BLACK);
     int numWhite = BoardGetStoneCount(game->board, WHITE);
-    cout << ((numBlack == numWhite)
-                 ? "引き分け！！"
-                 : ((numBlack > numWhite) ? "○の勝ち！" : "●の勝ち！\n"));
+    printf((
+        (numBlack == numWhite) ? "引き分け！！"
+                               : ((numBlack > numWhite) ? "○の勝ち！" : "●の勝ち！\n")));
     char xAscii;
     int y;
     for (uint8 move : game->moves)
