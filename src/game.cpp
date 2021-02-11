@@ -37,17 +37,17 @@ void LoadGameRecords(const char *file, vector<vector<uint8>> &records)
 
 Game::Game(PlayerEnum black, PlayerEnum white, int mid, int end)
 {
-    this->player[Const::WHITE] = white;
-    this->player[Const::BLACK] = black;
+    this->player[WHITE] = white;
+    this->player[BLACK] = black;
 
     // AIの初期化
-    if (player[Const::WHITE] == PlayerEnum::AI)
+    if (player[WHITE] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::WHITE], mid, end, 4, 8, 1, 1, 1);
+        InitTree(&tree[WHITE], mid, end, 4, 8, 1, 1, 1);
     }
-    if (player[Const::BLACK] == PlayerEnum::AI)
+    if (player[BLACK] == PlayerEnum::AI)
     {
-        InitTree(&tree[Const::BLACK], mid, end, 4, 8, 1, 1, 1);
+        InitTree(&tree[BLACK], mid, end, 4, 8, 1, 1, 1);
     }
     Reset();
 }
@@ -55,13 +55,13 @@ Game::Game(PlayerEnum black, PlayerEnum white, int mid, int end)
 Game::~Game()
 {
     // AIの初期化
-    if (player[Const::WHITE] == PlayerEnum::AI)
+    if (player[WHITE] == PlayerEnum::AI)
     {
-        DeleteTree(&tree[Const::WHITE]);
+        DeleteTree(&tree[WHITE]);
     }
-    if (player[Const::BLACK] == PlayerEnum::AI)
+    if (player[BLACK] == PlayerEnum::AI)
     {
-        DeleteTree(&tree[Const::BLACK]);
+        DeleteTree(&tree[BLACK]);
     }
 }
 
@@ -76,7 +76,7 @@ uint8 WaitPosHumanInput()
         cin >> str_pos;
         if (str_pos[0] == 'U')
         {
-            return Const::UNDO;
+            return UNDO;
         }
 
         x = str_pos[0] - 'A';
@@ -144,7 +144,7 @@ void Game::Start()
         board.Draw();
         if (board.GetMobility() == 0)
         {
-            cout << (board.GetTurnColor() == Const::BLACK ? "○の" : "●の")
+            cout << (board.GetTurnColor() == BLACK ? "○の" : "●の")
                  << "置く場所がありません！スキップ！\n";
             this_thread::sleep_for(chrono::seconds(1));
             board.Skip();
@@ -153,7 +153,7 @@ void Game::Start()
 
         // 入力/解析の着手位置を待機
         pos = WaitPos(board.GetTurnColor());
-        if (pos == Const::UNDO)
+        if (pos == UNDO)
         {
             board.UndoUntilColorChange();
             board.UndoUntilColorChange();
@@ -171,7 +171,7 @@ void Game::Start()
         else
         {
             cout
-                << (board.GetTurnColor() == Const::BLACK ? "○が" : "●が")
+                << (board.GetTurnColor() == BLACK ? "○が" : "●が")
                 << (char)('A' + pos % 8)
                 << pos / 8 + 1
                 << "に置きました\n";
@@ -186,8 +186,8 @@ void Game::Start()
 
     // 勝敗を表示
     board.Draw();
-    int numBlack = board.GetStoneCount(Const::BLACK);
-    int numWhite = board.GetStoneCount(Const::WHITE);
+    int numBlack = board.GetStoneCount(BLACK);
+    int numWhite = board.GetStoneCount(WHITE);
     cout << ((numBlack == numWhite)
                  ? "引き分け！！"
                  : ((numBlack > numWhite) ? "○の勝ち！" : "●の勝ち！\n"));

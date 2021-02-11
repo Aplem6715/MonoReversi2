@@ -36,19 +36,16 @@ typedef float score_strict_t;
 #define SCORE_MIN (-650.0f)
 */
 
-struct Const
-{
-    static const uint8_t WHITE;
-    static const uint8_t BLACK;
-    static const uint8_t EMPTY;
+extern const uint8_t WHITE;
+extern const uint8_t BLACK;
+extern const uint8_t EMPTY;
 
-    static const uint8_t PASS;
-    static const uint8_t UNDO;
+extern const uint8_t PASS;
+extern const uint8_t UNDO;
 
-    static const uint8_t BOARD_SIZE;
+extern const uint8_t BOARD_SIZE;
 
-    static const score_t MAX_VALUE;
-};
+extern const score_t MAX_VALUE;
 
 // 1ターンでの最大着手可能位置数
 #define MAX_MOVES 32

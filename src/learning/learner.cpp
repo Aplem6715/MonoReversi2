@@ -105,7 +105,7 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
         else
         {
             useSecondMove = rnd_prob(mt) < secondMoveRatio ? 1 : 0;
-            if (board.GetTurnColor() == Const::BLACK)
+            if (board.GetTurnColor() == BLACK)
             {
                 // AIが着手位置を決める
                 pos = Search(treeBlack, board.GetOwn(), board.GetOpp(), useSecondMove);
@@ -140,7 +140,7 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
                 }
                 record.nbEmpty = nbEmpty;
                 record.stoneDiff = 1;
-                record.color = Const::BLACK;
+                record.color = BLACK;
                 // レコードを追加
                 featRecords.push_back(record);
             }
@@ -150,8 +150,8 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
 
     // 勝敗を表示
     //board.Draw();
-    int numBlack = board.GetStoneCount(Const::BLACK);
-    int numWhite = board.GetStoneCount(Const::WHITE);
+    int numBlack = board.GetStoneCount(BLACK);
+    int numWhite = board.GetStoneCount(WHITE);
     signed char stoneDiff = numBlack - numWhite;
 
     if (useRecording)
@@ -163,7 +163,7 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
         }
     }
 
-    return numBlack > numWhite ? Const::BLACK : Const::WHITE;
+    return numBlack > numWhite ? BLACK : WHITE;
 }
 
 void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
@@ -248,7 +248,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
             // 新規ウェイトを黒にしてプレイ
-            if (PlayOneGame(dummyRecords, &trees[1], &trees[0], VERSUS_RANDOM_TURNS, 0, 0, false) == Const::BLACK)
+            if (PlayOneGame(dummyRecords, &trees[1], &trees[0], VERSUS_RANDOM_TURNS, 0, 0, false) == BLACK)
             {
                 // 勝ったら加算
                 winCount++;
@@ -258,7 +258,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
             // 新規ウェイトを白にしてプレイ
-            if (PlayOneGame(dummyRecords, &trees[0], &trees[1], VERSUS_RANDOM_TURNS, 0, 0, false) == Const::WHITE)
+            if (PlayOneGame(dummyRecords, &trees[0], &trees[1], VERSUS_RANDOM_TURNS, 0, 0, false) == WHITE)
             {
                 // 勝ったら加算
                 winCount++;
@@ -362,7 +362,7 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         }
         record.nbEmpty = nbEmpty;
         record.stoneDiff = 1;
-        record.color = Const::BLACK;
+        record.color = BLACK;
         // レコードを追加
         featRecords.push_back(record);
         assert(CountBits(~(board.GetBlack() | board.GetWhite())) == nbEmpty);
@@ -371,8 +371,8 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
 
     // 勝敗を表示
     //board.Draw();
-    int numBlack = board.GetStoneCount(Const::BLACK);
-    int numWhite = board.GetStoneCount(Const::WHITE);
+    int numBlack = board.GetStoneCount(BLACK);
+    int numWhite = board.GetStoneCount(WHITE);
     signed char stoneDiff = numBlack - numWhite;
 
     // レコード終端から，リザルトが未確定のレコードに対してリザルトを設定
@@ -602,12 +602,12 @@ int main(int argc, char **argv)
 #ifdef USE_NN
     for (phase = 0; phase < NB_PHASE; phase++)
     {
-        game.GetTree(Const::WHITE)->eval->net[phase] = tree.eval->net[phase];
+        game.GetTree(WHITE)->eval->net[phase] = tree.eval->net[phase];
     }
 #elif USE_REGRESSION
     for (phase = 0; phase < NB_PHASE; phase++)
     {
-        game.GetTree(Const::WHITE)->eval->regr[phase] = tree.eval->regr[phase];
+        game.GetTree(WHITE)->eval->regr[phase] = tree.eval->regr[phase];
     }
 #endif
     game.Start();

@@ -117,7 +117,7 @@ extern "C"
 
     uint64_t DllGetStones(int color)
     {
-        if (color == Const::BLACK)
+        if (color == BLACK)
         {
             return dllBoard->GetBlack();
         }

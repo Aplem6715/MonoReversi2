@@ -131,7 +131,7 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
                 return score;
         }
-        maxScore = -Const::MAX_VALUE;
+        maxScore = -MAX_VALUE;
         lower = alpha;
         // 打つ手がある時
         while (mob != 0)
@@ -226,7 +226,7 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         {
             NextSearch = MidAlphaBetaDeep;
         }
-        maxScore = -Const::MAX_VALUE;
+        maxScore = -MAX_VALUE;
         lower = alpha;
 
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
@@ -303,7 +303,7 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
                 return score;
         }
 
-        maxScore = -Const::MAX_VALUE;
+        maxScore = -MAX_VALUE;
         while (mob != 0)
         {
             // 着手位置・反転位置を取得
@@ -402,7 +402,7 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
 
         EvaluateMoveList(tree, &moveList, tree->stones, hashData);
 
-        maxScore = -Const::MAX_VALUE;
+        maxScore = -MAX_VALUE;
 
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
         {

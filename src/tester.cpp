@@ -74,7 +74,7 @@ int Match(char *record, FILE *logFile)
     } //end of loop:　while (!board.IsFinished())
 
     fprintf(logFile, "\n");
-    return board.GetStoneCount(Const::BLACK) - board.GetStoneCount(Const::WHITE);
+    return board.GetStoneCount(BLACK) - board.GetStoneCount(WHITE);
 }
 
 int main()

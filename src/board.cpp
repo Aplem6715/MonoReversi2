@@ -11,7 +11,7 @@ uint64_t Board::GetWhite() { return white; }
 
 uint64_t Board::GetOwn()
 {
-    if (turn == Const::BLACK)
+    if (turn == BLACK)
     {
         return black;
     }
@@ -20,7 +20,7 @@ uint64_t Board::GetOwn()
 
 uint64_t Board::GetOpp()
 {
-    if (turn == Const::BLACK)
+    if (turn == BLACK)
     {
         return white;
     }
@@ -33,14 +33,14 @@ void Board::Reset()
 {
     black = 0x0000000810000000;
     white = 0x0000001008000000;
-    turn = Const::BLACK;
+    turn = BLACK;
     nbPlayed = 0;
 }
 
 uint64_t Board::PutTT(uint8 pos)
 {
     uint64_t flip;
-    if (turn == Const::BLACK)
+    if (turn == BLACK)
     {
         flip = CalcFlip64(black, white, pos);
         black = black ^ flip ^ CalcPosBit(pos);
@@ -102,7 +102,7 @@ int Board::Undo()
         hist_turn = history[nbPlayed].color;
         flip = history[nbPlayed].flip;
         pos = history[nbPlayed].pos;
-        if (hist_turn == Const::BLACK)
+        if (hist_turn == BLACK)
         {
             black = black ^ flip ^ pos;
             white = white ^ flip;
@@ -208,7 +208,7 @@ void Board::Draw()
 
 int Board::GetStoneCount(uint8 color)
 {
-    if (color == Const::BLACK)
+    if (color == BLACK)
     {
         return CountBits(black);
     }
@@ -225,7 +225,7 @@ uint64_t Board::GetMobility()
 
 uint64_t Board::GetMobility(uint8 color)
 {
-    if (color == Const::BLACK)
+    if (color == BLACK)
     {
         return CalcMobility64(black, white);
     }

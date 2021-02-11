@@ -14,7 +14,7 @@ static const HashData EMPTY_HASH_DATA = {
     0, 0,                               // stones
     0,                                  // depth
     NOMOVE_INDEX, NOMOVE_INDEX,         // moves
-    -Const::MAX_VALUE, Const::MAX_VALUE // scores
+    -MAX_VALUE, MAX_VALUE // scores
 };
 
 void HashInit()
@@ -203,14 +203,14 @@ void HashDataSaveNew(HashData *data, const Stones *stones, const uint8 bestMove,
     if (maxScore < beta)
         data->upper = maxScore;
     else
-        data->upper = Const::MAX_VALUE;
+        data->upper = MAX_VALUE;
 
     if (maxScore > alpha)
         data->lower = maxScore;
     else
-        data->lower = -Const::MAX_VALUE;
+        data->lower = -MAX_VALUE;
 
-    if (maxScore > alpha || maxScore == -Const::MAX_VALUE)
+    if (maxScore > alpha || maxScore == -MAX_VALUE)
         data->bestMove = bestMove;
     else
         data->bestMove = NOMOVE_INDEX;
@@ -240,7 +240,7 @@ void HashDataUpdate(HashData *data, const uint8 bestMove, const score_t alpha, c
     if (maxScore > alpha && maxScore > data->lower)
         data->lower = maxScore;
 
-    if ((maxScore > alpha || maxScore == -Const::MAX_VALUE) && data->bestMove != bestMove)
+    if ((maxScore > alpha || maxScore == -MAX_VALUE) && data->bestMove != bestMove)
     {
         data->secondMove = data->bestMove;
         data->bestMove = bestMove;
@@ -262,14 +262,14 @@ void HashDataLevelUP(HashData *data, const uint8 bestMove, const uint8 depth, co
     if (maxScore < beta)
         data->upper = maxScore;
     else
-        data->upper = Const::MAX_VALUE;
+        data->upper = MAX_VALUE;
 
     if (maxScore > alpha)
         data->lower = maxScore;
     else
-        data->lower = -Const::MAX_VALUE;
+        data->lower = -MAX_VALUE;
 
-    if (maxScore > alpha || maxScore == -Const::MAX_VALUE)
+    if (maxScore > alpha || maxScore == -MAX_VALUE)
     {
         data->secondMove = data->bestMove;
         data->bestMove = bestMove;

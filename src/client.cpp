@@ -125,7 +125,7 @@ int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn
 int main()
 {
     HANDLE hPipe = INVALID_HANDLE_VALUE;
-    uint8 myColor = Const::WHITE;
+    uint8 myColor = WHITE;
     hPipe = CreateFile(TEXT(PIPE1),
                        GENERIC_READ | GENERIC_WRITE,
                        0,
@@ -135,7 +135,7 @@ int main()
                        NULL);
     if (hPipe == INVALID_HANDLE_VALUE)
     {
-        myColor = Const::BLACK;
+        myColor = BLACK;
         hPipe = CreateFile(TEXT(PIPE2),
                            GENERIC_READ | GENERIC_WRITE,
                            0,
@@ -149,7 +149,7 @@ int main()
             return 1;
         }
     }
-    if (myColor == Const::BLACK)
+    if (myColor == BLACK)
     {
         printf("黒 として接続\n");
     }

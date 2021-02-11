@@ -1,12 +1,12 @@
 ﻿#include "const.h"
 
-const uint8 Const::BLACK = 0;
-const uint8 Const::WHITE = 1;
-const uint8 Const::EMPTY = 2;
+static const uint8 BLACK = 0;
+static const uint8 WHITE = 1;
+static const uint8 EMPTY = 2;
 
-const uint8 Const::PASS = 64;
-const uint8 Const::UNDO = 65;
+static const uint8 PASS = 64;
+static const uint8 UNDO = 65;
 
-const uint8 Const::BOARD_SIZE = 8;
+static const uint8 BOARD_SIZE = 8;
 
-const score_t Const::MAX_VALUE = INT16_MAX;
+static const score_t MAX_VALUE = INT16_MAX;

@@ -358,7 +358,7 @@ score_t EvalPosTable(uint64_t own, uint64_t opp)
 {
     int i = 0;
     score_t score = 0;
-    for (i = 0; i < Const::BOARD_SIZE * Const::BOARD_SIZE; i++)
+    for (i = 0; i < BOARD_SIZE * BOARD_SIZE; i++)
     {
         score += ((own >> i) & 1) * VALUE_TABLE[i];
         score -= ((opp >> i) & 1) * VALUE_TABLE[i];
