@@ -9,7 +9,7 @@
 
 static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
 
-void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, unsigned char useHash, unsigned char useMPC)
+void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, unsigned char useHash, unsigned char useMPC, unsigned char nestMPC)
 {
     tree->midDepth = midDepth;
     tree->endDepth = endDepth;
@@ -17,6 +17,7 @@ void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
     tree->endPvsDepth = endPvsDepth;
     tree->useHash = useHash;
     tree->useMPC = useMPC;
+    tree->enableMpcNest = nestMPC;
 
     EvalInit(tree->eval);
 

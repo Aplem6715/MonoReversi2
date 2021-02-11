@@ -12,6 +12,7 @@
 
 #define MID_DEPTH 15
 #define USE_MPC 1
+#define USE_NEST_MPC 1
 
 uint8 BoardDownload(HANDLE pipe, uint64_t *black, uint64_t *white)
 {
@@ -62,7 +63,7 @@ int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn
     int nbEmpty = 60;
     Board board;
 
-    InitTree(tree, MID_DEPTH, 18, 4, 8, 1, USE_MPC);
+    InitTree(tree, MID_DEPTH, 18, 4, 8, 1, USE_MPC, USE_NEST_MPC);
     board.Reset();
     board.SetStones(black, white, turn);
     while (!board.IsFinished())

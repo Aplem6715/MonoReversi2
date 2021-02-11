@@ -28,6 +28,7 @@ typedef struct SearchTree
     unsigned char useHash;
 
     unsigned char useMPC;
+    unsigned char enableMpcNest;
     uint8 nbMpcNested;
 
     /* For Stats */
@@ -43,7 +44,7 @@ typedef struct SearchTree
 typedef score_t (*SearchFunc_t)(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed);
 typedef score_t (*SearchFuncNullWindow_t)(SearchTree *tree, score_t alpha, unsigned char depth, unsigned char passed);
 
-void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, unsigned char useHash, unsigned char useMPC);
+void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, unsigned char useHash, unsigned char useMPC, unsigned char nestMPC);
 void DeleteTree(SearchTree *tree);
 void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth);
 void ResetTree(SearchTree *tree);

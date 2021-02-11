@@ -38,7 +38,10 @@ bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 d
     long bound;
     const MPCPair *mpc;
 
-    if (depth >= MPC_DEEP_MIN && depth <= MPC_DEEP_MAX && tree->nbMpcNested < MPC_NEST_MAX)
+    if (depth >= MPC_DEEP_MIN &&
+        depth <= MPC_DEEP_MAX &&
+        tree->nbMpcNested < MPC_NEST_MAX &&
+        (tree->enableMpcNest || (!tree->enableMpcNest && tree->nbMpcNested == 0)))
     {
         //thresh = MPC_T[tree->nbMpcNested];
         thresh = MPC_DEPTH_T[depth];
@@ -345,6 +348,11 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     uint8 bestMove;
     score_t score, maxScore;
     const score_t alpha = beta - 1;
+
+    if (!tree->enableMpcNest)
+    {
+        assert(tree->nbMpcNested <= 1);
+    }
 
     tree->nodeCount++;
     if (depth <= 0)

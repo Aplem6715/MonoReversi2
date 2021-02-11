@@ -28,8 +28,8 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
     int i;
 
     minimum = deep > minimum ? deep : minimum;
-    InitTree(shallowTree, 0, minimum, 4, 8, 1, 1);
-    InitTree(deepTree, 0, minimum, 4, 8, 1, 1);
+    InitTree(shallowTree, 0, minimum, 4, 8, 1, 1, 1);
+    InitTree(deepTree, 0, minimum, 4, 8, 1, 1, 1);
     logFile = fopen(MPC_RAW_FILE, "a");
 
     for (i = 0; i < nbPlay; i++)
