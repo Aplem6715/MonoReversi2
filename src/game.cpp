@@ -35,37 +35,37 @@ void LoadGameRecords(const char *file, vector<vector<uint8>> &records)
     }
 }
 
-Game::Game(PlayerEnum black, PlayerEnum white, int mid, int end)
+void GameInit(Game *game, PlayerEnum black, PlayerEnum white, int mid, int end)
 {
-    this->player[WHITE] = white;
-    this->player[BLACK] = black;
+    game->player[WHITE] = white;
+    game->player[BLACK] = black;
 
     // AIの初期化
-    if (player[WHITE] == PlayerEnum::AI)
+    if (game->player[WHITE] == PlayerEnum::AI)
     {
-        InitTree(&tree[WHITE], mid, end, 4, 8, 1, 1, 1);
+        InitTree(&game->tree[WHITE], mid, end, 4, 8, 1, 1, 1);
     }
-    if (player[BLACK] == PlayerEnum::AI)
+    if (game->player[BLACK] == PlayerEnum::AI)
     {
-        InitTree(&tree[BLACK], mid, end, 4, 8, 1, 1, 1);
+        InitTree(&game->tree[BLACK], mid, end, 4, 8, 1, 1, 1);
     }
-    Reset();
+    GameReset(game);
 }
 
-Game::~Game()
+void GameFree(Game *game)
 {
     // AIの初期化
-    if (player[WHITE] == PlayerEnum::AI)
+    if (game->player[WHITE] == PlayerEnum::AI)
     {
-        DeleteTree(&tree[WHITE]);
+        DeleteTree(&game->tree[WHITE]);
     }
-    if (player[BLACK] == PlayerEnum::AI)
+    if (game->player[BLACK] == PlayerEnum::AI)
     {
-        DeleteTree(&tree[BLACK]);
+        DeleteTree(&game->tree[BLACK]);
     }
 }
 
-uint8 WaitPosHumanInput()
+uint8 WaitPosHumanInput(Game *game)
 {
     string str_pos;
     int x, y;
@@ -93,14 +93,14 @@ uint8 WaitPosHumanInput()
     }
 }
 
-uint8 Game::WaitPosAI(uint8 color)
+uint8 WaitPosAI(Game *game, uint8 color)
 {
     uint8 input;
     printf("※考え中・・・\r");
-    input = Search(&tree[color], BoardGetOwn(board), BoardGetOpp(board), 0);
+    input = Search(&game->tree[color], BoardGetOwn(game->board), BoardGetOpp(game->board), 0);
     printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
-           tree[color].usedTime, tree[color].nodeCount, tree[color].nodeCount / tree[color].usedTime, tree[color].score / (float)(STONE_VALUE));
-    if (tree[color].isEndSearch)
+           game->tree[color].usedTime, game->tree[color].nodeCount, game->tree[color].nodeCount / game->tree[color].usedTime, game->tree[color].score / (float)(STONE_VALUE));
+    if (game->tree[color].isEndSearch)
     {
         printf("(WLD)");
     }
@@ -108,15 +108,15 @@ uint8 Game::WaitPosAI(uint8 color)
     return input;
 }
 
-uint8 Game::WaitPos(uint8 color)
+uint8 WaitPos(Game *game, uint8 color)
 {
-    if (player[color] == PlayerEnum::HUMAN)
+    if (game->player[color] == PlayerEnum::HUMAN)
     {
-        return WaitPosHumanInput();
+        return WaitPosHumanInput(game);
     }
-    else if (player[color] == PlayerEnum::AI)
+    else if (game->player[color] == PlayerEnum::AI)
     {
-        return WaitPosAI(color); // TODO
+        return WaitPosAI(game, color); // TODO
     }
     else
     {
@@ -126,41 +126,41 @@ uint8 Game::WaitPos(uint8 color)
     }
 }
 
-void Game::Reset()
+void GameReset(Game *game)
 {
-    moves.clear();
-    BoardReset(board);
-    turn = 0;
+    game->moves.clear();
+    BoardReset(game->board);
+    game->turn = 0;
 }
 
-void Game::Start()
+void GameStart(Game *game)
 {
     uint8 pos;
-    turn = 0;
-    Reset();
+    game->turn = 0;
+    GameReset(game);
 
-    while (!BoardIsFinished(board))
+    while (!BoardIsFinished(game->board))
     {
-        BoardDraw(board);
-        if (BoardGetMobility(board) == 0)
+        BoardDraw(game->board);
+        if (BoardGetMobility(game->board) == 0)
         {
-            cout << (BoardGetTurnColor(board) == BLACK ? "○の" : "●の")
+            cout << (BoardGetTurnColor(game->board) == BLACK ? "○の" : "●の")
                  << "置く場所がありません！スキップ！\n";
             this_thread::sleep_for(chrono::seconds(1));
-            BoardSkip(board);
+            BoardSkip(game->board);
             continue;
         }
 
         // 入力/解析の着手位置を待機
-        pos = WaitPos(BoardGetTurnColor(board));
+        pos = WaitPos(game, BoardGetTurnColor(game->board));
         if (pos == UNDO)
         {
-            BoardUndoUntilColorChange(board);
-            BoardUndoUntilColorChange(board);
+            BoardUndoUntilColorChange(game->board);
+            BoardUndoUntilColorChange(game->board);
         }
 
         // 合法手判定
-        if (!BoardIsLegalTT(board, pos))
+        if (!BoardIsLegalTT(game->board, pos))
         {
             cout
                 << (char)('A' + pos % 8)
@@ -171,29 +171,29 @@ void Game::Start()
         else
         {
             cout
-                << (BoardGetTurnColor(board) == BLACK ? "○が" : "●が")
+                << (BoardGetTurnColor(game->board) == BLACK ? "○が" : "●が")
                 << (char)('A' + pos % 8)
                 << pos / 8 + 1
                 << "に置きました\n";
-            moves.push_back(pos);
-            turn++;
+            game->moves.push_back(pos);
+            game->turn++;
         }
 
         // 実際に着手
-        BoardPutTT(board, pos);
+        BoardPutTT(game->board, pos);
 
-    } //end of loop:　while (!BoardIsFinished(board))
+    } //end of loop:　while (!BoardIsFinished(game->board))
 
     // 勝敗を表示
-    BoardDraw(board);
-    int numBlack = BoardGetStoneCount(board, BLACK);
-    int numWhite = BoardGetStoneCount(board, WHITE);
+    BoardDraw(game->board);
+    int numBlack = BoardGetStoneCount(game->board, BLACK);
+    int numWhite = BoardGetStoneCount(game->board, WHITE);
     cout << ((numBlack == numWhite)
                  ? "引き分け！！"
                  : ((numBlack > numWhite) ? "○の勝ち！" : "●の勝ち！\n"));
     char xAscii;
     int y;
-    for (uint8 move : moves)
+    for (uint8 move : game->moves)
     {
         CalcPosAscii(move, xAscii, y);
         printf("%c%d, ", xAscii, y);
@@ -203,7 +203,7 @@ void Game::Start()
     getchar();
 }
 
-SearchTree *Game::GetTree(uint8 color)
+SearchTree *GetTree(Game *game, uint8 color)
 {
-    return &tree[color];
+    return &game->tree[color];
 }

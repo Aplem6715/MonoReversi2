@@ -597,7 +597,8 @@ int main(int argc, char **argv)
     }
 
     int phase;
-    Game game(PlayerEnum::HUMAN, PlayerEnum::AI);
+    Game game[1];
+    GameInit(game, PlayerEnum::HUMAN, PlayerEnum::AI);
 // TODO pointer dainyu matigai
 #ifdef USE_NN
     for (phase = 0; phase < NB_PHASE; phase++)
