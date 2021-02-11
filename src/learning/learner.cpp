@@ -170,8 +170,8 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
 {
 
     SearchTree trees[2];
-    InitTree(&trees[0], midDepth, endDepth, 4, 8, 1); // 旧
-    InitTree(&trees[1], midDepth, endDepth, 4, 8, 1); // 新
+    InitTree(&trees[0], midDepth, endDepth, 4, 8, 1, 0, 0); // 旧
+    InitTree(&trees[1], midDepth, endDepth, 4, 8, 1, 0, 0); // 新
 
 #ifdef USE_NN
 #elif USE_REGRESSION
@@ -448,6 +448,7 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
     fclose(tfp);
 }
 
+/*
 void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enableLog, int matchIdxShift)
 {
     SearchTree tree[1];
@@ -457,7 +458,7 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
     FILE *logFile;
     int i;
 
-    InitTree(tree, 0, 16, 4, 8, 1);
+    InitTree(tree, 0, 16, 4, 8, 1, 0, 0);
     logFile = fopen(MPC_RAW_FILE, "a");
     fprintf(logFile, "matchIdx,nbEmpty,depth,score\n");
 
@@ -513,6 +514,7 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
 
     fclose(logFile);
 }
+*/
 
 int main(int argc, char **argv)
 {
@@ -532,7 +534,7 @@ int main(int argc, char **argv)
     idxShift = atoi(input);
 
     //SelfPlay(6, 17, false);
-    MPCSampling(nbPlay, 6, 4.0 / 60.0, 1, idxShift);
+    //MPCSampling(nbPlay, 6, 4.0 / 60.0, 1, idxShift);
     /*
     string recordDir = "./resources/record/";
     SearchTree tree;

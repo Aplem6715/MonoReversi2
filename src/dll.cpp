@@ -47,7 +47,7 @@ extern "C"
     {
         srand((unsigned int)time(NULL));
         HashInit();
-        InitTree(dllTree, 8, 20, 4, 8, 1, 0);
+        InitTree(dllTree, 8, 20, 4, 8, 1, 1, 1);
         dllBoard->Reset();
     }
 
