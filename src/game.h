@@ -16,7 +16,7 @@ class Game
 private:
     PlayerEnum player[2];
     SearchTree tree[2];
-    Board board;
+    Board board[1];
     uint8 turn;
     std::vector<uint8> moves;
 

@@ -60,20 +60,20 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
     uint8 pos;
     int nbEmpty = 60;
     uint8 useSecondMove;
-    Board board;
+    Board board[1];
     Evaluator eval[2];
     FeatureRecord record;
     size_t topOfAddition = featRecords.size();
 
-    board.Reset();
+    BoardReset(board);
     if (useRecording)
     {
-        EvalReload(&eval[0], board.GetBlack(), board.GetWhite(), OWN);
-        EvalReload(&eval[1], board.GetWhite(), board.GetBlack(), OPP);
+        EvalReload(&eval[0], BoardGetBlack(board), BoardGetWhite(board), OWN);
+        EvalReload(&eval[1], BoardGetWhite(board), BoardGetBlack(board), OPP);
     }
-    while (!board.IsFinished())
+    while (!BoardIsFinished(board))
     {
-        //board.Draw();
+        //BoardDraw(board);
         //_sleep(750);
 
         // 終盤探索は確定的に
@@ -84,14 +84,14 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
         }
 
         // 置ける場所がなかったらスキップ
-        if (board.GetMobility() == 0)
+        if (BoardGetMobility(board) == 0)
         {
             if (useRecording)
             {
                 EvalUpdatePass(&eval[0]);
                 EvalUpdatePass(&eval[1]);
             }
-            board.Skip();
+            BoardSkip(board);
             continue;
         }
 
@@ -99,31 +99,31 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
         if ((nbEmpty >= 60 - randomTurns) || rnd_prob(mt) < randMoveRatio)
         {
             // ランダム着手位置
-            pos = board.GetRandomPosMoveable();
+            pos = BoardGetRandomPosMoveable(board);
             //printf("Random!!!\n");
         }
         else
         {
             useSecondMove = rnd_prob(mt) < secondMoveRatio ? 1 : 0;
-            if (board.GetTurnColor() == BLACK)
+            if (BoardGetTurnColor(board) == BLACK)
             {
                 // AIが着手位置を決める
-                pos = Search(treeBlack, board.GetOwn(), board.GetOpp(), useSecondMove);
+                pos = Search(treeBlack, BoardGetOwn(board), BoardGetOpp(board), useSecondMove);
                 //printf("\n%f\n", treeBlack->score);
             }
             else
             {
                 // AIが着手位置を決める
-                pos = Search(treeWhite, board.GetOwn(), board.GetOpp(), useSecondMove);
+                pos = Search(treeWhite, BoardGetOwn(board), BoardGetOpp(board), useSecondMove);
                 //printf("\n%f\n", treeWhite->score);
             }
         }
 
         // 合法手判定
-        assert(board.IsLegalTT(pos));
+        assert(BoardIsLegalTT(board, pos));
 
         // 実際に着手
-        flip = board.PutTT(pos);
+        flip = BoardPutTT(board, pos);
         nbEmpty--;
 
         if (useRecording)
@@ -146,12 +146,12 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
             }
         }
 
-    } //end of loop:　while (!board.IsFinished())
+    } //end of loop:　while (!BoardIsFinished(board))
 
     // 勝敗を表示
-    //board.Draw();
-    int numBlack = board.GetStoneCount(BLACK);
-    int numWhite = board.GetStoneCount(WHITE);
+    //BoardDraw(board);
+    int numBlack = BoardGetStoneCount(board, BLACK);
+    int numWhite = BoardGetStoneCount(board, WHITE);
     signed char stoneDiff = numBlack - numWhite;
 
     if (useRecording)
@@ -319,23 +319,23 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
     uint8 pos;
     int nbEmpty = 60;
     int nbMoves = 0;
-    Board board;
+    Board board[1];
     Evaluator eval[2];
     FeatureRecord record;
     size_t topOfAddition = featRecords.size();
 
-    board.Reset();
-    EvalReload(&eval[0], board.GetBlack(), board.GetWhite(), OWN);
-    EvalReload(&eval[1], board.GetWhite(), board.GetBlack(), OPP);
-    while (!board.IsFinished())
+    BoardReset(board);
+    EvalReload(&eval[0], BoardGetBlack(board), BoardGetWhite(board), OWN);
+    EvalReload(&eval[1], BoardGetWhite(board), BoardGetBlack(board), OPP);
+    while (!BoardIsFinished(board))
     {
-        //board.Draw();
+        //BoardDraw(board);
         // 置ける場所がなかったらスキップ
-        if (board.GetMobility() == 0)
+        if (BoardGetMobility(board) == 0)
         {
             EvalUpdatePass(&eval[0]);
             EvalUpdatePass(&eval[1]);
-            board.Skip();
+            BoardSkip(board);
             continue;
         }
 
@@ -344,10 +344,10 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         nbMoves++;
 
         // 合法手判定
-        assert(board.IsLegalTT(pos));
+        assert(BoardIsLegalTT(board, pos));
 
         // 実際に着手
-        flip = board.PutTT(pos);
+        flip = BoardPutTT(board, pos);
         nbEmpty--;
         EvalUpdate(&eval[0], pos, flip);
         EvalUpdate(&eval[1], pos, flip);
@@ -365,14 +365,14 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
         record.color = BLACK;
         // レコードを追加
         featRecords.push_back(record);
-        assert(CountBits(~(board.GetBlack() | board.GetWhite())) == nbEmpty);
+        assert(CountBits(~(BoardGetBlack(board) | BoardGetWhite(board))) == nbEmpty);
 
-    } //end of loop:　while (!board.IsFinished())
+    } //end of loop:　while (!BoardIsFinished(board))
 
     // 勝敗を表示
-    //board.Draw();
-    int numBlack = board.GetStoneCount(BLACK);
-    int numWhite = board.GetStoneCount(WHITE);
+    //BoardDraw(board);
+    int numBlack = BoardGetStoneCount(board, BLACK);
+    int numWhite = BoardGetStoneCount(board, WHITE);
     signed char stoneDiff = numBlack - numWhite;
 
     // レコード終端から，リザルトが未確定のレコードに対してリザルトを設定
@@ -452,7 +452,7 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
 void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enableLog, int matchIdxShift)
 {
     SearchTree tree[1];
-    Board board;
+    Board board[1];
     uint8 pos;
     uint8 nbEmpty;
     FILE *logFile;
@@ -465,19 +465,19 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
     for (i = 0; i < nbPlay; i++)
     {
         nbEmpty = 60;
-        board.Reset();
-        while (!board.IsFinished())
+        BoardReset(board);
+        while (!BoardIsFinished(board))
         {
             if (enableLog)
             {
-                board.Draw();
+                BoardDraw(board);
                 //_sleep(500);
             }
 
             // 置ける場所がなかったらスキップ
-            if (board.GetMobility() == 0)
+            if (BoardGetMobility(board) == 0)
             {
-                board.Skip();
+                BoardSkip(board);
                 continue;
             }
 
@@ -485,30 +485,30 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
             if (nbEmpty > tree->endDepth && ((nbEmpty >= 60 - randomTurns) || rnd_prob(mt) < randMoveRatio))
             {
                 // ランダム着手位置
-                pos = board.GetRandomPosMoveable();
+                pos = BoardGetRandomPosMoveable(board);
                 //printf("Random!!!\n");
             }
             else
             {
-                SearchSetup(tree, board.GetOwn(), board.GetOpp());
+                SearchSetup(tree, BoardGetOwn(board), BoardGetOpp(board));
                 pos = MidRootWithMpcLog(tree, logFile, matchIdxShift + i);
                 if (nbEmpty <= tree->endDepth)
                 {
                     printf("EndSearching            \r");
-                    pos = Search(tree, board.GetOwn(), board.GetOpp(), 0);
+                    pos = Search(tree, BoardGetOwn(board), BoardGetOpp(board), 0);
                 }
                 if (enableLog)
                     printf("探索ノード数：%zu[Node]  推定CPUスコア：%.1f\n",
                            tree->nodeCount, tree->score / (float)(STONE_VALUE));
             }
             // 合法手判定
-            assert(board.IsLegalTT(pos));
+            assert(BoardIsLegalTT(board, pos));
 
             // 実際に着手
-            board.PutTT(pos);
+            BoardPutTT(board, pos);
             nbEmpty--;
 
-        } //end of loop:　while (!board.IsFinished())
+        } //end of loop:　while (!BoardIsFinished(board))
         printf("Game %d Finished\n", i);
     }
 
@@ -549,7 +549,7 @@ int main(int argc, char **argv)
 #endif
 
     /*
-    Board board;
+    Board board[1];
     uint64_t black, white;
     while (true)
     {

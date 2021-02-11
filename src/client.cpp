@@ -61,27 +61,27 @@ int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn
     uint64_t flip;
     uint8 pos;
     int nbEmpty = 60;
-    Board board;
+    Board board[1];
 
     InitTree(tree, MID_DEPTH, 18, 4, 8, 1, USE_MPC, USE_NEST_MPC);
-    board.Reset();
-    board.SetStones(black, white, turn);
-    while (!board.IsFinished())
+    BoardReset(board);
+    BoardSetStones(board, black, white, turn);
+    while (!BoardIsFinished(board))
     {
-        board.Draw();
+        BoardDraw(board);
 
         // 置ける場所がなかったらスキップ
-        if (board.GetMobility() == 0)
+        if (BoardGetMobility(board) == 0)
         {
-            board.Skip();
+            BoardSkip(board);
             continue;
         }
 
-        if (board.GetTurnColor() == myColor)
+        if (BoardGetTurnColor(board) == myColor)
         {
             printf("※考え中・・・\r");
             // AIが着手位置を決める
-            pos = Search(tree, board.GetOwn(), board.GetOpp(), 0);
+            pos = Search(tree, BoardGetOwn(board), BoardGetOpp(board), 0);
             printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
                    tree->usedTime, tree->nodeCount, tree->nodeCount / tree->usedTime, tree->score / (float)(STONE_VALUE));
             if (tree->isEndSearch)
@@ -107,17 +107,17 @@ int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn
 
         printf("pos: %d\n", pos);
         // 合法手判定
-        if (!board.IsLegalTT(pos))
+        if (!BoardIsLegalTT(board, pos))
         {
             printf("error!!!!!! iligal move!!\n");
             return ERROR_POS;
         }
 
         // 実際に着手
-        flip = board.PutTT(pos);
+        flip = BoardPutTT(board, pos);
         nbEmpty--;
 
-    } //end of loop:　while (!board.IsFinished())
+    } //end of loop:　while (!BoardIsFinished(board))
     DeleteTree(tree);
     return 0;
 }

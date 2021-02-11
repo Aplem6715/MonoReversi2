@@ -12,39 +12,34 @@ typedef struct History
     uint8 color;
 } History;
 
-class Board
+typedef struct Board
 {
-private:
     uint64_t white;
     uint64_t black;
     uint8 turn;
     History history[HIST_LENGTH];
     int nbPlayed;
+} Board;
 
-public:
-    Board();
-    ~Board();
+extern void Draw(uint64_t black, uint64_t white, uint64_t mobility);
 
-    static void Draw(uint64_t black, uint64_t white, uint64_t mobility);
-
-    uint64_t GetBlack();
-    uint64_t GetWhite();
-    uint64_t GetOwn();
-    uint64_t GetOpp();
-    uint64_t GetMobility();
-    uint64_t GetMobility(uint8 color);
-    uint8 GetTurnColor();
-    void Reset();
-    void SetStones(uint64_t black, uint64_t white, uint8 turn);
-    uint64_t PutTT(uint8 pos);
-    uint8 GetRandomPosMoveable();
-    int Undo();
-    void UndoUntilColorChange();
-    void Skip();
-    void Draw();
-    int GetStoneCount(uint8 color);
-    bool IsLegalTT(uint8 pos);
-    bool IsFinished();
-};
+uint64_t BoardGetBlack(Board *board);
+uint64_t BoardGetWhite(Board *board);
+uint64_t BoardGetOwn(Board *board);
+uint64_t BoardGetOpp(Board *board);
+uint64_t BoardGetMobility(Board *board);
+uint64_t BoardGetMobility(Board *board, uint8 color);
+uint8 BoardGetTurnColor(Board *board);
+void BoardReset(Board *board);
+void BoardSetStones(Board *board, uint64_t black, uint64_t white, uint8 turn);
+uint64_t BoardPutTT(Board *board, uint8 pos);
+uint8 BoardGetRandomPosMoveable(Board *board);
+int BoardUndo(Board *board);
+void BoardUndoUntilColorChange(Board *board);
+void BoardSkip(Board *board);
+void BoardDraw(Board *board);
+int BoardGetStoneCount(Board *board, uint8 color);
+bool BoardIsLegalTT(Board *board, uint8 pos);
+bool BoardIsFinished(Board *board);
 
 #endif

@@ -97,7 +97,7 @@ uint8 Game::WaitPosAI(uint8 color)
 {
     uint8 input;
     printf("※考え中・・・\r");
-    input = Search(&tree[color], board.GetOwn(), board.GetOpp(), 0);
+    input = Search(&tree[color], BoardGetOwn(board), BoardGetOpp(board), 0);
     printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
            tree[color].usedTime, tree[color].nodeCount, tree[color].nodeCount / tree[color].usedTime, tree[color].score / (float)(STONE_VALUE));
     if (tree[color].isEndSearch)
@@ -129,7 +129,7 @@ uint8 Game::WaitPos(uint8 color)
 void Game::Reset()
 {
     moves.clear();
-    board.Reset();
+    BoardReset(board);
     turn = 0;
 }
 
@@ -139,28 +139,28 @@ void Game::Start()
     turn = 0;
     Reset();
 
-    while (!board.IsFinished())
+    while (!BoardIsFinished(board))
     {
-        board.Draw();
-        if (board.GetMobility() == 0)
+        BoardDraw(board);
+        if (BoardGetMobility(board) == 0)
         {
-            cout << (board.GetTurnColor() == BLACK ? "○の" : "●の")
+            cout << (BoardGetTurnColor(board) == BLACK ? "○の" : "●の")
                  << "置く場所がありません！スキップ！\n";
             this_thread::sleep_for(chrono::seconds(1));
-            board.Skip();
+            BoardSkip(board);
             continue;
         }
 
         // 入力/解析の着手位置を待機
-        pos = WaitPos(board.GetTurnColor());
+        pos = WaitPos(BoardGetTurnColor(board));
         if (pos == UNDO)
         {
-            board.UndoUntilColorChange();
-            board.UndoUntilColorChange();
+            BoardUndoUntilColorChange(board);
+            BoardUndoUntilColorChange(board);
         }
 
         // 合法手判定
-        if (!board.IsLegalTT(pos))
+        if (!BoardIsLegalTT(board, pos))
         {
             cout
                 << (char)('A' + pos % 8)
@@ -171,7 +171,7 @@ void Game::Start()
         else
         {
             cout
-                << (board.GetTurnColor() == BLACK ? "○が" : "●が")
+                << (BoardGetTurnColor(board) == BLACK ? "○が" : "●が")
                 << (char)('A' + pos % 8)
                 << pos / 8 + 1
                 << "に置きました\n";
@@ -180,14 +180,14 @@ void Game::Start()
         }
 
         // 実際に着手
-        board.PutTT(pos);
+        BoardPutTT(board, pos);
 
-    } //end of loop:　while (!board.IsFinished())
+    } //end of loop:　while (!BoardIsFinished(board))
 
     // 勝敗を表示
-    board.Draw();
-    int numBlack = board.GetStoneCount(BLACK);
-    int numWhite = board.GetStoneCount(WHITE);
+    BoardDraw(board);
+    int numBlack = BoardGetStoneCount(board, BLACK);
+    int numWhite = BoardGetStoneCount(board, WHITE);
     cout << ((numBlack == numWhite)
                  ? "引き分け！！"
                  : ((numBlack > numWhite) ? "○の勝ち！" : "●の勝ち！\n"));

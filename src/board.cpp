@@ -3,140 +3,7 @@
 #include "board.h"
 #include "bit_operation.h"
 
-Board::Board(/* args */){};
-Board::~Board(){};
-
-uint64_t Board::GetBlack() { return black; }
-uint64_t Board::GetWhite() { return white; }
-
-uint64_t Board::GetOwn()
-{
-    if (turn == BLACK)
-    {
-        return black;
-    }
-    return white;
-}
-
-uint64_t Board::GetOpp()
-{
-    if (turn == BLACK)
-    {
-        return white;
-    }
-    return black;
-}
-
-uint8 Board::GetTurnColor() { return turn; }
-
-void Board::Reset()
-{
-    black = 0x0000000810000000;
-    white = 0x0000001008000000;
-    turn = BLACK;
-    nbPlayed = 0;
-}
-
-uint64_t Board::PutTT(uint8 pos)
-{
-    uint64_t flip;
-    if (turn == BLACK)
-    {
-        flip = CalcFlip64(black, white, pos);
-        black = black ^ flip ^ CalcPosBit(pos);
-        white = white ^ flip;
-    }
-    else
-    {
-        flip = CalcFlip64(white, black, pos);
-        black = black ^ flip;
-        white = white ^ flip ^ CalcPosBit(pos);
-    }
-    // 着手情報を保存（どっちが，どこに打ち，どこを反転させたか）
-    history[nbPlayed].color = turn;
-    history[nbPlayed].pos = pos;
-    history[nbPlayed].flip = flip;
-    nbPlayed++;
-    turn ^= 1;
-    return flip;
-}
-
-void Board::SetStones(uint64_t black, uint64_t white, uint8 turn)
-{
-    this->black = black;
-    this->white = white;
-    this->turn = turn;
-}
-
-uint8 Board::GetRandomPosMoveable()
-{
-    uint64_t mob = GetMobility();
-    if (mob == 0)
-        return 0;
-    uint64_t posBit = 0x0000000000000001;
-    uint8 nbMobs = CountBits(mob);
-    uint8 target = rand() % nbMobs + 1;
-    int ignored = 0;
-    while (1)
-    {
-        if ((posBit & mob) != 0)
-        {
-            ignored++;
-            if (ignored == target)
-            {
-                break;
-            }
-        }
-        posBit <<= 1;
-    }
-    return CalcPosIndex(posBit);
-}
-
-int Board::Undo()
-{
-    uint64_t flip, pos;
-    uint8 hist_turn;
-    if (nbPlayed > 0)
-    {
-        nbPlayed--;
-        hist_turn = history[nbPlayed].color;
-        flip = history[nbPlayed].flip;
-        pos = history[nbPlayed].pos;
-        if (hist_turn == BLACK)
-        {
-            black = black ^ flip ^ pos;
-            white = white ^ flip;
-        }
-        else
-        {
-            black = black ^ flip;
-            white = white ^ flip ^ pos;
-        }
-        this->turn = hist_turn;
-    }
-    else
-    {
-        printf("これ以上戻せません\n");
-        return 0;
-    }
-    return 1;
-}
-
-void Board::UndoUntilColorChange()
-{
-    uint8 prev_turn = turn;
-    while (prev_turn == turn)
-    {
-        Undo();
-    }
-}
-
-void Board::Skip()
-{
-    turn ^= 1;
-}
-
-void Board::Draw(uint64_t black, uint64_t white, uint64_t mobility)
+static void Draw(uint64_t black, uint64_t white, uint64_t mobility)
 {
     uint64_t cursor = 0x0000000000000001;
     printf("＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋\n");
@@ -201,50 +68,180 @@ void Board::Draw(uint64_t black, uint64_t white, uint64_t mobility)
     printf("○:%d  ●:%d\n", CountBits(black), CountBits(white));
 }
 
-void Board::Draw()
+uint64_t BoardGetBlack(Board *board) { return board->black; }
+uint64_t BoardGetWhite(Board *board) { return board->white; }
+
+uint64_t BoardGetOwn(Board *board)
 {
-    Draw(black, white, GetMobility());
+    if (board->turn == BLACK)
+    {
+        return board->black;
+    }
+    return board->white;
 }
 
-int Board::GetStoneCount(uint8 color)
+uint64_t BoardGetOpp(Board *board)
 {
-    if (color == BLACK)
+    if (board->turn == BLACK)
     {
-        return CountBits(black);
+        return board->white;
+    }
+    return board->black;
+}
+
+uint8 BoardGetTurnColor(Board *board) { return board->turn; }
+
+void BoardReset(Board *board)
+{
+    board->black = 0x0000000810000000;
+    board->white = 0x0000001008000000;
+    board->turn = BLACK;
+    board->nbPlayed = 0;
+}
+
+uint64_t BoardPutTT(Board *board, uint8 pos)
+{
+    uint64_t flip;
+    if (board->turn == BLACK)
+    {
+        flip = CalcFlip64(board->black, board->white, pos);
+        board->black = board->black ^ flip ^ CalcPosBit(pos);
+        board->white = board->white ^ flip;
     }
     else
     {
-        return CountBits(white);
+        flip = CalcFlip64(board->white, board->black, pos);
+        board->black = board->black ^ flip;
+        board->white = board->white ^ flip ^ CalcPosBit(pos);
     }
+    // 着手情報を保存（どっちが，どこに打ち，どこを反転させたか）
+    board->history[board->nbPlayed].color = board->turn;
+    board->history[board->nbPlayed].pos = pos;
+    board->history[board->nbPlayed].flip = flip;
+    board->nbPlayed++;
+    board->turn ^= 1;
+    return flip;
 }
 
-uint64_t Board::GetMobility()
+void BoardSetStones(Board *board, uint64_t black, uint64_t white, uint8 turn)
 {
-    return GetMobility(turn);
+    board->black = black;
+    board->white = white;
+    board->turn = turn;
 }
 
-uint64_t Board::GetMobility(uint8 color)
+uint8 BoardGetRandomPosMoveable(Board *board)
 {
-    if (color == BLACK)
+    uint64_t mob = BoardGetMobility(board);
+    if (mob == 0)
+        return 0;
+    uint64_t posBit = 0x0000000000000001;
+    uint8 nbMobs = CountBits(mob);
+    uint8 target = rand() % nbMobs + 1;
+    int ignored = 0;
+    while (1)
     {
-        return CalcMobility64(black, white);
+        if ((posBit & mob) != 0)
+        {
+            ignored++;
+            if (ignored == target)
+            {
+                break;
+            }
+        }
+        posBit <<= 1;
+    }
+    return CalcPosIndex(posBit);
+}
+
+int BoardUndo(Board *board)
+{
+    uint64_t flip, pos;
+    uint8 hist_turn;
+    if (board->nbPlayed > 0)
+    {
+        board->nbPlayed--;
+        hist_turn = board->history[board->nbPlayed].color;
+        flip = board->history[board->nbPlayed].flip;
+        pos = board->history[board->nbPlayed].pos;
+        if (hist_turn == BLACK)
+        {
+            board->black = board->black ^ flip ^ pos;
+            board->white = board->white ^ flip;
+        }
+        else
+        {
+            board->black = board->black ^ flip;
+            board->white = board->white ^ flip ^ pos;
+        }
+        board->turn = hist_turn;
     }
     else
     {
-        return CalcMobility64(white, black);
+        printf("これ以上戻せません\n");
+        return 0;
+    }
+    return 1;
+}
+
+void BoardUndoUntilColorChange(Board *board)
+{
+    uint8 prev_turn = board->turn;
+    while (prev_turn == board->turn)
+    {
+        BoardUndo(board);
     }
 }
 
-bool Board::IsLegalTT(uint8 pos)
+void BoardSkip(Board *board)
 {
-    return (GetMobility() & CalcPosBit(pos)) != 0;
+    board->turn ^= 1;
 }
 
-bool Board::IsFinished()
+void BoardDraw(Board *board)
 {
-    if (nbPlayed >= HIST_LENGTH)
+    Draw(board->black, board->white, BoardGetMobility(board));
+}
+
+int BoardGetStoneCount(Board *board, uint8 color)
+{
+    if (color == BLACK)
+    {
+        return CountBits(board->black);
+    }
+    else
+    {
+        return CountBits(board->white);
+    }
+}
+
+uint64_t BoardGetMobility(Board *board)
+{
+    return BoardGetMobility(board, board->turn);
+}
+
+uint64_t BoardGetMobility(Board *board, uint8 color)
+{
+    if (color == BLACK)
+    {
+        return CalcMobility64(board->black, board->white);
+    }
+    else
+    {
+        return CalcMobility64(board->white, board->black);
+    }
+}
+
+bool BoardIsLegalTT(Board *board, uint8 pos)
+{
+    return (BoardGetMobility(board) & CalcPosBit(pos)) != 0;
+}
+
+bool BoardIsFinished(Board *board)
+{
+    if (board->nbPlayed >= HIST_LENGTH)
     {
         return true;
     }
-    return (CalcMobility64(black, white) == 0) && (CalcMobility64(white, black) == 0);
+    return (CalcMobility64(board->black, board->white) == 0) && (CalcMobility64(board->white, board->black) == 0);
 }
