@@ -1,3 +1,24 @@
+/**
+ * @file end.c
+ * @author Daichi Sato
+ * @brief 終盤探索機能の定義
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * 終盤探索では終局まで探索を行い，最善進行と石差を計算する。
+ * 最善進行を探索するため，どのアルゴリズムを用いても結果は同じにならなければいけない。
+ * デバッグしやすくてありがたい。
+ * 
+ * メインとなるアルゴリズム：
+ * ・NullWindowSearch(NWSと略す。αβ探索のWindowを1にして探索。高速にα以上or以下を判別できる)
+ * ・PVS(NWSを用いて高速に探索する深さ優先探索アルゴリズム)
+ * ・反復深化(だんだん深く探索)
+ * ・TranspositionTable（置換表・ハッシュ）
+ * ・MoveOrdering(探索順番の並び替え)
+ */
+
 #include "end.h"
 #include "search.h"
 #include "hash.h"

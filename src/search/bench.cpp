@@ -1,4 +1,14 @@
-﻿
+﻿/**
+ * @file bench.cpp
+ * @author Daichi Sato
+ * @brief 探索ベンチマーク機能の定義
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ */
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -6,7 +16,7 @@
 
 #include "bench.hpp"
 #include "../board.h"
-#include "../game.hpp"
+#include "../game.h"
 #include "../bit_operation.h"
 
 using namespace std;
@@ -67,7 +77,7 @@ void MakeBench(int nbGames, uint8 nbRandomTurn, string benchFile)
 
         for (turn = 0; turn < nbRandomTurn; turn++)
         {
-            CalcPosAscii(moves[turn], xAscii, y);
+            CalcPosAscii(moves[turn], &xAscii, &y);
             outfile << xAscii << y;
         }
 
@@ -104,7 +114,7 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
         pos = Search(&tree, BoardGetOwn(board), BoardGetOpp(board), 0);
         BoardPutTT(board, pos);
         BoardDraw(board);
-        CalcPosAscii(pos, xAscii, y);
+        CalcPosAscii(pos, &xAscii, &y);
 
         {
             logfile << (int)tree.depth << ","
@@ -157,7 +167,7 @@ void BenchSearching(vector<unsigned char> depths, unsigned char useHash, unsigne
         {
             char x;
             int y;
-            CalcPosAscii(move, x, y);
+            CalcPosAscii(move, &x, &y);
             logfile << x << y;
         }
         logfile << "\n";

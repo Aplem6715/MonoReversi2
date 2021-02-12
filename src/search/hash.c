@@ -1,4 +1,23 @@
-﻿
+﻿/**
+ * @file hash.c
+ * @author Daichi Sato
+ * @brief TranspositionTable(置換表)の実装
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * ハッシュを用いた高速検索可能な置換表
+ * 一度探索したことがある盤面の過去の情報を記録しておき，
+ * 有効に再利用することができる。
+ * 
+ * ハッシュ関数：
+ * 64x2bit盤面を1byteごとに分割し，
+ * それぞれに対して乱数を振り分け（起動時に各バイト値(0-255)に乱数振り分けをしておく），
+ * 取得された16個の乱数をXORで統合することでハッシュ値を生成。
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -14,10 +33,10 @@
 uint64_t RawHash[8 * 2][1 << 8];
 
 static const HashData EMPTY_HASH_DATA = {
-    0, 0,                               // stones
-    0,                                  // depth
-    NOMOVE_INDEX, NOMOVE_INDEX,         // moves
-    -MAX_VALUE, MAX_VALUE // scores
+    0, 0,                       // stones
+    0,                          // depth
+    NOMOVE_INDEX, NOMOVE_INDEX, // moves
+    -MAX_VALUE, MAX_VALUE       // scores
 };
 
 void HashInit()
