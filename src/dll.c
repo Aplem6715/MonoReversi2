@@ -1,4 +1,19 @@
-﻿#include <time.h>
+﻿
+/**
+ * @file dll.c
+ * @author Daichi Sato
+ * @brief GUI用のDLL関数郡定義
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * C#-WPFで作成したGUIプログラムにDLLとして読み込ませるための関数。
+ * グローバル変数としてBoardと探索ツリー，ログ出力用のコールバックを保持する。
+ * 
+ */
+
+#include <time.h>
 #include "search/search.h"
 #include "board.h"
 #include "bit_operation.h"
@@ -9,133 +24,130 @@
 #define DLLAPI __declspec(dllexport)
 #endif
 
-extern "C"
+enum GUI_TextColor
 {
-    enum GUI_TextColor
+    GUI_BLACK,
+    GUI_WHITE,
+    GUI_LIME,
+    GUI_ORANGE,
+    GUI_RED
+};
+
+typedef const void(__stdcall *GUI_Log)(int knd, char *str);
+
+GUI_Log GUI_Print;
+SearchTree dllTree[1];
+Board dllBoard[1];
+
+DLLAPI void DllInit();
+DLLAPI void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth);
+DLLAPI int DllSearch(double *value);
+
+DLLAPI void DllBoardReset();
+DLLAPI int DllPut(int pos);
+DLLAPI int DllStoneCount(int color);
+DLLAPI int DllUndo();
+DLLAPI int DllIsGameEnd();
+DLLAPI int DllIsLegal(int pos);
+DLLAPI uint64_t DllGetMobility();
+DLLAPI uint64_t DllGetMobilityC(int color);
+DLLAPI uint64_t DllGetStones(int color);
+
+DLLAPI void SetCallBack(GUI_Log printCallback);
+DLLAPI void DllShowMsg();
+
+void DllInit()
+{
+    srand((unsigned int)time(NULL));
+    HashInit();
+    InitTree(dllTree, 8, 20, 4, 8, 1, 1, 1);
+    BoardReset(dllBoard);
+}
+
+void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth)
+{
+    ConfigTree(dllTree, midDepth, endDepth);
+}
+
+int DllSearch(double *value)
+{
+    return Search(dllTree, BoardGetOwn(dllBoard), BoardGetOpp(dllBoard), 0);
+}
+
+void DllBoardReset()
+{
+    ResetTree(dllTree);
+    BoardReset(dllBoard);
+}
+
+int DllPut(int pos)
+{
+    if (BoardIsLegalTT(dllBoard, pos))
     {
-        GUI_BLACK,
-        GUI_WHITE,
-        GUI_LIME,
-        GUI_ORANGE,
-        GUI_RED
-    };
-
-    typedef const void(__stdcall *GUI_Log)(int knd, char *str);
-
-    GUI_Log GUI_Print;
-    SearchTree dllTree[1];
-    Board dllBoard[1];
-
-    DLLAPI void DllInit();
-    DLLAPI void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth);
-    DLLAPI int DllSearch(double *value);
-
-    DLLAPI void DllBoardReset();
-    DLLAPI int DllPut(int pos);
-    DLLAPI int DllStoneCount(int color);
-    DLLAPI int DllUndo();
-    DLLAPI int DllIsGameEnd();
-    DLLAPI int DllIsLegal(int pos);
-    DLLAPI uint64_t DllGetMobility();
-    DLLAPI uint64_t DllGetMobilityC(int color);
-    DLLAPI uint64_t DllGetStones(int color);
-
-    DLLAPI void SetCallBack(GUI_Log printCallback);
-    DLLAPI void DllShowMsg();
-
-    void DllInit()
-    {
-        srand((unsigned int)time(NULL));
-        HashInit();
-        InitTree(dllTree, 8, 20, 4, 8, 1, 1, 1);
-        BoardReset(dllBoard);
-    }
-
-    void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth)
-    {
-        ConfigTree(dllTree, midDepth, endDepth);
-    }
-
-    int DllSearch(double *value)
-    {
-        return Search(dllTree, BoardGetOwn(dllBoard), BoardGetOpp(dllBoard), 0);
-    }
-
-    void DllBoardReset()
-    {
-        ResetTree(dllTree);
-        BoardReset(dllBoard);
-    }
-
-    int DllPut(int pos)
-    {
-        if (BoardIsLegalTT(dllBoard, pos))
+        BoardPutTT(dllBoard, pos);
+        if (BoardGetMobility(dllBoard) == 0)
         {
-            BoardPutTT(dllBoard, pos);
-            if (BoardGetMobility(dllBoard) == 0)
-            {
-                BoardSkip(dllBoard);
-            }
-            return 1;
+            BoardSkip(dllBoard);
         }
-        return 0;
+        return 1;
     }
+    return 0;
+}
 
-    int DllStoneCount(int color)
-    {
-        return BoardGetStoneCount(dllBoard, color);
-    }
+int DllStoneCount(int color)
+{
+    return BoardGetStoneCount(dllBoard, color);
+}
 
-    int DllUndo()
+int DllUndo()
+{
+    if (BoardUndo(dllBoard))
     {
-        if (BoardUndo(dllBoard))
-        {
-            return 1;
-        }
-        return 0;
+        return 1;
     }
+    return 0;
+}
 
-    int DllIsGameEnd()
-    {
-        return BoardIsFinished(dllBoard);
-    }
+int DllIsGameEnd()
+{
+    return BoardIsFinished(dllBoard);
+}
 
-    int DllIsLegal(int pos)
-    {
-        return BoardIsLegalTT(dllBoard, pos);
-    }
+int DllIsLegal(int pos)
+{
+    return BoardIsLegalTT(dllBoard, pos);
+}
 
-    uint64_t DllGetMobility()
-    {
-        return BoardGetMobility(dllBoard);
-    }
+uint64_t DllGetMobility()
+{
+    return BoardGetMobility(dllBoard);
+}
 
-    uint64_t DllGetMobilityC(int color)
-    {
-        return BoardGetColorsMobility(dllBoard, color);
-    }
+uint64_t DllGetMobilityC(int color)
+{
+    return BoardGetColorsMobility(dllBoard, color);
+}
 
-    uint64_t DllGetStones(int color)
+uint64_t DllGetStones(int color)
+{
+    if (color == BLACK)
     {
-        if (color == BLACK)
-        {
-            return BoardGetBlack(dllBoard);
-        }
-        else
-        {
-            return BoardGetWhite(dllBoard);
-        }
+        return BoardGetBlack(dllBoard);
     }
+    else
+    {
+        return BoardGetWhite(dllBoard);
+    }
+}
 
-    void SetCallBack(GUI_Log printCallback)
-    {
-        GUI_Print = printCallback;
-        GUI_Print(GUI_ORANGE, "System: Callback Initialized");
-    }
+void SetCallBack(GUI_Log printCallback)
+{
+    GUI_Print = printCallback;
+    GUI_Print(GUI_ORANGE, "System: Callback Initialized");
+}
 
-    void DllShowMsg()
-    {
-        GUI_Print(GUI_LIME, dllTree->msg);
-    }
+void DllShowMsg()
+{
+    GUI_Print(GUI_LIME, dllTree->msg);
 }
 #endif

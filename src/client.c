@@ -1,3 +1,17 @@
+/**
+ * @file client.c
+ * @author Daichi Sato
+ * @brief クライアントとして動作する際のメイン部
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * AI強化後の効果確認のためにサーバー上で対戦する。
+ * 公開用ではなく確認用のため，通信などは適当な作りになっている。
+ * 
+ */
+
 #include <stdio.h>
 #include <Windows.h>
 #include <assert.h>

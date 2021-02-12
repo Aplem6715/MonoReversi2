@@ -1,3 +1,13 @@
+/**
+ * @file mpc_playout.cpp
+ * @author Daichi Sato
+ * @brief 自己対戦を繰り返し，深度別に評価関数の誤差の統計を取得する。
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ */
 
 #define _CRT_SECURE_NO_WARNINGS
 

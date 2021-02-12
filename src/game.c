@@ -1,4 +1,19 @@
 ﻿
+/**
+ * @file game.c
+ * @author Daichi Sato
+ * @brief CUIでの対戦の管理・処理を行う
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * GameInit()を呼び出した後にGameStart()を実行することでゲームが開始される。
+ * Game構造体にゲーム進行のための情報が保持される。
+ * 人対人や，人対CPUの対戦が可能。
+ * 
+ */
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
