@@ -1,4 +1,17 @@
-﻿
+﻿/**
+ * @file game_record.cpp
+ * @author Daichi Sato
+ * @brief 対戦結果からいくつかのデータを取得する
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * メインはヘッダーにあるGameRecord関連の構造体
+ * sampling関数はおまけの便利機能的位置
+ * 
+ */
+
 extern "C"
 {
 #include "../const.h"
