@@ -1,6 +1,8 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
+extern "C"
+{
 #include "../board.h"
 #include "../bit_operation.h"
 #include "../search/search.h"
@@ -9,6 +11,7 @@
 #include "../ai/regression.h"
 #include "../search/mid.h"
 #include "../search/mpc.h"
+}
 
 #include <signal.h>
 #include <assert.h>

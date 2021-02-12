@@ -36,7 +36,7 @@ int Match(char *record, FILE *logFile)
     int i = 0;
     while (record[i] != '\0')
     {
-        pos = CalcPosIndex(&record[i]);
+        pos = PosIndexFromAscii(&record[i]);
         BoardPutTT(board, pos);
         CalcPosAscii(pos, posX, posY);
         fprintf(logFile, "%c%d", posX, posY);

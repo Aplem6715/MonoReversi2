@@ -88,18 +88,10 @@
 #define FEAT_BOX10_7 44
 #define FEAT_BOX10_8 45
 
-extern const uint32_t FeatMaxIndex[];
-extern const uint8 FeatDigits[];
+extern const uint32_t FeatMaxIndex[46];
+extern const uint8 FeatDigits[46];
 
-const score_t VALUE_TABLE[] = {
-    20, 4, 18, 12, 12, 18, 4, 20,
-    4, 1, 6, 8, 8, 6, 1, 4,
-    18, 6, 15, 10, 10, 15, 6, 18,
-    12, 8, 10, 0, 0, 10, 8, 12,
-    12, 8, 10, 0, 0, 10, 8, 12,
-    18, 6, 15, 10, 10, 15, 6, 18,
-    4, 1, 6, 8, 8, 6, 1, 4,
-    20, 4, 18, 12, 12, 18, 4, 20};
+extern const score_t VALUE_TABLE[64];
 
 typedef struct Evaluator
 {

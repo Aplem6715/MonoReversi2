@@ -1,4 +1,8 @@
-﻿#include "game_record.h"
+﻿
+extern "C"
+{
+#include "game_record.hpp"
+}
 #include <stdlib.h>
 #include <vector>
 

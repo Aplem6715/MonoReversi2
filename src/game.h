@@ -1,15 +1,15 @@
+
 #ifndef GAME_DEFINED
 #define GAME_DEFINED
 
-#include <vector>
 #include "board.h"
 #include "search/search.h"
 
-enum PlayerEnum
+typedef enum PlayerEnum
 {
     HUMAN,
     AI,
-};
+} PlayerEnum;
 
 typedef struct Game
 {
@@ -17,10 +17,8 @@ typedef struct Game
     SearchTree tree[2];
     Board board[1];
     uint8 turn;
-    std::vector<uint8> moves;
+    uint8 moves[60];
 } Game;
-
-void LoadGameRecords(const char *file, std::vector<std::vector<uint8>> &moves);
 
 void GameInit(Game *game, PlayerEnum black, PlayerEnum white, int mid, int end);
 void GameFree(Game *game);

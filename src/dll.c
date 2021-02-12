@@ -112,7 +112,7 @@ extern "C"
 
     uint64_t DllGetMobilityC(int color)
     {
-        return BoardGetMobility(dllBoard, color);
+        return BoardGetColorsMobility(dllBoard, color);
     }
 
     uint64_t DllGetStones(int color)

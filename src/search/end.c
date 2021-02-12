@@ -1,8 +1,10 @@
 #include "end.h"
+#include "search.h"
 #include "hash.h"
 #include "moves.h"
 #include "../ai/eval.h"
 #include "../bit_operation.h"
+#include "../const.h"
 #include <assert.h>
 
 inline score_t Judge(const SearchTree *tree)
@@ -164,7 +166,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
             // 着手位置・反転位置を取得
             pos = GetLSB(mob);
             mob ^= pos;
-            posIdx = CalcPosIndex(pos);
+            posIdx = PosIndexFromBit(pos);
             flip = CalcFlip(tree->stones, posIdx);
 
             SearchUpdateEndDeep(tree, pos, flip);
@@ -248,7 +250,7 @@ score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
             // 着手位置・反転位置を取得
             pos = GetLSB(mob);
             mob ^= pos;
-            posIdx = CalcPosIndex(pos);
+            posIdx = PosIndexFromBit(pos);
             flip = CalcFlip(tree->stones, posIdx);
 
             SearchUpdateEndDeep(tree, pos, flip);

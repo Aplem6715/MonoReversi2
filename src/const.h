@@ -1,18 +1,17 @@
 #ifndef CONST_DEFINED
 #define CONST_DEFINED
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 /* stdintの整数型へ変更
 typedef unsigned long long uint64_t;
 typedef unsigned int uint32;
 typedef unsigned short uint16;
 */
-typedef unsigned char uint8;
-
 typedef int16_t score_t;
 typedef int16_t score_strict_t;
+typedef unsigned char uint8;
 // 1石の価値 (signed 16bit)
 #define STONE_VALUE (100)
 // 評価関数の最大値 (50 x 64[stone])
@@ -22,6 +21,7 @@ typedef int16_t score_strict_t;
 #define SCORE_MAX (6500)
 #define SCORE_MIN (-6500)
 
+#define MAX_VALUE INT16_MAX
 /*
 typedef float score_t;
 typedef float score_strict_t;
@@ -36,16 +36,15 @@ typedef float score_strict_t;
 #define SCORE_MIN (-650.0f)
 */
 
-extern const uint8_t WHITE;
-extern const uint8_t BLACK;
-extern const uint8_t EMPTY;
+extern const uint8 BLACK;
+extern const uint8 WHITE;
+extern const uint8 EMPTY;
 
-extern const uint8_t PASS;
-extern const uint8_t UNDO;
+extern const uint8 PASS;
+extern const uint8 UNDO;
 
-extern const uint8_t BOARD_SIZE;
+extern const uint8 BOARD_SIZE;
 
-extern const score_t MAX_VALUE;
 
 // 1ターンでの最大着手可能位置数
 #define MAX_MOVES 32

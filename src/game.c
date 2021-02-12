@@ -1,36 +1,13 @@
-﻿#include <fstream>
-#include <string>
-
+﻿
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
+#include "const.h"
 #include "game.h"
+#include "board.h"
+#include "search/search.h"
 #include "bit_operation.h"
-
-using namespace std;
-
-void LoadGameRecords(const char *file, vector<vector<uint8>> &records)
-{
-    ifstream infile(file);
-    string str;
-
-    if (infile.fail())
-    {
-        fprintf(stderr, "Failed to open file.");
-        return;
-    }
-
-    vector<uint8> moves;
-    while (getline(infile, str))
-    {
-        moves.clear();
-        for (size_t i = 0; i < str.length(); i += 2)
-        {
-            moves.push_back(CalcPosIndex(str.substr(i, 2).c_str()));
-        }
-        records.push_back(moves);
-    }
-}
 
 void GameInit(Game *game, PlayerEnum black, PlayerEnum white, int mid, int end)
 {
@@ -38,11 +15,11 @@ void GameInit(Game *game, PlayerEnum black, PlayerEnum white, int mid, int end)
     game->player[BLACK] = black;
 
     // AIの初期化
-    if (game->player[WHITE] == PlayerEnum::AI)
+    if (game->player[WHITE] == AI)
     {
         InitTree(&game->tree[WHITE], mid, end, 4, 8, 1, 1, 1);
     }
-    if (game->player[BLACK] == PlayerEnum::AI)
+    if (game->player[BLACK] == AI)
     {
         InitTree(&game->tree[BLACK], mid, end, 4, 8, 1, 1, 1);
     }
@@ -52,11 +29,11 @@ void GameInit(Game *game, PlayerEnum black, PlayerEnum white, int mid, int end)
 void GameFree(Game *game)
 {
     // AIの初期化
-    if (game->player[WHITE] == PlayerEnum::AI)
+    if (game->player[WHITE] == AI)
     {
         DeleteTree(&game->tree[WHITE]);
     }
-    if (game->player[BLACK] == PlayerEnum::AI)
+    if (game->player[BLACK] == AI)
     {
         DeleteTree(&game->tree[BLACK]);
     }
@@ -107,11 +84,11 @@ uint8 WaitPosAI(Game *game, uint8 color)
 
 uint8 WaitPos(Game *game, uint8 color)
 {
-    if (game->player[color] == PlayerEnum::HUMAN)
+    if (game->player[color] == HUMAN)
     {
         return WaitPosHumanInput(game);
     }
-    else if (game->player[color] == PlayerEnum::AI)
+    else if (game->player[color] == AI)
     {
         return WaitPosAI(game, color); // TODO
     }
@@ -125,7 +102,11 @@ uint8 WaitPos(Game *game, uint8 color)
 
 void GameReset(Game *game)
 {
-    game->moves.clear();
+    int i;
+    for (i = 0; i < 60; i++)
+    {
+        game->moves[i] = NOMOVE_INDEX;
+    }
     BoardReset(game->board);
     game->turn = 0;
 }
@@ -173,7 +154,7 @@ void GameStart(Game *game)
                    (BoardGetTurnColor(game->board) == BLACK ? '○' : '●'),
                    (char)('A' + pos % 8),
                    pos / 8 + 1);
-            game->moves.push_back(pos);
+            game->moves[game->turn] = pos;
             game->turn++;
         }
 
@@ -191,9 +172,12 @@ void GameStart(Game *game)
                                : ((numBlack > numWhite) ? "○の勝ち！" : "●の勝ち！\n")));
     char xAscii;
     int y;
-    for (uint8 move : game->moves)
+    int i;
+    for (i = 0; i < 60; i++)
     {
-        CalcPosAscii(move, xAscii, y);
+        if (game->moves[i] == NOMOVE_INDEX)
+            break;
+        CalcPosAscii(game->moves[i], &xAscii, &y);
         printf("%c%d, ", xAscii, y);
     }
     printf("\n");

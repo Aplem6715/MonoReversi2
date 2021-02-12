@@ -1,12 +1,16 @@
+
 #include "mid.h"
+
+#include <assert.h>
+#include <math.h>
+#include <stdio.h>
+
+#include "search.h"
 #include "mpc.h"
 #include "hash.h"
 #include "moves.h"
 #include "../ai/eval.h"
 #include "../bit_operation.h"
-#include <assert.h>
-#include <math.h>
-#include <stdio.h>
 
 score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed);
 
@@ -139,7 +143,7 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
             // 着手位置・反転位置を取得
             pos = GetLSB(mob);
             mob ^= pos;
-            posIdx = CalcPosIndex(pos);
+            posIdx = PosIndexFromBit(pos);
             flip = CalcFlip(tree->stones, posIdx);
 
             SearchUpdateMidDeep(tree, pos, flip);
@@ -309,7 +313,7 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
             // 着手位置・反転位置を取得
             pos = GetLSB(mob);
             mob ^= pos;
-            posIdx = CalcPosIndex(pos);
+            posIdx = PosIndexFromBit(pos);
             flip = CalcFlip(tree->stones, posIdx);
 
             SearchUpdateMidDeep(tree, pos, flip);

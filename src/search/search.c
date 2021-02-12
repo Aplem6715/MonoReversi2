@@ -1,11 +1,13 @@
 ﻿
+#include <stdlib.h>
+#include <assert.h>
+#include <time.h>
+
 #include "search.h"
 #include "mid.h"
 #include "end.h"
 #include "../ai/nnet.h"
 #include "../bit_operation.h"
-#include <chrono>
-#include <assert.h>
 
 static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
 
@@ -95,7 +97,7 @@ void SearchRestoreMid(SearchTree *tree, Move *move)
 
 void SearchUpdateMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
-    uint8 posIdx = CalcPosIndex(pos);
+    uint8 posIdx = PosIndexFromBit(pos);
     EvalUpdate(tree->eval, posIdx, flip);
     StonesUpdate(tree->stones, pos, flip);
     tree->nbEmpty--;
@@ -103,7 +105,7 @@ void SearchUpdateMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 
 void SearchRestoreMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
-    uint8 posIdx = CalcPosIndex(pos);
+    uint8 posIdx = PosIndexFromBit(pos);
     EvalUndo(tree->eval, posIdx, flip);
     StonesRestore(tree->stones, pos, flip);
     tree->nbEmpty++;
@@ -131,14 +133,14 @@ void SearchRestoreEnd(SearchTree *tree, Move *move)
 
 void SearchUpdateEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
-    uint8 posIdx = CalcPosIndex(pos);
+    uint8 posIdx = PosIndexFromBit(pos);
     StonesUpdate(tree->stones, pos, flip);
     tree->nbEmpty--;
 }
 
 void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
-    uint8 posIdx = CalcPosIndex(pos);
+    uint8 posIdx = PosIndexFromBit(pos);
     StonesRestore(tree->stones, pos, flip);
     tree->nbEmpty++;
 }
@@ -148,8 +150,8 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
     uint8 pos = NOMOVE_INDEX;
     uint8 nbEmpty = CountBits(~(own | opp));
 
-    std::chrono::system_clock::time_point start, end;
-    start = std::chrono::system_clock::now();
+    clock_t start, finish;
+    start = clock();
 
     SearchSetup(tree, own, opp);
 
@@ -176,11 +178,11 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
         pos = MidRoot(tree, choiceSecond);
     }
 
-    end = std::chrono::system_clock::now();
-    tree->usedTime = static_cast<double>(
-        std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000.0);
+    finish = clock();
+    tree->usedTime = (finish - start) / (double)CLOCKS_PER_SEC;
 
-    sprintf_s(tree->msg, "思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
+    sprintf_s(tree->msg, sizeof(tree->msg),
+              "思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
               tree->usedTime,
               tree->nodeCount,
               tree->nodeCount / tree->usedTime,

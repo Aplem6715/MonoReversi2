@@ -3,7 +3,7 @@
 
 #include "const.h"
 
-const int HIST_LENGTH = 60;
+#define HIST_LENGTH 60
 
 typedef struct History
 {
@@ -28,7 +28,7 @@ uint64_t BoardGetWhite(Board *board);
 uint64_t BoardGetOwn(Board *board);
 uint64_t BoardGetOpp(Board *board);
 uint64_t BoardGetMobility(Board *board);
-uint64_t BoardGetMobility(Board *board, uint8 color);
+uint64_t BoardGetColorsMobility(Board *board, uint8 color);
 uint8 BoardGetTurnColor(Board *board);
 void BoardReset(Board *board);
 void BoardSetStones(Board *board, uint64_t black, uint64_t white, uint8 turn);

@@ -1,8 +1,11 @@
-﻿#include "hash.h"
-#include "../bit_operation.h"
-#include <random>
+﻿
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include "hash.h"
+#include "random_util.h"
+#include "../bit_operation.h"
+#include "../const.h"
 
 #define HASH_TABLE_SIZE (1 << 24)
 #define RETRY_HASH(h) ((h) ^ 1)
@@ -19,15 +22,13 @@ static const HashData EMPTY_HASH_DATA = {
 
 void HashInit()
 {
-    std::mt19937_64 mt(HASH_SEED);
-
     for (int i = 0; i < 8 * 2; i++)
     {
         for (int j = 0; j < 1 << 8; j++)
         {
             do
             {
-                RawHash[i][j] = mt();
+                RawHash[i][j] = rand64();
             } while (CountBits(RawHash[i][j]) < MIN_RAWHASH_BIT);
         }
     }

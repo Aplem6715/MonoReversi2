@@ -1,16 +1,18 @@
 #include <stdio.h>
 #include <time.h>
-#include "game.h"
-#include "search/bench.h"
+#include <stdlib.h>
 #include "bit_operation.h"
+
+//#include "search/bench.hpp"
+#include "game.h"
 
 int main()
 {
     srand((unsigned int)time(NULL));
     HashInit();
     Game game[1];
-    GameInit(game, PlayerEnum::HUMAN, PlayerEnum::AI, 15, 20);
-    //GameInit(game, PlayerEnum::AI, PlayerEnum::HUMAN, 15, 20);
+    GameInit(game, HUMAN, AI, 15, 20);
+    //GameInit(game, AI, HUMAN, 15, 20);
     GameStart(game);
 
     //std::vector<unsigned char> depths = {10, 12, 14};

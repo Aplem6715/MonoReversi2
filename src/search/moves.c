@@ -1,8 +1,16 @@
-﻿#include <stdio.h>
+﻿
+#include <stdio.h>
+#include <stdint.h>
 #include <assert.h>
+
 #include "moves.h"
 #include "mid.h"
+#include "hash.h"
 #include "search.h"
+
+#include "../const.h"
+#include "../stones.h"
+#include "../ai/eval.h"
 #include "../bit_operation.h"
 
 void CreateMoveList(MoveList *moveList, Stones *stones)
@@ -17,7 +25,7 @@ void CreateMoveList(MoveList *moveList, Stones *stones)
     {
         // 着手位置・反転位置を取得
         pos = GetLSB(mob);
-        posIdx = CalcPosIndex(pos);
+        posIdx = PosIndexFromBit(pos);
         mob ^= pos;
         rev = CalcFlip(stones, posIdx);
 

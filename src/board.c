@@ -1,6 +1,7 @@
 ﻿#include <stdio.h>
 #include <stdlib.h>
 #include "board.h"
+#include "const.h"
 #include "bit_operation.h"
 
 static void Draw(uint64_t black, uint64_t white, uint64_t mobility)
@@ -151,7 +152,7 @@ uint8 BoardGetRandomPosMoveable(Board *board)
         }
         posBit <<= 1;
     }
-    return CalcPosIndex(posBit);
+    return PosIndexFromBit(posBit);
 }
 
 int BoardUndo(Board *board)
@@ -217,10 +218,10 @@ int BoardGetStoneCount(Board *board, uint8 color)
 
 uint64_t BoardGetMobility(Board *board)
 {
-    return BoardGetMobility(board, board->turn);
+    return BoardGetColorsMobility(board, board->turn);
 }
 
-uint64_t BoardGetMobility(Board *board, uint8 color)
+uint64_t BoardGetColorsMobility(Board *board, uint8 color)
 {
     if (color == BLACK)
     {
