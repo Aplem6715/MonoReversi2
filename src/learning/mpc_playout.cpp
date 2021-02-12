@@ -1,11 +1,15 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
+extern "C"
+{
 #include "../board.h"
 #include "../search/search.h"
 #include "../game.h"
 #include "../search/mid.h"
 #include "../search/mpc.h"
+}
+
 #include <string>
 #include <assert.h>
 #include <random>

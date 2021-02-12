@@ -1,8 +1,15 @@
 
 #include "nnet_trainer.hpp"
+
+extern "C"
+{
 #include "../ai/nnet.h"
-#include "eval.h"
+#include "../ai/eval.h"
+}
+
 #include <assert.h>
+
+#define _USE_MATH_DEFINES
 #include <math.h>
 
 #define BATCH_SIZE 32

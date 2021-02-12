@@ -1,8 +1,12 @@
 ﻿#ifndef GAME_RECORD_DEFINED
 #define GAME_RECORD_DEFINED
 
+extern "C"
+{
 #include "../const.h"
 #include "../ai/ai_const.h"
+}
+
 #include <vector>
 using namespace std;
 

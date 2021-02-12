@@ -9,6 +9,13 @@
 #define NB_LAYERS 3
 #define NB_PHASE 15
 
+#ifdef LEARN_MODE
+typedef struct UnitState
+{
+    float sumIn;
+    float delta;
+} UnitState;
+#endif
 
 typedef struct NNet
 {

@@ -21,6 +21,7 @@ LEARN_OBJS=\
 	$(OUTDIR)\bit_operation.o\
 	$(OUTDIR)\game.o\
 	$(OUTDIR)\board.o\
+	$(SEARCH_OUTDIR)\random_util.o\
 	$(SEARCH_OUTDIR)\hash.o\
 	$(SEARCH_OUTDIR)\moves.o\
 	$(SEARCH_OUTDIR)\mpc_info.o\
@@ -32,6 +33,8 @@ LEARN_OBJS=\
 	$(AI_OUTDIR)\nnet.o\
 	$(AI_OUTDIR)\regression.o\
 	$(LEARN_OUTDIR)\game_record.obj\
+	$(LEARN_OUTDIR)\nnet_trainer.obj\
+	$(LEARN_OUTDIR)\regr_trainer.obj\
 	$(LEARN_OUTDIR)\learner.obj
 
 	
@@ -103,13 +106,13 @@ $(OUTDIR)\$(LEARN_TARGET).exe: $(OUTDIR) $(AI_OUTDIR) $(SEARCH_OUTDIR) $(LEARN_O
 
 
 {$(SRC_DIR)}.cpp{$(OUTDIR)}.obj:
-	$(CPP) $(CFLAGS) /Fo"$@" /Fd"$(OUTDIR)\\" $<
+	$(CPP) $(CFLAGS) /Fo"$@" $<
 
 {$(AI_SRC_DIR)}.cpp{$(AI_OUTDIR)}.obj:
-	$(CPP) $(CFLAGS) /Fo"$@" /Fd"$(AI_OUTDIR)\\" $<
+	$(CPP) $(CFLAGS) /Fo"$@" $<
 	
 {$(SEARCH_DIR)}.cpp{$(SEARCH_OUTDIR)}.obj:
-	$(CPP) $(CFLAGS) /Fo"$@" /Fd"$(SEARCH_OUTDIR)\\" $<
+	$(CPP) $(CFLAGS) /Fo"$@" $<
 	
 {$(LEARN_DIR)}.cpp{$(LEARN_OUTDIR)}.obj:
 	$(CPP) $(CFLAGS) /Fo"$@" $<

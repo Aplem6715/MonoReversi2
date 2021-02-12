@@ -1,16 +1,27 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
+#ifdef USE_NN
+#include "nnet_trainer.hpp"
+#elif USE_REGRESSION
+#include "regr_trainer.hpp"
+#endif
+
 extern "C"
 {
+#include "../const.h"
 #include "../board.h"
 #include "../bit_operation.h"
 #include "../search/search.h"
 #include "../game.h"
-#include "../ai/nnet.h"
-#include "../ai/regression.h"
 #include "../search/mid.h"
 #include "../search/mpc.h"
+
+#ifdef USE_NN
+#include "../ai/nnet.h"
+#elif USE_REGRESSION
+#include "../ai/regression.h"
+#endif
 }
 
 #include <signal.h>

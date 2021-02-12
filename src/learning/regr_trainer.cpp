@@ -1,14 +1,18 @@
 
 
 #include "regr_trainer.hpp"
-#include "regression.h"
-#include "eval.h"
+
+extern "C"
+{
+#include "../board.h"
+#include "../ai/regression.h"
+#include "../ai/eval.h"
+}
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
-#include "../board.h"
 
 #ifdef LEARN_MODE
 

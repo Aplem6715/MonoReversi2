@@ -2,13 +2,11 @@
 #define _NNET_TRAINER_H_
 
 #include "game_record.hpp"
-#include "../ai/nnet.h"
 
-typedef struct UnitState
+extern "C"
 {
-    float sumIn;
-    float delta;
-} UnitState;
+#include "../ai/nnet.h"
+}
 
 void InitWeight(NNet *net);
 void DecreaseNNlr(NNet *net);
