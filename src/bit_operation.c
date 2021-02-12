@@ -1,4 +1,17 @@
-﻿
+﻿/**
+ * @file bit_operation.c
+ * @author Daichi Sato
+ * @brief ビット演算・盤面のビット処理に関する機能
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * ビット演算による高速な合法手・反転計算
+ * 組み込み命令関数が利用可能な箇所についてはCPU命令を用いる
+ * 
+ */
+
 #ifdef USE_INTRIN
 #include <intrin.h>
 #endif

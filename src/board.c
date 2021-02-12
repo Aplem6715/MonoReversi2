@@ -1,4 +1,18 @@
-﻿#include <stdio.h>
+﻿/**
+ * @file board.c
+ * @author Daichi Sato
+ * @brief 盤面制御に関する関数
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * 対戦時に使われる盤面（探索時には使われない）
+ * 表示・着手・戻るなどの機能や盤面情報の取得など
+ * 
+ */
+
+#include <stdio.h>
 #include <stdlib.h>
 #include "board.h"
 #include "const.h"

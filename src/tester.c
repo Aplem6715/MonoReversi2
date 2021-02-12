@@ -1,3 +1,14 @@
+/**
+ * @file tester.c
+ * @author Daichi Sato
+ * @brief 探索の変更前後で着手位置が変化していないかをテストする（未実装）
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ */
+
 #include <stdio.h>
 
 #include "./search/search.h"

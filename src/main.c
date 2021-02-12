@@ -1,3 +1,14 @@
+/**
+ * @file main.c
+ * @author Daichi Sato
+ * @brief CUIプレイ時のメイン関数
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ */
+
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
@@ -11,10 +22,13 @@ int main()
     srand((unsigned int)time(NULL));
     HashInit();
     Game game[1];
+
+    // 現状ソースコードで先行/後攻切り替え
     GameInit(game, HUMAN, AI, 15, 20);
     //GameInit(game, AI, HUMAN, 15, 20);
     GameStart(game);
 
+    // ベンチマークの名残
     //std::vector<unsigned char> depths = {10, 12, 14};
     //std::vector<unsigned char> depths = {8, 10, 12};
     //char x;
