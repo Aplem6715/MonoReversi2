@@ -1,4 +1,19 @@
-﻿
+﻿/**
+ * @file moves.c
+ * @author Daichi Sato
+ * @brief 探索手リスト・並び替えの実装
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * 深さ優先探索において，スコアの高いてから先に探索したほうが
+ * 探索効率が良くなり，高速になることが知られている。
+ * 探索手リストは，探索中の盤面内での合法手一覧を保持し，
+ * それぞれの手についてスコア付けを行いソートしながら探索する。
+ * 
+ */
+
 #include <stdio.h>
 #include <stdint.h>
 #include <assert.h>

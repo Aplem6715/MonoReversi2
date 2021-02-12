@@ -1,4 +1,17 @@
-﻿
+﻿/**
+ * @file search.c
+ * @author Daichi Sato
+ * @brief 探索AIのメイン実装部
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * 残り空きマス数から中盤探索・終盤探索を判断し実行する
+ * その他，探索中の更新処理なども行う。
+ * 
+ */
+
 #include <stdlib.h>
 #include <assert.h>
 #include <time.h>

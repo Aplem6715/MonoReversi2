@@ -1,3 +1,13 @@
+/**
+ * @file random_util.c
+ * @author Daichi Sato
+ * @brief 64bit乱数生成
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ */
 
 #include <stdlib.h>
 #include <stdint.h>
