@@ -1,11 +1,15 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
+extern "C"
+{
 #include "../board.h"
 #include "../search/search.h"
 #include "../game.h"
 #include "../search/mid.h"
 #include "../search/mpc.h"
+}
+
 #include <string>
 #include <assert.h>
 #include <random>
@@ -21,7 +25,7 @@ static uniform_real_distribution<double> rnd_prob(0.0, 1.0);
 void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enableLog, int matchIdxShift, uint8 shallow, uint8 deep, uint8 minimum)
 {
     SearchTree deepTree[1], shallowTree[1];
-    Board board;
+    Board board[1];
     uint8 pos;
     uint8 nbEmpty;
     FILE *logFile;
@@ -35,8 +39,8 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
     for (i = 0; i < nbPlay; i++)
     {
         nbEmpty = 60;
-        board.Reset();
-        while (!board.IsFinished())
+        BoardReset(board);
+        while (!BoardIsFinished(board))
         {
             if (nbEmpty <= deep)
             {
@@ -44,14 +48,14 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
             }
             if (enableLog)
             {
-                board.Draw();
+                BoardDraw(board);
                 //_sleep(500);
             }
 
             // 置ける場所がなかったらスキップ
-            if (board.GetMobility() == 0)
+            if (BoardGetMobility(board) == 0)
             {
-                board.Skip();
+                BoardSkip(board);
                 continue;
             }
 
@@ -59,26 +63,26 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
             if (nbEmpty > deepTree->endDepth && ((nbEmpty >= 60 - randomTurns) || rnd_prob(mt) < randMoveRatio))
             {
                 // ランダム着手位置
-                pos = board.GetRandomPosMoveable();
+                pos = BoardGetRandomPosMoveable(board);
                 //printf("Random!!!\n");
             }
             else
             {
-                SearchSetup(deepTree, board.GetOwn(), board.GetOpp());
-                SearchSetup(shallowTree, board.GetOwn(), board.GetOpp());
+                SearchSetup(deepTree, BoardGetOwn(board), BoardGetOpp(board));
+                SearchSetup(shallowTree, BoardGetOwn(board), BoardGetOpp(board));
                 pos = MidRootWithMpcLog(deepTree, shallowTree, logFile, matchIdxShift + i, shallow, deep, minimum);
                 if (enableLog)
                     printf("探索ノード数：%zu[Node]  推定CPUスコア：%.1f\n",
                            deepTree->nodeCount, deepTree->score / (float)(STONE_VALUE));
             }
             // 合法手判定
-            assert(board.IsLegalTT(pos));
+            assert(BoardIsLegalTT(board, pos));
 
             // 実際に着手
-            board.PutTT(pos);
+            BoardPutTT(board, pos);
             nbEmpty--;
 
-        } //end of loop:　while (!board.IsFinished())
+        } //end of loop:　while (!BoardIsFinished(board))
         printf("Game %d Finished                 \n", i);
     }
 

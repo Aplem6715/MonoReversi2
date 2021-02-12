@@ -2,6 +2,7 @@
 #ifndef BIT_OPERATION_DEFINED
 #define BIT_OPERATION_DEFINED
 
+#include <stdint.h>
 #include "stones.h"
 #include "const.h"
 
@@ -16,10 +17,12 @@ uint64_t CalcFlip(const Stones *stones, const uint8 pos);
 
 uint8 CountBits(uint64_t stone);
 
-uint8 CalcPosIndex(uint64_t pos);
-uint8 CalcPosIndex(const char *ascii);
+uint8 PosIndexFromBit(uint64_t pos);
+uint8 PosIndexFromAscii(const char *ascii);
+
 uint64_t CalcPosBit(uint8 posIdx);
-void CalcPosAscii(uint8 posIdx, char &x, int &y);
+
+void CalcPosAscii(uint8 posIdx, char *x, int *y);
 
 inline unsigned char AntiColor(unsigned char color)
 {
@@ -35,7 +38,7 @@ inline uint64_t GetLSB(uint64_t bits)
 inline uint8 NextIndex(uint64_t *bits)
 {
     *bits &= *bits - 1;
-    return CalcPosIndex(*bits);
+    return PosIndexFromBit(*bits);
 }
 #pragma warning(pop)
 

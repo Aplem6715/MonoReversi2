@@ -3,7 +3,7 @@
 
 #include "mpc.h"
 
-static const MPCPair mpcPairs[60][MPC_DEEP_MAX - MPC_DEEP_MIN + 1][MPC_NB_TRY] = {
+extern const MPCPair mpcPairs[60][MPC_DEEP_MAX - MPC_DEEP_MIN + 1][MPC_NB_TRY] = {
 	{ /* nbEmpty:0 */
 		/*  3 */ {{0, -1.000000, -1.000000, -1.000000},{0, -1.000000, -1.000000, -1.000000},},
 		/*  4 */ {{0, -1.000000, -1.000000, -1.000000},{0, -1.000000, -1.000000, -1.000000},},

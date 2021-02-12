@@ -1,8 +1,10 @@
 #include "end.h"
+#include "search.h"
 #include "hash.h"
 #include "moves.h"
 #include "../ai/eval.h"
 #include "../bit_operation.h"
+#include "../const.h"
 #include <assert.h>
 
 inline score_t Judge(const SearchTree *tree)
@@ -68,7 +70,7 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         {
             NextSearch = EndAlphaBetaDeep;
         }
-        maxScore = -Const::MAX_VALUE;
+        maxScore = -MAX_VALUE;
         lower = alpha;
         // 打つ手がある時, 良い手から並べ替えつつループ
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
@@ -156,7 +158,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     }
     else
     {
-        maxScore = -Const::MAX_VALUE;
+        maxScore = -MAX_VALUE;
         lower = alpha;
         // 打つ手がある時
         while (mob != 0)
@@ -164,7 +166,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
             // 着手位置・反転位置を取得
             pos = GetLSB(mob);
             mob ^= pos;
-            posIdx = CalcPosIndex(pos);
+            posIdx = PosIndexFromBit(pos);
             flip = CalcFlip(tree->stones, posIdx);
 
             SearchUpdateEndDeep(tree, pos, flip);
@@ -242,13 +244,13 @@ score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
                 return score;
         }
 
-        maxScore = -Const::MAX_VALUE;
+        maxScore = -MAX_VALUE;
         while (mob != 0)
         {
             // 着手位置・反転位置を取得
             pos = GetLSB(mob);
             mob ^= pos;
-            posIdx = CalcPosIndex(pos);
+            posIdx = PosIndexFromBit(pos);
             flip = CalcFlip(tree->stones, posIdx);
 
             SearchUpdateEndDeep(tree, pos, flip);
@@ -330,7 +332,7 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
 
         EvaluateMoveList(tree, &moveList, tree->stones, hashData);
 
-        maxScore = -Const::MAX_VALUE;
+        maxScore = -MAX_VALUE;
 
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
         {
@@ -488,8 +490,8 @@ uint8 EndRoot(SearchTree *tree, uint8 choiceSecond)
         NextSearch = EndAlphaBeta;
     }
 
-    alpha = -Const::MAX_VALUE;
-    beta = Const::MAX_VALUE;
+    alpha = -MAX_VALUE;
+    beta = MAX_VALUE;
 
     CreateMoveList(&moveList, tree->stones);               // 着手リストを作成
     EvaluateMoveList(tree, &moveList, tree->stones, NULL); // 着手の事前評価

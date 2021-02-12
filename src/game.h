@@ -1,36 +1,32 @@
+
 #ifndef GAME_DEFINED
 #define GAME_DEFINED
 
-#include <vector>
 #include "board.h"
 #include "search/search.h"
 
-enum PlayerEnum
+typedef enum PlayerEnum
 {
     HUMAN,
     AI,
-};
+} PlayerEnum;
 
-class Game
+typedef struct Game
 {
-private:
     PlayerEnum player[2];
     SearchTree tree[2];
-    Board board;
+    Board board[1];
     uint8 turn;
-    std::vector<uint8> moves;
+    uint8 moves[60];
+} Game;
 
-public:
-    Game(PlayerEnum black, PlayerEnum white, int mid, int end);
-    ~Game();
-    uint8 Game::WaitPosAI(uint8 color);
-    uint8 Game::WaitPos(uint8 color);
+void GameInit(Game *game, PlayerEnum black, PlayerEnum white, int mid, int end);
+void GameFree(Game *game);
+uint8 GameWaitPosAI(Game *game, uint8 color);
+uint8 GameWaitPos(Game *game, uint8 color);
 
-    void Reset();
-    void Start();
-    SearchTree *GetTree(uint8 color);
-};
-
-void LoadGameRecords(const char *file, std::vector<std::vector<uint8>> &moves);
+void GameReset(Game *game);
+void GameStart(Game *game);
+SearchTree *GameGetTree(Game *game, uint8 color);
 
 #endif

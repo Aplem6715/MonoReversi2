@@ -48,7 +48,7 @@ extern "C"
         srand((unsigned int)time(NULL));
         HashInit();
         InitTree(dllTree, 8, 20, 4, 8, 1, 1, 1);
-        dllBoard->Reset();
+        BoardReset(dllBoard);
     }
 
     void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth)
@@ -58,23 +58,23 @@ extern "C"
 
     int DllSearch(double *value)
     {
-        return Search(dllTree, dllBoard->GetOwn(), dllBoard->GetOpp(), 0);
+        return Search(dllTree, BoardGetOwn(dllBoard), BoardGetOpp(dllBoard), 0);
     }
 
     void DllBoardReset()
     {
         ResetTree(dllTree);
-        dllBoard->Reset();
+        BoardReset(dllBoard);
     }
 
     int DllPut(int pos)
     {
-        if (dllBoard->IsLegalTT(pos))
+        if (BoardIsLegalTT(dllBoard, pos))
         {
-            dllBoard->PutTT(pos);
-            if (dllBoard->GetMobility() == 0)
+            BoardPutTT(dllBoard, pos);
+            if (BoardGetMobility(dllBoard) == 0)
             {
-                dllBoard->Skip();
+                BoardSkip(dllBoard);
             }
             return 1;
         }
@@ -83,12 +83,12 @@ extern "C"
 
     int DllStoneCount(int color)
     {
-        return dllBoard->GetStoneCount(color);
+        return BoardGetStoneCount(dllBoard, color);
     }
 
     int DllUndo()
     {
-        if (dllBoard->Undo())
+        if (BoardUndo(dllBoard))
         {
             return 1;
         }
@@ -97,33 +97,33 @@ extern "C"
 
     int DllIsGameEnd()
     {
-        return dllBoard->IsFinished();
+        return BoardIsFinished(dllBoard);
     }
 
     int DllIsLegal(int pos)
     {
-        return dllBoard->IsLegalTT(pos);
+        return BoardIsLegalTT(dllBoard, pos);
     }
 
     uint64_t DllGetMobility()
     {
-        return dllBoard->GetMobility();
+        return BoardGetMobility(dllBoard);
     }
 
     uint64_t DllGetMobilityC(int color)
     {
-        return dllBoard->GetMobility(color);
+        return BoardGetColorsMobility(dllBoard, color);
     }
 
     uint64_t DllGetStones(int color)
     {
-        if (color == Const::BLACK)
+        if (color == BLACK)
         {
-            return dllBoard->GetBlack();
+            return BoardGetBlack(dllBoard);
         }
         else
         {
-            return dllBoard->GetWhite();
+            return BoardGetWhite(dllBoard);
         }
     }
 

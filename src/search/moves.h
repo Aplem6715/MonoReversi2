@@ -1,16 +1,14 @@
 ﻿#ifndef MOVES_DEFINED
 #define MOVES_DEFINED
 
-#include "../stones.h"
-#include "hash.h"
 #include "../const.h"
 
 typedef struct Move
 {
-    uint64_t flip;
     uint8 posIdx;
     uint32_t score;
-    Move *next;
+    uint64_t flip;
+    struct Move* next;
 } Move;
 
 typedef struct MoveList
@@ -20,11 +18,21 @@ typedef struct MoveList
 } MoveList;
 
 struct SearchTree;
+struct Stones;
+struct HashData;
 
-void CreateMoveList(MoveList *moveList, Stones *stones);
-void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *hashData);
-void EvaluateMoveList(SearchTree *tree, MoveList *movelist, Stones *stones, const HashData *hashData);
-Move *NextBestMoveWithSwap(Move *prev);
+typedef struct SearchTree SearchTree;
+typedef struct Stones Stones;
+typedef struct HashData HashData;
+
+void CreateMoveList(MoveList* moveList, Stones* stones);
+
+Move* NextBestMoveWithSwap(Move* prev);
+
 void SortMoveList(MoveList *moveList);
+
+void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *hashData);
+
+void EvaluateMoveList(SearchTree *tree, MoveList *movelist, Stones *stones, const HashData *hashData);
 
 #endif

@@ -1,4 +1,4 @@
-#if !defined(_STONES_H_)
+#ifndef _STONES_H_
 #define _STONES_H_
 
 #include "const.h"

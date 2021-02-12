@@ -1,8 +1,11 @@
-﻿#include "hash.h"
-#include "../bit_operation.h"
-#include <random>
+﻿
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include "hash.h"
+#include "random_util.h"
+#include "../bit_operation.h"
+#include "../const.h"
 
 #define HASH_TABLE_SIZE (1 << 24)
 #define RETRY_HASH(h) ((h) ^ 1)
@@ -14,20 +17,18 @@ static const HashData EMPTY_HASH_DATA = {
     0, 0,                               // stones
     0,                                  // depth
     NOMOVE_INDEX, NOMOVE_INDEX,         // moves
-    -Const::MAX_VALUE, Const::MAX_VALUE // scores
+    -MAX_VALUE, MAX_VALUE // scores
 };
 
 void HashInit()
 {
-    std::mt19937_64 mt(HASH_SEED);
-
     for (int i = 0; i < 8 * 2; i++)
     {
         for (int j = 0; j < 1 << 8; j++)
         {
             do
             {
-                RawHash[i][j] = mt();
+                RawHash[i][j] = rand64();
             } while (CountBits(RawHash[i][j]) < MIN_RAWHASH_BIT);
         }
     }
@@ -203,14 +204,14 @@ void HashDataSaveNew(HashData *data, const Stones *stones, const uint8 bestMove,
     if (maxScore < beta)
         data->upper = maxScore;
     else
-        data->upper = Const::MAX_VALUE;
+        data->upper = MAX_VALUE;
 
     if (maxScore > alpha)
         data->lower = maxScore;
     else
-        data->lower = -Const::MAX_VALUE;
+        data->lower = -MAX_VALUE;
 
-    if (maxScore > alpha || maxScore == -Const::MAX_VALUE)
+    if (maxScore > alpha || maxScore == -MAX_VALUE)
         data->bestMove = bestMove;
     else
         data->bestMove = NOMOVE_INDEX;
@@ -240,7 +241,7 @@ void HashDataUpdate(HashData *data, const uint8 bestMove, const score_t alpha, c
     if (maxScore > alpha && maxScore > data->lower)
         data->lower = maxScore;
 
-    if ((maxScore > alpha || maxScore == -Const::MAX_VALUE) && data->bestMove != bestMove)
+    if ((maxScore > alpha || maxScore == -MAX_VALUE) && data->bestMove != bestMove)
     {
         data->secondMove = data->bestMove;
         data->bestMove = bestMove;
@@ -262,14 +263,14 @@ void HashDataLevelUP(HashData *data, const uint8 bestMove, const uint8 depth, co
     if (maxScore < beta)
         data->upper = maxScore;
     else
-        data->upper = Const::MAX_VALUE;
+        data->upper = MAX_VALUE;
 
     if (maxScore > alpha)
         data->lower = maxScore;
     else
-        data->lower = -Const::MAX_VALUE;
+        data->lower = -MAX_VALUE;
 
-    if (maxScore > alpha || maxScore == -Const::MAX_VALUE)
+    if (maxScore > alpha || maxScore == -MAX_VALUE)
     {
         data->secondMove = data->bestMove;
         data->bestMove = bestMove;

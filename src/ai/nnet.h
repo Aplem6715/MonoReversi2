@@ -1,7 +1,6 @@
 ﻿#ifndef NNET_DEFINED
 #define NNET_DEFINED
 
-#include "../learning/game_record.h"
 #include "ai_const.h"
 
 #define VALUE_HIDDEN_UNITS1 32
@@ -9,11 +8,6 @@
 
 #define NB_LAYERS 3
 #define NB_PHASE 15
-/*
-typedef struct Connection
-{
-    float weight;
-} Connection;*/
 
 #ifdef LEARN_MODE
 typedef struct UnitState
@@ -48,12 +42,7 @@ typedef struct NNet
 
 float Predict(NNet *net, const uint16_t features[]);
 
-#ifdef LEARN_MODE
-void InitWeight(NNet *net);
-void DecreaseNNlr(NNet *net);
-float TrainNN(NNet *net, FeatureRecord *featRecords, FeatureRecord *testRecords, size_t nbRecords, size_t nbTests);
-#endif
-
+float forward(NNet *net, const uint16_t features[FEAT_NUM], uint8 isTrain);
 void SaveNets(NNet *net, const char *file);
 void LoadNets(NNet *net, const char *file);
 

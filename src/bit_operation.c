@@ -300,12 +300,12 @@ uint8 CountBits(uint64_t stone)
     return popcnt(stone);
 }
 
-uint8 CalcPosIndex(uint64_t pos)
+uint8 PosIndexFromBit(uint64_t pos)
 {
     return tzcnt(pos);
 }
 
-uint8 CalcPosIndex(const char *ascii)
+uint8 PosIndexFromAscii(const char *ascii)
 {
     return 63 - ((ascii[0] - 'A') + (ascii[1] - '1') * 8);
 }
@@ -315,8 +315,8 @@ uint64_t CalcPosBit(unsigned char posIdx)
     return (uint64_t)0x0000000000000001 << posIdx;
 }
 
-void CalcPosAscii(unsigned char posIdx, char &x, int &y)
+void CalcPosAscii(unsigned char posIdx, char *x, int *y)
 {
-    x = 'H' - posIdx % 8;
-    y = 8 - (posIdx / 8);
+    *x = 'H' - posIdx % 8;
+    *y = 8 - (posIdx / 8);
 }

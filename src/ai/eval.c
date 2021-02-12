@@ -2,6 +2,8 @@
 #include "ai_const.h"
 #include "../bit_operation.h"
 #include <assert.h>
+#include <stdlib.h>
+#include <math.h>
 
 /**
  * テスト済み
@@ -33,6 +35,17 @@ typedef struct PosToFeature
         unsigned short idx;
     } feature[8];
 } PosToFeature;
+
+extern const score_t VALUE_TABLE[64] = {
+    20, 4, 18, 12, 12, 18, 4, 20,
+    4, 1, 6, 8, 8, 6, 1, 4,
+    18, 6, 15, 10, 10, 15, 6, 18,
+    12, 8, 10, 0, 0, 10, 8, 12,
+    12, 8, 10, 0, 0, 10, 8, 12,
+    18, 6, 15, 10, 10, 15, 6, 18,
+    4, 1, 6, 8, 8, 6, 1, 4,
+    20, 4, 18, 12, 12, 18, 4, 20
+};
 
 // 各座標と対応するパターンとその３進インデックス
 static const PosToFeature Pos2Feat[] = {
@@ -110,7 +123,7 @@ static const PosToFeature Pos2Feat[] = {
 };
 
 // ALL 211,734
-static const uint32_t FeatMaxIndex[] = {
+extern const uint32_t FeatMaxIndex[46] = {
     POW3_8, POW3_8, POW3_8, POW3_8,     // LINE2  26244
     POW3_8, POW3_8, POW3_8, POW3_8,     // LINE3  26244
     POW3_8, POW3_8, POW3_8, POW3_8,     // LINE4  26244
@@ -125,7 +138,7 @@ static const uint32_t FeatMaxIndex[] = {
     POW3_10, POW3_10, POW3_10, POW3_10, // BOX10 236196
 };
 
-static const uint8 FeatDigits[] = {
+extern const uint8 FeatDigits[46] = {
     8, 8, 8, 8,     // LINE
     8, 8, 8, 8,     //
     8, 8, 8, 8,     //
@@ -180,7 +193,7 @@ void EvalReload(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player)
     }
 
     // 自分の石がある位置について
-    for (pos = CalcPosIndex(own); own; pos = NextIndex(&own))
+    for (pos = PosIndexFromBit(own); own; pos = NextIndex(&own))
     {
         pos2f = &(Pos2Feat[pos]);
         nbFeat = pos2f->nbFeature;
@@ -192,7 +205,7 @@ void EvalReload(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player)
         }
     }
     // 相手の石がある位置について
-    for (pos = CalcPosIndex(opp); opp; pos = NextIndex(&opp))
+    for (pos = PosIndexFromBit(opp); opp; pos = NextIndex(&opp))
     {
         pos2f = &(Pos2Feat[pos]);
         nbFeat = pos2f->nbFeature;
@@ -224,7 +237,7 @@ void EvalUpdate(Evaluator *eval, uint8 pos, uint64_t flip)
         }
 
         // 反転箇所について
-        for (flipIdx = CalcPosIndex(flip); flip; flipIdx = NextIndex(&flip))
+        for (flipIdx = PosIndexFromBit(flip); flip; flipIdx = NextIndex(&flip))
         {
             pos2f = &(Pos2Feat[flipIdx]);
             nbFeat = pos2f->nbFeature;
@@ -249,7 +262,7 @@ void EvalUpdate(Evaluator *eval, uint8 pos, uint64_t flip)
         }
 
         // 反転箇所について
-        for (flipIdx = CalcPosIndex(flip); flip; flipIdx = NextIndex(&flip))
+        for (flipIdx = PosIndexFromBit(flip); flip; flipIdx = NextIndex(&flip))
         {
             pos2f = &(Pos2Feat[flipIdx]);
             nbFeat = pos2f->nbFeature;
@@ -285,7 +298,7 @@ void EvalUndo(Evaluator *eval, uint8 pos, uint64_t flip)
         }
 
         // 反転箇所について
-        for (flipIdx = CalcPosIndex(flip); flip; flipIdx = NextIndex(&flip))
+        for (flipIdx = PosIndexFromBit(flip); flip; flipIdx = NextIndex(&flip))
         {
             pos2f = &(Pos2Feat[flipIdx]);
             nbFeat = pos2f->nbFeature;
@@ -310,7 +323,7 @@ void EvalUndo(Evaluator *eval, uint8 pos, uint64_t flip)
         }
 
         // 反転箇所について
-        for (flipIdx = CalcPosIndex(flip); flip; flipIdx = NextIndex(&flip))
+        for (flipIdx = PosIndexFromBit(flip); flip; flipIdx = NextIndex(&flip))
         {
             pos2f = &(Pos2Feat[flipIdx]);
             nbFeat = pos2f->nbFeature;
@@ -358,7 +371,7 @@ score_t EvalPosTable(uint64_t own, uint64_t opp)
 {
     int i = 0;
     score_t score = 0;
-    for (i = 0; i < Const::BOARD_SIZE * Const::BOARD_SIZE; i++)
+    for (i = 0; i < BOARD_SIZE * BOARD_SIZE; i++)
     {
         score += ((own >> i) & 1) * VALUE_TABLE[i];
         score -= ((opp >> i) & 1) * VALUE_TABLE[i];

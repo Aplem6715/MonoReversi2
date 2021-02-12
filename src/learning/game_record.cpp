@@ -1,4 +1,11 @@
-﻿#include "game_record.h"
+﻿
+extern "C"
+{
+#include "../const.h"
+#include "../ai/ai_const.h"
+}
+
+#include "game_record.hpp"
 #include <stdlib.h>
 #include <vector>
 

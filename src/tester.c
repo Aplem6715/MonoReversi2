@@ -24,19 +24,20 @@ int Match(char *record, FILE *logFile)
     SearchTree tree[2];
     uint64_t flip;
     int nbEmpty = 60;
-    Board board;
+    Board board[1];
+    ;
 
     uint8 pos;
     char posX;
     int posY;
 
-    board.Reset();
+    BoardReset(board);
 
     int i = 0;
     while (record[i] != '\0')
     {
-        pos = CalcPosIndex(&record[i]);
-        board.PutTT(pos);
+        pos = PosIndexFromAscii(&record[i]);
+        BoardPutTT(board, pos);
         CalcPosAscii(pos, posX, posY);
         fprintf(logFile, "%c%d", posX, posY);
         i += 2;
@@ -44,37 +45,37 @@ int Match(char *record, FILE *logFile)
 
     fprintf(logFile, " ");
 
-    while (!board.IsFinished())
+    while (!BoardIsFinished(board))
     {
-        board.Draw();
+        BoardDraw(board);
 
         // 置ける場所がなかったらスキップ
-        if (board.GetMobility() == 0)
+        if (BoardGetMobility(board) == 0)
         {
-            board.Skip();
+            BoardSkip(board);
             continue;
         }
 
-        pos = Search(&tree[board.GetTurnColor()], board.GetOwn(), board.GetOpp(), 0);
+        pos = Search(&tree[BoardGetTurnColor(board)], BoardGetOwn(board), BoardGetOpp(board), 0);
 
         // 合法手判定
-        if (!board.IsLegalTT(pos))
+        if (!BoardIsLegalTT(board, pos))
         {
             printf("error!!!!!! iligal move!!\n");
             return 0;
         }
 
         // 実際に着手
-        flip = board.PutTT(pos);
+        flip = BoardPutTT(board, pos);
 
         CalcPosAscii(pos, posX, posY);
         fprintf(logFile, "%c%d", posX, posY);
         nbEmpty--;
 
-    } //end of loop:　while (!board.IsFinished())
+    } //end of loop:　while (!BoardIsFinished(board))
 
     fprintf(logFile, "\n");
-    return board.GetStoneCount(Const::BLACK) - board.GetStoneCount(Const::WHITE);
+    return BoardGetStoneCount(board, BLACK) - BoardGetStoneCount(board, WHITE);
 }
 
 int main()

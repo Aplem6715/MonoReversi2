@@ -4,16 +4,39 @@
 #include <string>
 #include <chrono>
 
-#include "bench.h"
+#include "bench.hpp"
 #include "../board.h"
-#include "../game.h"
+#include "../game.hpp"
 #include "../bit_operation.h"
 
 using namespace std;
 
+void LoadGameRecords(const char *file, vector<vector<uint8>> &records)
+{
+    ifstream infile(file);
+    string str;
+
+    if (infile.fail())
+    {
+        fprintf(stderr, "Failed to open file.");
+        return;
+    }
+
+    vector<uint8> moves;
+    while (getline(infile, str))
+    {
+        moves.clear();
+        for (size_t i = 0; i < str.length(); i += 2)
+        {
+            moves.push_back(PosIndexFromAscii(str.substr(i, 2).c_str()));
+        }
+        records.push_back(moves);
+    }
+}
+
 void MakeBench(int nbGames, uint8 nbRandomTurn, string benchFile)
 {
-    Board board;
+    Board board[1];
     uint8 pos;
     uint8 turn;
     char xAscii;
@@ -24,15 +47,15 @@ void MakeBench(int nbGames, uint8 nbRandomTurn, string benchFile)
 
     for (int i = 0; i < nbGames; i++)
     {
-        board.Reset();
+        BoardReset(board);
         for (turn = 0; turn < nbRandomTurn; turn++)
         {
-            pos = board.GetRandomPosMoveable();
+            pos = BoardGetRandomPosMoveable(board);
             if (pos == 0)
             {
                 break;
             }
-            board.PutTT(pos);
+            BoardPutTT(board, pos);
             moves[turn] = pos;
         }
 
@@ -54,33 +77,33 @@ void MakeBench(int nbGames, uint8 nbRandomTurn, string benchFile)
 
 void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logfile)
 {
-    Board board;
+    Board board[1];
     uint8 pos;
     char xAscii;
     int y;
 
-    board.Reset();
+    BoardReset(board);
 
     for (uint8 move : moves)
     {
-        board.PutTT(move);
+        BoardPutTT(board, move);
     }
 
-    board.Draw();
+    BoardDraw(board);
     for (int i = 0; i < nbPut; i++)
     {
         ResetTree(&tree);
-        if (board.IsFinished())
+        if (BoardIsFinished(board))
         {
             break;
         }
-        else if (board.GetMobility() == 0)
+        else if (BoardGetMobility(board) == 0)
         {
-            board.Skip();
+            BoardSkip(board);
         }
-        pos = Search(&tree, board.GetOwn(), board.GetOpp(), 0);
-        board.PutTT(pos);
-        board.Draw();
+        pos = Search(&tree, BoardGetOwn(board), BoardGetOpp(board), 0);
+        BoardPutTT(board, pos);
+        BoardDraw(board);
         CalcPosAscii(pos, xAscii, y);
 
         {

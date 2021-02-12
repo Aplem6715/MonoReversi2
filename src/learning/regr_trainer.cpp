@@ -1,13 +1,20 @@
-﻿
-#define _CRT_SECURE_NO_WARNINGS
-#include "regression.h"
-#include "eval.h"
+
+
+#include "regr_trainer.hpp"
+
+extern "C"
+{
+#include "../board.h"
+#include "../ai/regression.h"
+#include "../ai/eval.h"
+}
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
-#include "../board.h"
+
+#ifdef LEARN_MODE
 
 #define BATCH_SIZE 128
 static const float BETA_INIT = 0.00075f;
@@ -49,94 +56,14 @@ static uint16_t SAME_INDEX_EDGE[POW3_10];
 static uint16_t SAME_INDEX_CORNR[POW3_9];
 //static uint16_t SAME_INDEX_BOX10[POW3_10]; 対照型ない
 
-void InitRegr(Regressor regr[NB_PHASE])
-{
-    int phase;
-    int feat;
-    for (phase = 0; phase < NB_PHASE; phase++)
-    {
-        for (feat = 0; feat < FEAT_NUM; feat++)
-        {
-            regr[phase].weight[0][feat] = (float *)calloc(FeatMaxIndex[feat], sizeof(float));
-            regr[phase].weight[1][feat] = (float *)calloc(FeatMaxIndex[feat], sizeof(float));
-        }
-    }
-}
-
-void DelRegr(Regressor regr[NB_PHASE])
-{
-    int phase;
-    int feat;
-    for (phase = 0; phase < NB_PHASE; phase++)
-    {
-        for (feat = 0; feat < FEAT_NUM; feat++)
-        {
-            free(regr[phase].weight[0][feat]);
-            free(regr[phase].weight[1][feat]);
-        }
-    }
-}
-
 void RegrInitBeta(Regressor regr[NB_PHASE])
 {
     int phase;
     for (phase = 0; phase < NB_PHASE; phase++)
     {
-#ifdef LEARN_MODE
         regr[phase].beta = BETA_INIT;
-#endif
     }
 }
-
-void RegrClearWeight(Regressor regr[NB_PHASE])
-{
-    int phase, feat;
-    uint32_t i;
-    for (phase = 0; phase < NB_PHASE; phase++)
-    {
-        for (feat = 0; feat < FEAT_NUM; feat++)
-        {
-            for (i = 0; i < FeatMaxIndex[feat]; i++)
-            {
-                regr[phase].weight[0][feat][i] = 0;
-                regr[phase].weight[1][feat][i] = 0;
-            }
-        }
-    }
-}
-
-void RegrApplyWeightToOpp(Regressor *regr)
-{
-    uint8 feat;
-    uint16_t i;
-    for (feat = 0; feat < FEAT_NUM; feat++)
-    {
-        for (i = 0; i < FeatMaxIndex[feat]; i++)
-        {
-            regr->weight[1][feat][i] = regr->weight[0][feat][OpponentIndex(i, FeatDigits[feat])];
-        }
-    }
-}
-
-float RegrPred(Regressor *regr, const uint16_t features[FEAT_NUM], uint8 player)
-{
-    int feat;
-    float score = 0;
-
-    for (feat = 0; feat < FEAT_NUM; feat++)
-    {
-        score += regr->weight[player][feat][features[feat]];
-        assert(features[feat] < FeatMaxIndex[feat]);
-    }
-
-#ifdef LEARN_MODE
-    //assert(player == OWN);
-#endif
-
-    return score;
-}
-
-#ifdef LEARN_MODE
 
 void RegrDecreaseBeta(Regressor regr[NB_PHASE], float mul)
 {
@@ -272,7 +199,6 @@ void TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inpu
     RegrApplyWeightToOpp(regr);
 }
 
-#ifdef LEARN_MODE
 void RegrTrainInit(Regressor regr[NB_PHASE])
 {
     int phase, i;
@@ -359,7 +285,6 @@ void RegrTrainInit(Regressor regr[NB_PHASE])
         SAME_INDEX_EDGE[i] = same;
     }
 }
-#endif
 
 float RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, FeatureRecord *testRecords, size_t nbTests)
 {
@@ -452,73 +377,3 @@ float RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, Fe
     return (float)totalLoss / totalCnt;
 }
 #endif
-
-void RegrSave(Regressor regr[NB_PHASE], const char *file)
-{
-    int phase, feat;
-    size_t writed;
-    char fileName[100];
-    FILE *fp;
-    for (phase = 0; phase < NB_PHASE; phase++)
-    {
-        sprintf(fileName, "%sphase%d", file, phase);
-        fp = fopen(fileName, "wb");
-        if (fp == NULL)
-        {
-            fputs("書き込み用モデルファイルオープンに失敗しました。\n", stderr);
-            exit(EXIT_FAILURE);
-        }
-
-        writed = 0;
-        for (feat = 0; feat < FEAT_NUM; feat++)
-        {
-            writed += fwrite(regr[phase].weight[0][feat], sizeof(float), FeatMaxIndex[feat], fp);
-        }
-        if (writed < NB_FEAT_COMB)
-        {
-            fputs("モデルファイルへの書き込みに失敗しました。\n", stderr);
-            exit(EXIT_FAILURE);
-        }
-
-        if (fclose(fp) == EOF)
-        {
-            fputs("モデルファイルクローズに失敗しました。\n", stderr);
-            exit(EXIT_FAILURE);
-        }
-    }
-}
-void RegrLoad(Regressor regr[NB_PHASE], const char *file)
-{
-    int phase, feat;
-    size_t readed;
-    char fileName[100];
-    FILE *fp;
-    for (phase = 0; phase < NB_PHASE; phase++)
-    {
-        sprintf(fileName, "%sphase%d", file, phase);
-        fp = fopen(fileName, "rb");
-        if (fp == NULL)
-        {
-            fputs("読み込み用モデルファイルオープンに失敗しました。\n", stderr);
-            return;
-        }
-
-        readed = 0;
-        for (feat = 0; feat < FEAT_NUM; feat++)
-        {
-            readed += fread(regr[phase].weight[0][feat], sizeof(float), FeatMaxIndex[feat], fp);
-        }
-        RegrApplyWeightToOpp(&regr[phase]);
-        if (readed < NB_FEAT_COMB)
-        {
-            fputs("モデルファイルの読み込みに失敗しました。\n", stderr);
-            return;
-        }
-
-        if (fclose(fp) == EOF)
-        {
-            fputs("モデルファイルクローズに失敗しました。\n", stderr);
-            return;
-        }
-    }
-}
