@@ -1,4 +1,20 @@
-﻿#include "eval.h"
+﻿/**
+ * @file eval.c
+ * @author Daichi Sato
+ * @brief 盤面の評価を行う評価関数の定義
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * 反転・対称型は学習時に統合を行っている。
+ * 保存ファイルの容量は増えるが，読み込み処理の簡単化を優先した。
+ * 
+ * M-buroさんの論文を参考に作成。パターンなども同じパターンを使った。
+ * https://skatgame.net/mburo/ps/improve.pdf
+ */
+
+#include "eval.h"
 #include "ai_const.h"
 #include "../bit_operation.h"
 #include <assert.h>
@@ -44,8 +60,7 @@ extern const score_t VALUE_TABLE[64] = {
     12, 8, 10, 0, 0, 10, 8, 12,
     18, 6, 15, 10, 10, 15, 6, 18,
     4, 1, 6, 8, 8, 6, 1, 4,
-    20, 4, 18, 12, 12, 18, 4, 20
-};
+    20, 4, 18, 12, 12, 18, 4, 20};
 
 // 各座標と対応するパターンとその３進インデックス
 static const PosToFeature Pos2Feat[] = {
