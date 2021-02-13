@@ -17,7 +17,7 @@ uint64_t CalcFlip(const Stones *stones, const uint8 pos);
 
 uint8 CountBits(uint64_t stone);
 
-uint8 PosIndexFromBit(uint64_t pos);
+uint8 PosIndexFromBit(uint64_t pos64);
 uint8 PosIndexFromAscii(const char *ascii);
 
 uint64_t CalcPosBit(uint8 posIdx);

@@ -19,6 +19,14 @@
 #include "bit_operation.h"
 #include <assert.h>
 
+/**
+ * @brief 立っているビット数を数える
+ * 
+ * 組み込み命令を使って高速にカウント（USE_INTRIN)
+ * 
+ * @param x ビット列64
+ * @return uint8 立っているビット数
+ */
 inline uint8 popcnt(uint64_t x)
 {
 #ifdef USE_INTRIN
@@ -45,6 +53,12 @@ inline uint8 popcnt(uint64_t x)
 #endif
 }
 
+/**
+ * @brief 最下位ビットの下側にある0の個数を取得
+ * 
+ * @param x 64ビット列
+ * @return uint8 末尾0の数
+ */
 inline uint8 tzcnt(uint64_t x)
 {
 #ifdef USE_INTRIN
@@ -66,6 +80,12 @@ inline uint8 tzcnt(uint64_t x)
 #endif
 }
 
+/**
+ * @brief 最上位ビットの上側にある0の個数を取得
+ * 
+ * @param x 64ビット列
+ * @return uint8 先頭0の数
+ */
 inline uint8 lzcnt(uint64_t x)
 {
 #ifdef USE_INTRIN
@@ -81,7 +101,17 @@ inline uint8 lzcnt(uint64_t x)
 #endif
 }
 
+// AVX2では全方向同時に計算できるので無効化
 #if !defined(__AVX2__) || !defined(USE_INTRIN)
+/**
+ * @brief 左側のビットに対する着手可能位置の計算
+ * 
+ * @param aly 自身の石情報
+ * @param masked_opp 端マスクをかけた相手の石位置
+ * @param empty 空きマス情報
+ * @param dir 検索方向（タテ・ヨコ・ナナメ
+ * @return uint64_t 左側着手可能位置
+ */
 uint64_t CalcMobilityL(uint64_t aly, uint64_t masked_opp, uint64_t empty,
                        unsigned char dir)
 {
@@ -94,6 +124,15 @@ uint64_t CalcMobilityL(uint64_t aly, uint64_t masked_opp, uint64_t empty,
     return empty & (tmp << dir);
 }
 
+/**
+ * @brief 右側のビットに対する着手可能位置の計算
+ * 
+ * @param aly 自身の石情報
+ * @param masked_opp 端マスクをかけた相手の石位置
+ * @param empty 空きマス情報
+ * @param dir 検索方向（タテ・ヨコ・ナナメ
+ * @return uint64_t 右側着手可能位置
+ */
 uint64_t CalcMobilityR(uint64_t aly, uint64_t masked_opp, uint64_t empty,
                        unsigned char dir)
 {
@@ -107,6 +146,13 @@ uint64_t CalcMobilityR(uint64_t aly, uint64_t masked_opp, uint64_t empty,
 }
 #endif
 
+/**
+ * @brief 着手可能位置の計算
+ * 
+ * @param aly 自分の石情報
+ * @param opp 相手の石情報
+ * @return uint64_t 着手可能位置ビット列
+ */
 inline uint64_t CalcMobility64(const uint64_t aly, const uint64_t opp)
 {
 #if defined(__AVX2__) && defined(USE_INTRIN)
@@ -155,6 +201,12 @@ inline uint64_t CalcMobility64(const uint64_t aly, const uint64_t opp)
 #endif
 }
 
+/**
+ * @brief 石情報から着手可能位置を計算
+ * 
+ * @param stones 石情報
+ * @return uint64_t 着手可能位置bit
+ */
 uint64_t CalcMobility(const Stones *stones)
 {
     return CalcMobility64(stones->own, stones->opp);
@@ -218,28 +270,17 @@ uint64_t CalcFlipR(uint64_t aly, uint64_t masked_empty, uint64_t pos,
 }
 */
 
-/* 
-FlipGenerator
-参考 https://primenumber.hatenadiary.jp/entry/2016/12/26/063226
-
-1. 盤面の端を超えて石が繋がっていても無視する
-2. posから見て上、左、右上、左上のマス目をマスクするビット列を計算する
-3. posからみて相手の石が途切れたところをclzで求め、自分の石の位置とandを取ることでひっくり返せるかどうかがわかる。outflankの各要素は高々1ビットが立つ。
-4. -outflank * 2でoutflankより上位のビットが全部1になる。これとマスクを取ることでひっくり返る石の位置がわかる。
-5. 後半部分は下位ビットから見ていって相手の石が途切れたところを探します。これは関係ない場所を1埋めしてから+1すればよいです。あとは単に前半部分の逆です。
-　　ulong4 flipped, OM, outflank, mask;
-
-　　OM.x = O;
-　　OM.yzw = O & 0x7e7e7e7e7e7e7e7eUL; // 1
-　　mask = (ulong4) (0x0080808080808080UL, 0x7f00000000000000UL, 0x0102040810204000UL, 0x0040201008040201UL) >> (63 - pos); // 2
-　　outflank = (0x8000000000000000UL >> clz(~OM & mask)) & P; // 3
-　　flipped  = (-outflank * 2) & mask; // 4
-　　mask = (ulong4) (0x0101010101010100UL, 0x00000000000000feUL, 0x0002040810204080UL, 0x8040201008040200UL) << pos;
-　　outflank = mask & ((OM | ~mask) + 1) & P; // 5
-　　flipped |= (outflank - (outflank != 0)) & mask;
-　　return flipped.x | flipped.y | flipped.z | flipped.w;
-*/
-
+/**
+ * @brief 反転位置を計算
+ * 
+ * 参考 FlipGenerator
+ * https://primenumber.hatenadiary.jp/entry/2016/12/26/063226
+ * 
+ * @param own 自身の石情報
+ * @param opp 相手の石情報
+ * @param pos 着手位置番号
+ * @return uint64_t 反転位置bit
+ */
 inline uint64_t CalcFlip64(const uint64_t own, const uint64_t opp, const uint8 pos)
 {
     uint64_t flipped[4];
@@ -303,31 +344,69 @@ inline uint64_t CalcFlip64(const uint64_t own, const uint64_t opp, const uint8 p
     */
 }
 
+/**
+ * @brief 石情報と着手位置から反転位置を計算
+ * 
+ * @param stones 石情報
+ * @param pos 着手位置
+ * @return uint64_t 反転位置bit
+ */
 uint64_t CalcFlip(const Stones *stones, const uint8 pos)
 {
     return CalcFlip64(stones->own, stones->opp, pos);
 }
 
+/**
+ * @brief 立っているビット数を数える
+ * 
+ * @param stone 石情報
+ * @return uint8 立っているビット数
+ */
 uint8 CountBits(uint64_t stone)
 {
     return popcnt(stone);
 }
 
-uint8 PosIndexFromBit(uint64_t pos)
+/**
+ * @brief 64bit位置情報から位置インデックス（位置番号）を計算
+ * 
+ * @param pos64 64bit位置情報
+ * @return uint8 位置インデックス（位置番号）
+ */
+uint8 PosIndexFromBit(uint64_t pos64)
 {
-    return tzcnt(pos);
+    return tzcnt(pos64);
 }
 
+/**
+ * @brief Ascii位置情報から位置番号を計算
+ * 
+ * @param ascii Ascii位置情報
+ * @return uint8 位置インデックス（位置番号
+ */
 uint8 PosIndexFromAscii(const char *ascii)
 {
     return 63 - ((ascii[0] - 'A') + (ascii[1] - '1') * 8);
 }
 
+/**
+ * @brief 位置インデックスから64bit位置情報を計算
+ * 
+ * @param posIdx 位置インデックス
+ * @return uint64_t bit位置
+ */
 uint64_t CalcPosBit(unsigned char posIdx)
 {
     return (uint64_t)0x0000000000000001 << posIdx;
 }
 
+/**
+ * @brief 位置インデックスに対応するAscii位置情報を計算
+ * 
+ * @param posIdx 位置インデックス
+ * @param x X座標出力
+ * @param y y座標出力
+ */
 void CalcPosAscii(unsigned char posIdx, char *x, int *y)
 {
     *x = 'H' - posIdx % 8;
