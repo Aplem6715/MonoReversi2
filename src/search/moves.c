@@ -28,6 +28,12 @@
 #include "../ai/eval.h"
 #include "../bit_operation.h"
 
+/**
+ * @brief 盤面石情報から着手リストMoveListを作成
+ * 
+ * @param moveList 作成する着手リストへの参照
+ * @param stones 盤面石情報
+ */
 void CreateMoveList(MoveList *moveList, Stones *stones)
 {
     Move *prev = moveList->moves;
@@ -57,6 +63,14 @@ void CreateMoveList(MoveList *moveList, Stones *stones)
     assert(moveList->nbMoves == CountBits(CalcMobility(stones)));
 }
 
+/**
+ * @brief 着手の評価をする
+ * 
+ * @param tree 探索木
+ * @param move 着手オブジェクト
+ * @param stones 盤面石情報
+ * @param hashData 盤面に対応するハッシュデータ
+ */
 void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *hashData)
 {
     if (move->flip == stones->opp)
@@ -110,6 +124,14 @@ void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *
     }
 }
 
+/**
+ * @brief 着手リストのすべての着手について評価
+ * 
+ * @param tree 探索木
+ * @param movelist 着手可能位置リスト
+ * @param stones 盤面石情報
+ * @param hashData 盤面に対応するハッシュデータ
+ */
 void EvaluateMoveList(SearchTree *tree, MoveList *movelist, Stones *stones, const HashData *hashData)
 {
     Move *move;
@@ -119,6 +141,12 @@ void EvaluateMoveList(SearchTree *tree, MoveList *movelist, Stones *stones, cons
     }
 }
 
+/**
+ * @brief prevの次に評価の高いMoveを入れ替えつつ取得
+ * 
+ * @param prev 検索の起点となる着手
+ * @return Move* prevの次に評価の高い着手
+ */
 Move *NextBestMoveWithSwap(Move *prev)
 {
     if (prev->next)
@@ -146,6 +174,11 @@ Move *NextBestMoveWithSwap(Move *prev)
     return prev->next;
 }
 
+/**
+ * @brief 着手リスト全体をソート
+ * 
+ * @param moveList ソートする着手リスト
+ */
 void SortMoveList(MoveList *moveList)
 {
     Move *move;
