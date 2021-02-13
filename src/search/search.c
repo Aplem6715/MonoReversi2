@@ -24,6 +24,18 @@
 
 static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
 
+/**
+ * @brief 探索木の生成
+ * 
+ * @param tree 生成した探索木
+ * @param midDepth 中盤探索深度
+ * @param endDepth 終盤探索深度
+ * @param midPvsDepth 中盤探索PVS-αβ切り替え深度
+ * @param endPvsDepth 終盤探索PVS-αβ切り替え深度
+ * @param useHash ハッシュ表を使うか
+ * @param useMPC Multi Prob Cutを使うか
+ * @param nestMPC MPCの浅い探索中にさらにMPCを許可するか
+ */
 void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, unsigned char useHash, unsigned char useMPC, unsigned char nestMPC)
 {
     tree->midDepth = midDepth;
@@ -49,6 +61,11 @@ void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
     }
 }
 
+/**
+ * @brief 探索木の解放
+ * 
+ * @param tree 解放する探索木
+ */
 void DeleteTree(SearchTree *tree)
 {
     EvalDelete(tree->eval);
@@ -59,18 +76,37 @@ void DeleteTree(SearchTree *tree)
     }
 }
 
+/**
+ * @brief 探索深度の設定変更
+ * 
+ * @param tree 探索木
+ * @param midDepth 中盤探索深度
+ * @param endDepth 終盤探索深度
+ */
 void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth)
 {
     tree->midDepth = midDepth;
     tree->endDepth = endDepth;
 }
 
+/**
+ * @brief 探索木をリセット
+ * 
+ * @param tree 探索木
+ */
 void ResetTree(SearchTree *tree)
 {
     if (tree->useHash)
         HashTableReset(tree->table);
 }
 
+/**
+ * @brief 探索の初期化
+ * 
+ * @param tree 探索木
+ * @param own 自分の石情報
+ * @param opp 相手の石情報
+ */
 void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
 {
     //ResetTree(tree);
@@ -86,12 +122,23 @@ void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
     tree->stones->opp = opp;
 }
 
+/**
+ * @brief 中盤探索でのパス・パス戻し処理
+ * 
+ * @param tree 探索木
+ */
 void SearchPassMid(SearchTree *tree)
 {
     EvalUpdatePass(tree->eval);
     StonesSwap(tree->stones);
 }
 
+/**
+ * @brief 中盤探索での更新処理
+ * 
+ * @param tree 探索木
+ * @param move 着手情報
+ */
 void SearchUpdateMid(SearchTree *tree, Move *move)
 {
     uint64_t posBit = CalcPosBit(move->posIdx);
@@ -100,6 +147,12 @@ void SearchUpdateMid(SearchTree *tree, Move *move)
     tree->nbEmpty--;
 }
 
+/**
+ * @brief 中盤探索での盤面復元処理
+ * 
+ * @param tree 探索木
+ * @param move 着手情報
+ */
 void SearchRestoreMid(SearchTree *tree, Move *move)
 {
     uint64_t posBit = CalcPosBit(move->posIdx);
@@ -108,6 +161,13 @@ void SearchRestoreMid(SearchTree *tree, Move *move)
     tree->nbEmpty++;
 }
 
+/**
+ * @brief 深い深度での中盤更新処理
+ * 
+ * @param tree 探索木
+ * @param pos bit着手位置
+ * @param flip bit反転位置
+ */
 void SearchUpdateMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
     uint8 posIdx = PosIndexFromBit(pos);
@@ -116,6 +176,13 @@ void SearchUpdateMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
     tree->nbEmpty--;
 }
 
+/**
+ * @brief 深い深度での中盤復元処理
+ * 
+ * @param tree 探索木
+ * @param pos bit着手位置
+ * @param flip bit反転位置
+ */
 void SearchRestoreMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
     uint8 posIdx = PosIndexFromBit(pos);
@@ -124,12 +191,23 @@ void SearchRestoreMidDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
     tree->nbEmpty++;
 }
 
+/**
+ * @brief 終盤探索でのパス・パス復元処理
+ * 
+ * @param tree 
+ */
 void SearchPassEnd(SearchTree *tree)
 {
     StonesSwap(tree->stones);
     EvalUpdatePass(tree->eval);
 }
 
+/**
+ * @brief 終盤探索での更新処理
+ * 
+ * @param tree 探索木
+ * @param move 着手情報
+ */
 void SearchUpdateEnd(SearchTree *tree, Move *move)
 {
     EvalUpdate(tree->eval, move->posIdx, move->flip);
@@ -137,6 +215,12 @@ void SearchUpdateEnd(SearchTree *tree, Move *move)
     tree->nbEmpty--;
 }
 
+/**
+ * @brief 終盤探索での復元処理
+ * 
+ * @param tree 探索木
+ * @param move 着手情報
+ */
 void SearchRestoreEnd(SearchTree *tree, Move *move)
 {
     EvalUndo(tree->eval, move->posIdx, move->flip);
@@ -144,6 +228,13 @@ void SearchRestoreEnd(SearchTree *tree, Move *move)
     tree->nbEmpty++;
 }
 
+/**
+ * @brief 深い深度での終盤更新処理
+ * 
+ * @param tree 探索木
+ * @param pos bit着手位置
+ * @param flip bit反転位置
+ */
 void SearchUpdateEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
     uint8 posIdx = PosIndexFromBit(pos);
@@ -151,6 +242,13 @@ void SearchUpdateEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
     tree->nbEmpty--;
 }
 
+/**
+ * @brief 深い深度での終盤探索復元処理
+ * 
+ * @param tree 探索木
+ * @param pos bit着手位置
+ * @param flip bit反転位置
+ */
 void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 {
     uint8 posIdx = PosIndexFromBit(pos);
@@ -158,6 +256,15 @@ void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
     tree->nbEmpty++;
 }
 
+/**
+ * @brief 予想最善手の探索（AIのメイン処理）
+ * 
+ * @param tree 探索木
+ * @param own 自身の石配置
+ * @param opp 相手の石配置
+ * @param choiceSecond 次善手を選ぶかどうか
+ * @return uint8 予想最善手の位置番号
+ */
 uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
 {
     uint8 pos = NOMOVE_INDEX;
