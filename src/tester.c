@@ -30,6 +30,13 @@ char records[10][61] = {
     "F5D6C4D3E6F4E3F3C6F6",
 };
 
+/**
+ * @brief 対戦の実行
+ * 
+ * @param record 着手位置インデックスの記録
+ * @param logFile 出力ファイル
+ * @return int 黒から見た最終石差
+ */
 int Match(char *record, FILE *logFile)
 {
     SearchTree tree[2];

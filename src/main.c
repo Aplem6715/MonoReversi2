@@ -37,5 +37,5 @@ int main()
     //BenchSearching(depths, 1, 4, 8, "./resources/bench/search.txt");
     //MakeBench(2, 38);
 
-    return 1;
+    return 0;
 }
