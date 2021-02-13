@@ -56,6 +56,17 @@ inline score_t WinJudge(const Stones *stones)
     }
 }
 
+/**
+ * @brief Multi Prob Cutによる枝刈り
+ * 
+ * 浅い探索結果から，Window外のスコアになると予測された場合探索を省略する
+ * 
+ * @param tree 探索ツリー
+ * @param alpha アルファ値
+ * @param depth 探索深度
+ * @param score 探索スコアへの参照
+ * @return bool カットが起こるかどうか
+ */
 bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 depth, score_t *score)
 {
     int i;
@@ -114,6 +125,19 @@ bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 d
     return 0;
 }
 
+/**
+ * @brief 深度が深い枝でのαβ法
+ * 
+ * 枝刈りの性能は低くなるが，１手にかかる処理コストを下げたもの。
+ * Movelistを使わずに，bit位置のみを使う。
+ * 
+ * @param tree 探索木
+ * @param alpha アルファ値
+ * @param beta ベータ値
+ * @param depth 探索深度
+ * @param passed 親ノードでパスされたかどうか
+ * @return score_t この枝の探索スコア
+ */
 score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
 {
     assert(depth <= tree->orderDepth);
@@ -204,6 +228,16 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     return maxScore;
 }
 
+/**
+ * @brief 中盤探索αβ
+ * 
+ * @param tree 探索木
+ * @param alpha アルファ値
+ * @param beta ベータ値
+ * @param depth 探索深度
+ * @param passed 前の盤面がパスだったか？
+ * @return score_t この枝の探索スコア
+ */
 score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
 {
     SearchFunc_t NextSearch;
@@ -290,7 +324,23 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     return maxScore;
 }
 
-// https://www.chessprogramming.org/Principal_Variation_Search
+/**
+ * @brief 深い深度でのNull Window Search(NWS)
+ * 
+ * 探索スコアの幅（Window）をゼロ（実装は１）にして探索することで大量の枝刈りが起き，
+ * 高速に探索できる。探索結果vは，正確な探索スコアがVのとき
+ *  V <= v <= α または β <= v <= V
+ * が得られる。つまりアルファ以上or未満を高速に判別できる。
+ * 
+ * 参考
+ * https://www.chessprogramming.org/Principal_Variation_Search
+ * 
+ * @param tree 探索木
+ * @param beta ベータ値
+ * @param depth 探索深度
+ * @param passed 前の盤面でパスされたかどうか
+ * @return score_t この枝の探索スコア
+ */
 score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed)
 {
     const score_t alpha = beta - 1;
@@ -365,7 +415,23 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
     return maxScore;
 }
 
-// https://www.chessprogramming.org/Principal_Variation_Search
+/**
+ * @brief Null Window Search(NWS)
+ * 
+ * 探索スコアの幅（Window）をゼロ（実装は１）にして探索することで大量の枝刈りが起き，
+ * 高速に探索できる。探索結果vは，正確な探索スコアがVのとき
+ *  V <= v <= α または β <= v <= V
+ * が得られる。つまりアルファ以上or未満を高速に判別できる。
+ * 
+ * 参考
+ * https://www.chessprogramming.org/Principal_Variation_Search
+ * 
+ * @param tree 探索木
+ * @param beta ベータ値
+ * @param depth 探索深度
+ * @param passed パスされたか
+ * @return score_t この枝の探索スコア
+ */
 score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed)
 {
     SearchFuncNullWindow_t NextNullSearch;
@@ -459,10 +525,16 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     return maxScore;
 }
 
-//
 /**
  * @brief 中盤のPVS探索
  * 
+ * 探索する手がスコアが高い順に並んでいると仮定し，
+ * 最初に探索した手のスコア(Principal Variation-PV)を元に，それ以降の手では
+ * NWSを使って最初の手よりもスコアが低いことのみを確認する。
+ * もし最初の手よりスコアが高くなっていた場合，PVSで再探索して正確なスコア(PV)を取得する。
+ * PVSでは，PVを発見するまではNWSを行わない。（α値を超える手が見つかるまでヘアNWSしない）
+ * 
+ * 参考
  *  https://www.chessprogramming.org/Principal_Variation_Search
  * 
  * @param tree 探索木用データ
@@ -572,6 +644,16 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     return alpha;
 }
 
+/**
+ * @brief 中盤探索PVSのルートノード処理
+ * 
+ * @param tree 探索木
+ * @param moveList 着手位置リスト
+ * @param depth 探索深度
+ * @param scoreOut 探索スコアの出力参照
+ * @param secondMoveOut 次善手の出力参照
+ * @return uint8 予想最善手の位置番号
+ */
 uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *scoreOut, uint8 *secondMoveOut)
 {
     SearchFunc_t NextSearch;
@@ -621,6 +703,16 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
     return bestMove;
 }
 
+/**
+ * @brief 中盤探索のルートノード
+ * 
+ * 反復深化法+PVS
+ * 反復深化の深度増加量は探索深度の√に沿う（だいたい2～3ずつ深くなる）
+ * 
+ * @param tree 探索木
+ * @param choiceSecond 次善手を選ぶかどうか
+ * @return uint8 予想最善手位置の番号
+ */
 uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
 {
     MoveList moveList;
@@ -667,6 +759,21 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
     return bestMove;
 }
 
+/**
+ * @brief MPC統計を取りつつ反復深化するルートノード処理
+ * 
+ * MPC統計時のみに使われる。
+ * プレイ時には使われない！
+ * 
+ * @param deepTree 深い探索で使われる探索木
+ * @param shallowTree 浅い探索で使われる探索木
+ * @param logFile 探索スコアデータを記録するファイル
+ * @param matchIdx 試合番号のスタート番号
+ * @param shallow 浅い探索の深度
+ * @param deep 深い探索の深度
+ * @param minimumDepth 最低限探索を行う深度（着手精度の劣悪化を防ぐため）
+ * @return uint8 予想最善手の位置
+ */
 uint8 MidRootWithMpcLog(SearchTree *deepTree, SearchTree *shallowTree, FILE *logFile, int matchIdx, uint8 shallow, uint8 deep, uint8 minimumDepth)
 {
     MoveList moveList;
