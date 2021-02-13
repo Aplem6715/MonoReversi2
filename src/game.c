@@ -24,6 +24,15 @@
 #include "search/search.h"
 #include "bit_operation.h"
 
+/**
+ * @brief 対戦の初期化
+ * 
+ * @param game 対戦情報
+ * @param black 黒のプレイヤー属性（人間・AI
+ * @param white 白のプレイヤー属性
+ * @param mid 中盤探索深度
+ * @param end 終盤探索深度
+ */
 void GameInit(Game *game, PlayerEnum black, PlayerEnum white, int mid, int end)
 {
     game->player[WHITE] = white;
@@ -41,6 +50,11 @@ void GameInit(Game *game, PlayerEnum black, PlayerEnum white, int mid, int end)
     GameReset(game);
 }
 
+/**
+ * @brief 対戦情報の解放
+ * 
+ * @param game 対戦情報
+ */
 void GameFree(Game *game)
 {
     // AIの初期化
@@ -54,6 +68,12 @@ void GameFree(Game *game)
     }
 }
 
+/**
+ * @brief CUI入力から着手位置を取得
+ * 
+ * @param game 対戦情報
+ * @return uint8 着手位置インデックス
+ */
 uint8 WaitPosHumanInput(Game *game)
 {
     char str_pos[5];
@@ -82,6 +102,13 @@ uint8 WaitPosHumanInput(Game *game)
     }
 }
 
+/**
+ * @brief AIの着手位置を取得
+ * 
+ * @param game 対戦情報
+ * @param color 手番色
+ * @return uint8 着手位置
+ */
 uint8 WaitPosAI(Game *game, uint8 color)
 {
     uint8 input;
@@ -97,6 +124,15 @@ uint8 WaitPosAI(Game *game, uint8 color)
     return input;
 }
 
+/**
+ * @brief 着手を待機
+ * 
+ * 人間かAIかで処理を分ける
+ * 
+ * @param game 対戦情報
+ * @param color 手番の色
+ * @return uint8 着手位置インデックス
+ */
 uint8 WaitPos(Game *game, uint8 color)
 {
     if (game->player[color] == HUMAN)
@@ -115,6 +151,11 @@ uint8 WaitPos(Game *game, uint8 color)
     }
 }
 
+/**
+ * @brief 対戦をリセットする
+ * 
+ * @param game 対戦情報
+ */
 void GameReset(Game *game)
 {
     int i;
@@ -126,6 +167,11 @@ void GameReset(Game *game)
     game->turn = 0;
 }
 
+/**
+ * @brief 対戦を行う
+ * 
+ * @param game 対戦情報
+ */
 void GameStart(Game *game)
 {
     uint8 pos;
@@ -200,6 +246,13 @@ void GameStart(Game *game)
     getchar();
 }
 
+/**
+ * @brief 指定色側の探索木を取得
+ * 
+ * @param game 対戦情報
+ * @param color 色指定
+ * @return SearchTree* 指定色の探索木
+ */
 SearchTree *GetTree(Game *game, uint8 color)
 {
     return &game->tree[color];
