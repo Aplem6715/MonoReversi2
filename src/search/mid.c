@@ -69,55 +69,68 @@ inline score_t WinJudge(const Stones *stones)
  */
 bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 depth, score_t *score)
 {
-    int i;
-    uint8 shallowDepth;
+    // MPC統計情報
+    const MPCPair *mpcStat;
+    // ベータ値
     score_t beta = alpha + 1;
+    // 浅い探索でのスコア
     score_t shallowScore;
+    // 浅い探索の深度
+    uint8 shallowDepth;
+    // 標準偏差に乗算されるしきい値係数
     double thresh;
+    // カットしきい値
     long bound;
-    const MPCPair *mpc;
+    // イテレータ
+    int i;
 
-    if (depth >= MPC_DEEP_MIN &&
-        depth <= MPC_DEEP_MAX &&
-        tree->nbMpcNested < MPC_NEST_MAX &&
-        (tree->enableMpcNest || (!tree->enableMpcNest && tree->nbMpcNested == 0)))
+    // MPC深度対象外なら計算しない
+    if (depth < MPC_DEEP_MIN && depth > MPC_DEEP_MAX &&
+        tree->nbMpcNested >= MPC_NEST_MAX &&
+        !tree->enableMpcNest &&
+        tree->nbMpcNested != 0)
     {
-        //thresh = MPC_T[tree->nbMpcNested];
-        thresh = MPC_DEPTH_T[depth];
-        for (i = 0; i < MPC_NB_TRY; i++)
-        {
-            mpc = &mpcPairs[tree->nbEmpty][depth - MPC_DEEP_MIN][i];
-            shallowDepth = mpc->shallowDepth;
-            if (shallowDepth > 0)
-            {
-                bound = lround((thresh * mpc->std + beta - mpc->bias) / mpc->slope);
-                if (bound < SCORE_MAX)
-                {
-                    tree->nbMpcNested++;
-                    {
-                        shallowScore = MidNullWindow(tree, (score_t)bound, shallowDepth, 0);
-                    }
-                    tree->nbMpcNested--;
-                    if (shallowScore >= bound)
-                    {
-                        *score = beta;
-                        return 1;
-                    }
-                }
+        return 0;
+    }
 
-                bound = lround((-thresh * mpc->std + alpha - mpc->bias) / mpc->slope);
-                if (bound > SCORE_MIN)
+    //thresh = MPC_T[tree->nbMpcNested];
+    thresh = MPC_DEPTH_T[depth];
+    for (i = 0; i < MPC_NB_TRY; i++)
+    {
+        mpcStat = &mpcPairs[tree->nbEmpty][depth - MPC_DEEP_MIN][i];
+        shallowDepth = mpcStat->shallowDepth;
+        // MPC統計データがあったら
+        if (shallowDepth > 0)
+        {
+            // ベータカット予測
+            bound = lround((thresh * mpcStat->std + beta - mpcStat->bias) / mpcStat->slope);
+            if (bound < SCORE_MAX)
+            {
+                tree->nbMpcNested++;
                 {
-                    tree->nbMpcNested++;
-                    {
-                        shallowScore = MidNullWindow(tree, (score_t)bound + 1, shallowDepth, 0);
-                    }
-                    tree->nbMpcNested--;
-                    if (shallowScore <= bound)
-                    {
-                        *score = alpha;
-                        return 1;
-                    }
+                    shallowScore = MidNullWindow(tree, (score_t)bound, shallowDepth, 0);
+                }
+                tree->nbMpcNested--;
+                if (shallowScore >= bound)
+                {
+                    *score = beta;
+                    return 1;
+                }
+            }
+
+            // アルファカット予測
+            bound = lround((-thresh * mpcStat->std + alpha - mpcStat->bias) / mpcStat->slope);
+            if (bound > SCORE_MIN)
+            {
+                tree->nbMpcNested++;
+                {
+                    shallowScore = MidNullWindow(tree, (score_t)bound + 1, shallowDepth, 0);
+                }
+                tree->nbMpcNested--;
+                if (shallowScore <= bound)
+                {
+                    *score = alpha;
+                    return 1;
                 }
             }
         }
@@ -142,10 +155,21 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
 {
     assert(depth <= tree->orderDepth);
 
+    // 盤面に対応するハッシュデータ
     HashData *hashData = NULL;
-    uint64_t mob, pos, flip, hashCode;
-    score_t score, maxScore, lower;
+    // 盤面に対応するハッシュコード
+    uint64_t hashCode;
+    // 盤面更新用のビット列
+    uint64_t mob, pos, flip;
+    // 一時スコア
+    score_t score;
+    // 発見した最大スコア
+    score_t maxScore;
+    // 探索スコア下限値
+    score_t lower;
+    // 着手位置インデックス
     uint8 posIdx;
+    // 予想最善手
     uint8 bestMove;
 
     tree->nodeCount++;
@@ -177,14 +201,16 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     }
     else
     {
+        // ハッシュを使って探索範囲を狭める・カットする
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         {
             hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
                 return score;
         }
-        maxScore = -MAX_VALUE;
+
         lower = alpha;
+        maxScore = -MAX_VALUE;
         // 打つ手がある時
         while (mob != 0)
         {
@@ -206,11 +232,10 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
                 maxScore = score;
                 bestMove = posIdx;
 
-                // 上限突破したら
+                // 上限突破したら探索終了（カット）
                 if (score >= beta)
                 {
                     tree->nbCut++;
-                    // 探索終了（カット）
                     break;
                 }
                 else if (maxScore > lower)
@@ -221,6 +246,7 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
         }
     }
 
+    // ハッシュの記録
     if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
@@ -240,13 +266,24 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
  */
 score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
 {
+    // 次の探索に利用する探索関数
     SearchFunc_t NextSearch;
+    // 盤面に対応するハッシュデータ
     HashData *hashData = NULL;
-    MoveList moveList;
-    Move *move;
+    // 盤面に対応するハッシュコード
     uint64_t hashCode;
+    // 着手スコア
+    MoveList moveList;
+    // 着手情報
+    Move *move;
+    // 予想最善手
     uint8 bestMove;
-    score_t score, maxScore, lower;
+    // 一時スコア
+    score_t score;
+    // 発見した最大スコア
+    score_t maxScore;
+    // 探索スコア下限値
+    score_t lower;
 
     tree->nodeCount++;
     if (depth <= 0)
@@ -273,12 +310,15 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     }
     else
     {
+        // ハッシュを使って探索範囲を狭める・カットする
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         {
             hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
                 return score;
         }
+
+        // 探索深度によって探索関数を変更，深い探索では着手の静的評価をしない
         if (depth >= tree->orderDepth)
         {
             EvaluateMoveList(tree, &moveList, tree->stones, hashData);
@@ -288,13 +328,14 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         {
             NextSearch = MidAlphaBetaDeep;
         }
+
+        // すべての着手位置について探索
         maxScore = -MAX_VALUE;
         lower = alpha;
-
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
         {
-            SearchUpdateMid(tree, move); // 子ノードを探索
-            {
+            SearchUpdateMid(tree, move);
+            { // 子ノードを探索
                 score = -NextSearch(tree, -beta, -lower, depth - 1, false);
             }
             SearchRestoreMid(tree, move);
@@ -304,8 +345,8 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
                 maxScore = score;
                 bestMove = move->posIdx;
 
-                if (score >= beta) // 上限突破したら
-                {
+                if (score >= beta)
+                { // 上限突破したら
                     tree->nbCut++;
                     break; // 探索終了（カット）
                 }
@@ -317,6 +358,7 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         }
     }
 
+    // ハッシュの記録
     if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
@@ -343,11 +385,21 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
  */
 score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed)
 {
+    // アルファ値
     const score_t alpha = beta - 1;
+    // 盤面に対応するハッシュデータ
     HashData *hashData = NULL;
-    uint64_t mob, pos, flip, hashCode;
-    score_t score, maxScore;
+    // 盤面に対応するハッシュコード
+    uint64_t hashCode;
+    // 盤面更新用のビット列
+    uint64_t mob, pos, flip;
+    // 一時スコア
+    score_t score;
+    // 発見した最大スコア
+    score_t maxScore;
+    // 着手位置インデックス
     uint8 posIdx;
+    // 予想最善手
     uint8 bestMove;
 
     tree->nodeCount++;
@@ -374,6 +426,7 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
     }
     else
     {
+        // ハッシュを使って探索範囲を狭める・カットする
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         {
             hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
@@ -406,8 +459,9 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
                 }
             }
         }
-    } // end of if(mob == 0) else
+    }
 
+    // ハッシュに記録
     if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
@@ -434,14 +488,24 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
  */
 score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed)
 {
-    SearchFuncNullWindow_t NextNullSearch;
-    HashData *hashData = NULL;
-    MoveList moveList;
-    Move *move;
-    uint64_t hashCode;
-    uint8 bestMove;
-    score_t score, maxScore;
+    // アルファ値
     const score_t alpha = beta - 1;
+    // 次の探索に利用する探索関数
+    SearchFuncNullWindow_t NextNullSearch;
+    // 盤面に対応するハッシュデータ
+    HashData *hashData = NULL;
+    // 盤面に対応するハッシュコード
+    uint64_t hashCode;
+    // 着手リスト
+    MoveList moveList;
+    // 着手情報
+    Move *move;
+    // 予想最善手
+    uint8 bestMove;
+    // 一時スコア
+    score_t score;
+    // 発見した最大スコア
+    score_t maxScore;
 
     if (!tree->enableMpcNest)
     {
@@ -454,6 +518,7 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
         return Evaluate(tree->eval, tree->nbEmpty);
     }
 
+    // ハッシュを使って過去に探索した枝は省略
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
         hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
@@ -461,6 +526,7 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
             return score;
     }
 
+    // 探索深度によって探索関数を変える
     if (depth - 1 >= tree->orderDepth)
     {
         NextNullSearch = MidNullWindow;
@@ -470,6 +536,7 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
         NextNullSearch = MidNullWindowDeep;
     }
 
+    // 着手リストを作成
     CreateMoveList(&moveList, tree->stones);
     if (moveList.nbMoves <= 0) // 手があるか
     {
@@ -487,17 +554,18 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
         }
     }
     else
-    {
-
+    { // 着手できる場所がある時
+        // Multi Prob Cut
         if (tree->useMPC && NullWindowMultiProbCut(tree, alpha, depth, &score))
         {
             return score;
         }
 
+        // すべての手を静的評価
         EvaluateMoveList(tree, &moveList, tree->stones, hashData);
 
+        // すべての手を探索
         maxScore = -MAX_VALUE;
-
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
         {
             SearchUpdateMid(tree, move);
@@ -516,8 +584,9 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
                 }
             }
         }
-    } // end of if(moveList.nbMoves > 0)
+    }
 
+    // ハッシュ表に登録
     if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
@@ -546,14 +615,24 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
  */
 score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, const unsigned char depth, const unsigned char passed)
 {
+    // 次に使用する探索関数
     SearchFunc_t NextSearch;
+    // 盤面に対応するハッシュデータ
     HashData *hashData = NULL;
-    MoveList moveList;
-    Move *move;
+    // 盤面に対応するハッシュコード
     uint64_t hashCode;
+    // 着手リスト
+    MoveList moveList;
+    // 探索中の着手
+    Move *move;
+    // 現状での予想最善手
     uint8 bestMove;
+    // Principle Variationが見つかっているか
     uint8 foundPV = 0;
-    score_t score, alpha, beta;
+    // スコア
+    score_t score;
+    // 探索スコアwindow境界
+    score_t alpha, beta;
 
     tree->nodeCount++;
     if (depth <= 0)
@@ -561,6 +640,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         return Evaluate(tree->eval, tree->nbEmpty);
     }
 
+    // 探索深度によって次の探索関数を変える
     if (depth - 1 >= tree->pvsDepth)
     {
         NextSearch = MidPVS;
@@ -570,7 +650,8 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         NextSearch = MidAlphaBeta;
     }
 
-    CreateMoveList(&moveList, tree->stones); // 着手リストを作成
+    // 着手リストを作成
+    CreateMoveList(&moveList, tree->stones);
 
     if (moveList.nbMoves <= 0)
     { // 手があるか
@@ -600,17 +681,19 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
             //    return score;
         }
 
-        EvaluateMoveList(tree, &moveList, tree->stones, hashData); // 着手の事前評価
+        // 着手の事前評価
+        EvaluateMoveList(tree, &moveList, tree->stones, hashData);
 
+        // すべての着手について探索
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
-        { // すべての着手についてループ
+        {
             SearchUpdateMid(tree, move);
             if (!foundPV)
-            {                                                               // PVが見つかっていない
+            {                                                               // PVが見つかっていないとき
                 score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常探索
             }
             else
-            {                                                           // PVが見つかっている
+            {                                                           // PVが見つかっているとき
                 score = -MidNullWindow(tree, -alpha, depth - 1, false); // 最善かどうかチェック 子ノードをNull Window探索
                 if (score > alpha)                                      // 予想が外れていたら
                 {
@@ -632,9 +715,10 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
                 bestMove = move->posIdx;
                 foundPV = 1; // PVを発見した！
             }
-        } // end of moves loop
+        }
     }
 
+    // ハッシュ表に登録
     if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
     {
         HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, alpha);
@@ -656,11 +740,18 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
  */
 uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *scoreOut, uint8 *secondMoveOut)
 {
+    // 次の探索関数
     SearchFunc_t NextSearch;
-    score_t alpha, beta, score;
+    // Principle Variationが見つかっているか
     uint8 foundPV = 0;
+    // 現状予想される最善手
     uint8 bestMove = NOMOVE_INDEX;
+    // 着手情報
     Move *move;
+    // 一時探索スコア
+    score_t score;
+    // 探索スコアwindow境界
+    score_t alpha, beta;
 
     if (depth >= tree->pvsDepth)
     {
@@ -715,21 +806,29 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
  */
 uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
 {
+    // 着手リスト
     MoveList moveList;
+    // 反復深化の深度限界値
     uint8 startDepth, endDepth;
+    // 予想最善・次善手
     uint8 bestMove, secondMove;
+    // 一時記録用の深度情報
     uint8 tmpDepth;
+    // 反復深化深度リスト
     uint8 depths[10];
+    // 深度リストの内容数
     uint8 nDepths;
 
     CreateMoveList(&moveList, tree->stones);
     EvaluateMoveList(tree, &moveList, tree->stones, NULL); // 着手の事前評価
     assert(moveList.nbMoves > 0);
 
+    // 深度リストを深い方から設定
+    // 深い深度では間隔を開け，浅い深度では間隔を狭める
+    // 例：14, 11, 8, 6, 4
+    nDepths = 0;
     startDepth = 4;
     endDepth = tree->depth;
-
-    nDepths = 0;
     for (tmpDepth = endDepth; tmpDepth >= startDepth; tmpDepth -= (int)sqrt(tmpDepth))
     {
         depths[nDepths] = tmpDepth;
@@ -737,6 +836,7 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
     }
 
     // 反転
+    // 例：4, 6, 8, 11, 14
     int i = 0;
     for (i = 0; i < nDepths / 2; i++)
     {
@@ -745,10 +845,12 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
         depths[(nDepths - 1) - i] = tmpDepth;
     }
 
+    // 反復深化
     for (i = 0; i < nDepths; i++)
     {
         bestMove = MidPVSRoot(tree, &moveList, depths[i], &tree->score, &secondMove);
     }
+    // 最終深度で探索
     bestMove = MidPVSRoot(tree, &moveList, endDepth, &tree->score, &secondMove);
 
     if (choiceSecond && moveList.nbMoves >= 2)
@@ -779,16 +881,19 @@ uint8 MidRootWithMpcLog(SearchTree *deepTree, SearchTree *shallowTree, FILE *log
     MoveList moveList;
     uint8 bestMove, secondMove;
 
+    // 深い探索・浅い探索での着手リスト作成
     CreateMoveList(&moveList, deepTree->stones);
-    CreateMoveList(&moveList, shallowTree->stones);
     EvaluateMoveList(deepTree, &moveList, deepTree->stones, NULL);       // 着手の事前評価
     EvaluateMoveList(shallowTree, &moveList, shallowTree->stones, NULL); // 着手の事前評価
     assert(moveList.nbMoves > 0);
 
+    // 深い探索の設定
     deepTree->isEndSearch = 0;
     deepTree->pvsDepth = deepTree->midPvsDepth;
     deepTree->orderDepth = deepTree->pvsDepth;
     deepTree->hashDepth = deepTree->pvsDepth - 1;
+
+    // 浅い探索の設定
     shallowTree->isEndSearch = 0;
     shallowTree->pvsDepth = shallowTree->midPvsDepth;
     shallowTree->orderDepth = shallowTree->pvsDepth;
