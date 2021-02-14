@@ -85,10 +85,9 @@ bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 d
     int i;
 
     // MPC深度対象外なら計算しない
-    if (depth < MPC_DEEP_MIN && depth > MPC_DEEP_MAX &&
-        tree->nbMpcNested >= MPC_NEST_MAX &&
-        !tree->enableMpcNest &&
-        tree->nbMpcNested != 0)
+    if (depth < MPC_DEEP_MIN || depth > MPC_DEEP_MAX ||
+        tree->nbMpcNested >= MPC_NEST_MAX ||
+        (!tree->enableMpcNest && tree->nbMpcNested != 0))
     {
         return 0;
     }
@@ -823,33 +822,37 @@ uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
     EvaluateMoveList(tree, &moveList, tree->stones, NULL); // 着手の事前評価
     assert(moveList.nbMoves > 0);
 
-    // 深度リストを深い方から設定
-    // 深い深度では間隔を開け，浅い深度では間隔を狭める
-    // 例：14, 11, 8, 6, 4
     nDepths = 0;
     startDepth = 4;
     endDepth = tree->depth;
-    for (tmpDepth = endDepth; tmpDepth >= startDepth; tmpDepth -= (int)sqrt(tmpDepth))
-    {
-        depths[nDepths] = tmpDepth;
-        nDepths++;
-    }
-
-    // 反転
-    // 例：4, 6, 8, 11, 14
-    int i = 0;
-    for (i = 0; i < nDepths / 2; i++)
-    {
-        tmpDepth = depths[i];
-        depths[i] = depths[(nDepths - 1) - i];
-        depths[(nDepths - 1) - i] = tmpDepth;
-    }
-
     // 反復深化
-    for (i = 0; i < nDepths; i++)
+    if (tree->useIDDS)
     {
-        bestMove = MidPVSRoot(tree, &moveList, depths[i], &tree->score, &secondMove);
+        // 深度リストを深い方から設定
+        // 深い深度では間隔を開け，浅い深度では間隔を狭める
+        // 例：14, 11, 8, 6, 4
+        for (tmpDepth = endDepth; tmpDepth >= startDepth; tmpDepth -= (int)sqrt(tmpDepth))
+        {
+            depths[nDepths] = tmpDepth;
+            nDepths++;
+        }
+
+        // 反転
+        // 例：4, 6, 8, 11, 14
+        int i = 0;
+        for (i = 0; i < nDepths / 2; i++)
+        {
+            tmpDepth = depths[i];
+            depths[i] = depths[(nDepths - 1) - i];
+            depths[(nDepths - 1) - i] = tmpDepth;
+        }
+
+        for (i = 0; i < nDepths; i++)
+        {
+            bestMove = MidPVSRoot(tree, &moveList, depths[i], &tree->score, &secondMove);
+        }
     }
+
     // 最終深度で探索
     bestMove = MidPVSRoot(tree, &moveList, endDepth, &tree->score, &secondMove);
 

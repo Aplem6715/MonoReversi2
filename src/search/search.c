@@ -46,6 +46,8 @@ void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
     tree->useMPC = useMPC;
     tree->enableMpcNest = nestMPC;
 
+    tree->useIDDS = 1;
+
     EvalInit(tree->eval);
 
     if (useHash)

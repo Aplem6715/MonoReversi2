@@ -44,7 +44,8 @@ typedef struct SearchTree
 
     // ハッシュ表を利用するかどうか
     unsigned char useHash;
-
+    // 反復深化を利用するかどうか
+    unsigned char useIDDS;
     // Multi Prob Cutを利用するかどうか
     unsigned char useMPC;
     // MPCの探索内でさらにMPCを許可するかどうか
