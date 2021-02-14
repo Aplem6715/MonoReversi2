@@ -15,7 +15,7 @@
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate.txt"
+#define LOG_FILE "./resources/tester/accurate_base.txt"
 
 char records[10][61] = {
     "F5D6C5F4E3C6D3F6E6D7",
@@ -37,13 +37,11 @@ char records[10][61] = {
  * @param logFile 出力ファイル
  * @return int 黒から見た最終石差
  */
-int Match(char *record, FILE *logFile)
+int Match(char *record, SearchTree tree[2], FILE *logFile)
 {
-    SearchTree tree[2];
     uint64_t flip;
     int nbEmpty = 60;
     Board board[1];
-    ;
 
     uint8 pos;
     char posX;
@@ -56,7 +54,7 @@ int Match(char *record, FILE *logFile)
     {
         pos = PosIndexFromAscii(&record[i]);
         BoardPutTT(board, pos);
-        CalcPosAscii(pos, posX, posY);
+        CalcPosAscii(pos, &posX, &posY);
         fprintf(logFile, "%c%d", posX, posY);
         i += 2;
     }
@@ -86,7 +84,7 @@ int Match(char *record, FILE *logFile)
         // 実際に着手
         flip = BoardPutTT(board, pos);
 
-        CalcPosAscii(pos, posX, posY);
+        CalcPosAscii(pos, &posX, &posY);
         fprintf(logFile, "%c%d", posX, posY);
         nbEmpty--;
 
@@ -98,13 +96,21 @@ int Match(char *record, FILE *logFile)
 
 int main()
 {
-
+    SearchTree tree[2];
     FILE *fp = fopen(LOG_FILE, "w");
     int i = 0;
 
+    InitTree(&tree[0], 8, 10, 8, 18, 0, 0, 0);
+    InitTree(&tree[1], 8, 10, 8, 18, 0, 0, 0);
+    // 設定上書き
+    tree[0].useIDDS = 0;
+    tree[1].useIDDS = 0;
+
     for (i = 0; i < 10; i++)
     {
-        Match(records[i], fp);
+        ResetTree(&tree[0]);
+        ResetTree(&tree[1]);
+        Match(records[i], tree, fp);
     }
 
     fclose(fp);
