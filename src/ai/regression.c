@@ -1,4 +1,19 @@
-﻿
+﻿/**
+ * @file regression.c
+ * @author Daichi Sato
+ * @brief 線形回帰による最終石差予測
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * 各パターンの評価値を変数とし，それらを足し合わせることで最終石差を予測する。
+ * 
+ * M-buroさんの論文を参考に作成
+ * https://skatgame.net/mburo/ps/improve.pdf
+ * 
+ */
+
 #define _CRT_SECURE_NO_WARNINGS
 #include "regression.h"
 #include "eval.h"

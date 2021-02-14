@@ -9,35 +9,62 @@
 #include "../const.h"
 #include "../ai/eval.h"
 
+/**
+ * @brief 探索木の情報を持つオブジェクト
+ * 
+ */
 typedef struct SearchTree
 {
+    // ハッシュ表
     HashTable *table;
+    // 評価オブジェクト
     Evaluator eval[1];
+    // 石情報
     Stones stones[1];
+    // 残り空きマス数
     uint8 nbEmpty;
 
+    // 探索深度
     unsigned char depth;
+    // move ordering 限界深度
     unsigned char orderDepth;
+    // ハッシュ表限界深度
     unsigned char hashDepth;
+    // PVS限界深度
     unsigned char pvsDepth;
 
+    // 中盤探索深度
     unsigned char midDepth;
+    // 終盤探索深度
     unsigned char endDepth;
+    // 中盤探索PVS限界
     unsigned char midPvsDepth;
+    // 終盤探索PVS限界
     unsigned char endPvsDepth;
+
+    // ハッシュ表を利用するかどうか
     unsigned char useHash;
 
+    // Multi Prob Cutを利用するかどうか
     unsigned char useMPC;
+    // MPCの探索内でさらにMPCを許可するかどうか
     unsigned char enableMpcNest;
+    // MPCの重複回数
     uint8 nbMpcNested;
 
     /* For Stats */
+    // 探索ノード数
     size_t nodeCount;
+    // ベータカット数
     size_t nbCut;
+    // 探索時間
     double usedTime;
+    // 予想最善手の探索スコア
     score_t score;
+    // 終盤探索だったかどうか
     uint8 isEndSearch;
 
+    // CUIメッセージ利用時のバッファ
     char msg[1024];
 } SearchTree;
 

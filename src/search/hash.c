@@ -1,4 +1,23 @@
-﻿
+﻿/**
+ * @file hash.c
+ * @author Daichi Sato
+ * @brief TranspositionTable(置換表)の実装
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * ハッシュを用いた高速検索可能な置換表
+ * 一度探索したことがある盤面の過去の情報を記録しておき，
+ * 有効に再利用することができる。
+ * 
+ * ハッシュ関数：
+ * 64x2bit盤面を1byteごとに分割し，
+ * それぞれに対して乱数を振り分け（起動時に各バイト値(0-255)に乱数振り分けをしておく），
+ * 取得された16個の乱数をXORで統合することでハッシュ値を生成。
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -8,32 +27,46 @@
 #include "../const.h"
 
 #define HASH_TABLE_SIZE (1 << 24)
+
+// データ位置再探索（偶奇反転）
 #define RETRY_HASH(h) ((h) ^ 1)
+
+#define HASH_SEED (160510)
+#define RAWHASH_MIN_TRUE_BITS (8)
 
 // RawHash[8行x2色][列内8石のパターン]
 uint64_t RawHash[8 * 2][1 << 8];
 
+// 空ハッシュデータ
 static const HashData EMPTY_HASH_DATA = {
-    0, 0,                               // stones
-    0,                                  // depth
-    NOMOVE_INDEX, NOMOVE_INDEX,         // moves
-    -MAX_VALUE, MAX_VALUE // scores
+    0, 0,                       // stones
+    0,                          // depth
+    NOMOVE_INDEX, NOMOVE_INDEX, // moves
+    -MAX_VALUE, MAX_VALUE       // scores
 };
 
+/**
+ * @brief ハッシュ関数の乱数初期化
+ */
 void HashInit()
 {
-    for (int i = 0; i < 8 * 2; i++)
+    for (int row = 0; row < 8 * 2; row++)
     {
-        for (int j = 0; j < 1 << 8; j++)
+        for (int b = 0; b < (1 << 8); b++)
         {
             do
             {
-                RawHash[i][j] = rand64();
-            } while (CountBits(RawHash[i][j]) < MIN_RAWHASH_BIT);
+                RawHash[row][b] = rand64();
+            } while (CountBits(RawHash[row][b]) < RAWHASH_MIN_TRUE_BITS);
         }
     }
 }
 
+/**
+ * @brief ハッシュ表のメモリ確保
+ * 
+ * @param table 初期化するハッシュ表
+ */
 void HashTableInit(HashTable *table)
 {
     table->size = HASH_TABLE_SIZE;
@@ -48,12 +81,22 @@ void HashTableInit(HashTable *table)
     assert(CountBits(table->size) == 1);
 }
 
+/**
+ * @brief ハッシュ表の解放
+ * 
+ * @param table 開放するハッシュ表
+ */
 void HashTableFree(HashTable *table)
 {
     free(table->data);
     table->size = 0;
 }
 
+/**
+ * @brief ハッシュ表のリセット
+ * 
+ * @param table リセットするハッシュ表
+ */
 void HashTableReset(HashTable *table)
 {
     for (size_t i = 0; i < table->size; i++)
@@ -63,6 +106,11 @@ void HashTableReset(HashTable *table)
     HashTableResetStats(table);
 }
 
+/**
+ * @brief ハッシュ表の利用状況などの統計をリセット
+ * 
+ * @param table 統計をリセットするハッシュ表
+ */
 void HashTableResetStats(HashTable *table)
 {
     table->nbUsed = 0;
@@ -72,7 +120,12 @@ void HashTableResetStats(HashTable *table)
     table->nb2ndHit = 0;
 }
 
-// 乱数ビット列を統合してハッシュコードを取得する
+/**
+ * @brief 乱数ビット列を統合してハッシュコードを取得する
+ * 
+ * @param stones 盤面の石情報
+ * @return uint64_t ハッシュコード
+ */
 inline uint64_t GetHashCode(Stones *stones)
 {
     uint64_t code;
@@ -102,6 +155,15 @@ inline uint64_t GetHashCode(Stones *stones)
     return code;
 }
 
+/**
+ * @brief ハッシュ表内から，指定盤面のハッシュデータを取得
+ * 
+ * @param table ハッシュ表
+ * @param stones 盤面情報
+ * @param depth 探索深度
+ * @param hashCode ハッシュコード
+ * @return HashData* 取得したハッシュデータ
+ */
 HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64_t *hashCode)
 {
     // ハッシュコード取得
@@ -129,6 +191,13 @@ HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64
     return NULL;
 }
 
+/**
+ * @brief 指定盤面のデータを含んでいるかどうか
+ * 
+ * @param table ハッシュ表
+ * @param stones 盤面情報
+ * @return uint8 True/False
+ */
 uint8 IsHashTableContains(HashTable *table, Stones *stones)
 {
     // ハッシュコード取得
@@ -150,6 +219,16 @@ uint8 IsHashTableContains(HashTable *table, Stones *stones)
     return 0;
 }
 
+/**
+ * @brief ハッシュによる枝刈り・探索範囲の縮小
+ * 
+ * @param hashData ハッシュデータ
+ * @param depth 探索深度
+ * @param alpha アルファ値への参照
+ * @param beta ベータ値への参照
+ * @param score 探索スコアへの参照
+ * @return bool 枝刈りが起こるかどうか
+ */
 bool IsHashCut(HashData *hashData, const uint8 depth, score_t *alpha, score_t *beta, score_t *score)
 {
     assert(hashData != NULL);
@@ -178,6 +257,17 @@ bool IsHashCut(HashData *hashData, const uint8 depth, score_t *alpha, score_t *b
     return false;
 }
 
+/**
+ * @brief Null Window Search中のハッシュによる枝刈り
+ * 
+ * NWS中はアルファ値・ベータ値の変更は行わず，カットだけ実行。
+ * 
+ * @param hashData ハッシュデータ
+ * @param depth 探索深度
+ * @param alpha アルファ値
+ * @param score 探索スコアへの参照
+ * @return bool 枝刈りが起こるかどうか
+ */
 bool IsHashCutNullWindow(HashData *hashData, const uint8 depth, const score_t alpha, score_t *score)
 {
     assert(hashData != NULL);
@@ -199,6 +289,17 @@ bool IsHashCutNullWindow(HashData *hashData, const uint8 depth, const score_t al
     return false;
 }
 
+/**
+ * @brief ハッシュデータを新しいデータで上書きする
+ * 
+ * @param data 上書きするデータ
+ * @param stones 盤面石情報
+ * @param bestMove 予測される最善手
+ * @param depth 探索深度
+ * @param alpha アルファ値
+ * @param beta ベータ値
+ * @param maxScore 最大探索スコア
+ */
 void HashDataSaveNew(HashData *data, const Stones *stones, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
 {
     if (maxScore < beta)
@@ -306,6 +407,20 @@ uint8 HashDataPriorityOverwrite(HashData *data, const Stones *stones, const uint
     return 0;
 }
 
+/**
+ * @brief ハッシュ表に探索情報を記録する
+ * 
+ * 探索情報によって優先度付けを行い，衝突した際は優先度の高い方を記録する。
+ * 
+ * @param table ハッシュ表
+ * @param hashCode ハッシュコード
+ * @param stones 盤面石情報
+ * @param bestMove 予測される最善手
+ * @param depth 探索深度
+ * @param in_alpha アルファ値
+ * @param in_beta ベータ値
+ * @param maxScore 最大スコア
+ */
 void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t in_alpha, score_t in_beta, score_t maxScore)
 {
     uint64_t index = hashCode & (table->size - 1);

@@ -1,4 +1,18 @@
-
+/**
+ * @file regr_trainer.cpp
+ * @author Daichi Sato
+ * @brief 重線形回帰を用いたパターンの重み付け
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * 反転・対照型パターンも同時に重み更新を行う。
+ * 試合進行(フェーズと呼ぶ)によって評価を変える。
+ * 学習時には隣接するフェーズからも学習を行い，急な評価の変化を防ぐ
+ * ランダムサンプリング・バッチ学習
+ * 
+ */
 
 #include "regr_trainer.hpp"
 

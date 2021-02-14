@@ -1,3 +1,17 @@
+/**
+ * @file client.c
+ * @author Daichi Sato
+ * @brief クライアントとして動作する際のメイン部
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * AI強化後の効果確認のためにサーバー上で対戦する。
+ * 公開用ではなく確認用のため，通信などは適当な作りになっている。
+ * 
+ */
+
 #include <stdio.h>
 #include <Windows.h>
 #include <assert.h>
@@ -14,6 +28,14 @@
 #define USE_MPC 1
 #define USE_NEST_MPC 1
 
+/**
+ * @brief 盤面情報をサーバーからダウンロードする
+ * 
+ * @param pipe 通信パイプ
+ * @param black 黒石情報への参照
+ * @param white 白石情報への参照
+ * @return uint8 手番の色
+ */
 uint8 BoardDownload(HANDLE pipe, uint64_t *black, uint64_t *white)
 {
     uint64_t buff[5];
@@ -27,6 +49,12 @@ uint8 BoardDownload(HANDLE pipe, uint64_t *black, uint64_t *white)
     return (uint8)buff[2];
 }
 
+/**
+ * @brief サーバーからの着手を待機
+ * 
+ * @param pipe 通信パイプ
+ * @return uint8 着手位置
+ */
 uint8 WaitMoveResponse(HANDLE pipe)
 {
     char buff[1];
@@ -39,6 +67,12 @@ uint8 WaitMoveResponse(HANDLE pipe)
     return buff[0] - 1;
 }
 
+/**
+ * @brief 着手情報を送信
+ * 
+ * @param pipe 通信パイプ
+ * @param pos 着手位置
+ */
 void SendMove(HANDLE pipe, uint8 pos)
 {
     char buff[1];
@@ -55,6 +89,16 @@ void SendMove(HANDLE pipe, uint8 pos)
     }
 }
 
+/**
+ * @brief 対戦の実行
+ * 
+ * @param pipe 通信パイプ
+ * @param myColor 自分の色
+ * @param black 黒石情報
+ * @param white 白石情報
+ * @param turn スタート時点の手番色
+ * @return int 正常終了0 エラー番号
+ */
 int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn)
 {
     SearchTree tree[1];
@@ -122,6 +166,14 @@ int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn
     return 0;
 }
 
+/**
+ * @brief 通信対戦のメイン関数
+ * 
+ * 通信パイプを作成・接続し，エラー終了するまで対戦を繰り返す。
+ * 動作確認用なのでそのへんは適当な作りになっている。
+ * 
+ * @return int 
+ */
 int main()
 {
     HANDLE hPipe = INVALID_HANDLE_VALUE;

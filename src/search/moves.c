@@ -1,4 +1,19 @@
-﻿
+﻿/**
+ * @file moves.c
+ * @author Daichi Sato
+ * @brief 探索手リスト・並び替えの実装
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * 深さ優先探索において，スコアの高いてから先に探索したほうが
+ * 探索効率が良くなり，高速になることが知られている。
+ * 探索手リストは，探索中の盤面内での合法手一覧を保持し，
+ * それぞれの手についてスコア付けを行いソートしながら探索する。
+ * 
+ */
+
 #include <stdio.h>
 #include <stdint.h>
 #include <assert.h>
@@ -13,6 +28,12 @@
 #include "../ai/eval.h"
 #include "../bit_operation.h"
 
+/**
+ * @brief 盤面石情報から着手リストMoveListを作成
+ * 
+ * @param moveList 作成する着手リストへの参照
+ * @param stones 盤面石情報
+ */
 void CreateMoveList(MoveList *moveList, Stones *stones)
 {
     Move *prev = moveList->moves;
@@ -42,6 +63,14 @@ void CreateMoveList(MoveList *moveList, Stones *stones)
     assert(moveList->nbMoves == CountBits(CalcMobility(stones)));
 }
 
+/**
+ * @brief 着手の評価をする
+ * 
+ * @param tree 探索木
+ * @param move 着手オブジェクト
+ * @param stones 盤面石情報
+ * @param hashData 盤面に対応するハッシュデータ
+ */
 void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *hashData)
 {
     if (move->flip == stones->opp)
@@ -95,6 +124,14 @@ void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *
     }
 }
 
+/**
+ * @brief 着手リストのすべての着手について評価
+ * 
+ * @param tree 探索木
+ * @param movelist 着手可能位置リスト
+ * @param stones 盤面石情報
+ * @param hashData 盤面に対応するハッシュデータ
+ */
 void EvaluateMoveList(SearchTree *tree, MoveList *movelist, Stones *stones, const HashData *hashData)
 {
     Move *move;
@@ -104,6 +141,12 @@ void EvaluateMoveList(SearchTree *tree, MoveList *movelist, Stones *stones, cons
     }
 }
 
+/**
+ * @brief prevの次に評価の高いMoveを入れ替えつつ取得
+ * 
+ * @param prev 検索の起点となる着手
+ * @return Move* prevの次に評価の高い着手
+ */
 Move *NextBestMoveWithSwap(Move *prev)
 {
     if (prev->next)
@@ -131,6 +174,11 @@ Move *NextBestMoveWithSwap(Move *prev)
     return prev->next;
 }
 
+/**
+ * @brief 着手リスト全体をソート
+ * 
+ * @param moveList ソートする着手リスト
+ */
 void SortMoveList(MoveList *moveList)
 {
     Move *move;

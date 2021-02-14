@@ -4,23 +4,25 @@
 #include "../stones.h"
 #include "../const.h"
 
-#define NOMOVE_INDEX 64
-#define PASS_INDEX 65
 
 // ハッシュテーブルに格納されるデータ
 // 8x2 + 1 + 1*2 + 2x2 = 23[byte]
 typedef struct HashData
 {
+    // 石情報
     uint64_t own, opp;
+    // 探索深度
     uint8 depth;
+    // 最善手，更新前の最善手
     uint8 bestMove, secondMove;
-    //int16_t lower, upper;
+    // スコアwindow(下限値，上限値)
     score_strict_t lower, upper;
 } HashData;
 
 // ハッシュテーブル
 typedef struct HashTable
 {
+    // ハッシュデータの配列
     HashData *data;
     // サイズは2のべき乗
     size_t size;
@@ -32,9 +34,6 @@ typedef struct HashTable
     uint64_t nb2ndHit;
     uint64_t nbCollide;
 } HashTable;
-
-#define HASH_SEED (160510)
-#define MIN_RAWHASH_BIT (8)
 
 // ハッシュキー生成用の乱数ビット列を初期化
 void HashInit();

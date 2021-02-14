@@ -1,3 +1,17 @@
+/**
+ * @file nnet_trainer.cpp
+ * @author Daichi Sato
+ * @brief ニューラルネットの学習機能の定義
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * ニューラルネットの学習を行う。
+ * データ全体からいくつかのデータをランダムサンプリングして学習に利用する。
+ * 誤差逆伝播，バッチ学習，活性化関数はtanhExp，誤差関数はmse
+ * 
+ */
 
 #include "nnet_trainer.hpp"
 

@@ -1,3 +1,24 @@
+/**
+ * @file end.c
+ * @author Daichi Sato
+ * @brief 終盤探索機能の定義
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * 終盤探索では終局まで探索を行い，最善進行と石差を計算する。
+ * 最善進行を探索するため，どのアルゴリズムを用いても結果は同じにならなければいけない。
+ * デバッグしやすくてありがたい。
+ * 
+ * メインとなるアルゴリズム：
+ * ・NullWindowSearch(NWSと略す。αβ探索のWindowを1にして探索。高速にα以上or以下を判別できる)
+ * ・PVS(NWSを用いて高速に探索する深さ優先探索アルゴリズム)
+ * ・反復深化(だんだん深く探索)
+ * ・TranspositionTable（置換表・ハッシュ）
+ * ・MoveOrdering(探索順番の並び替え)
+ */
+
 #include "end.h"
 #include "search.h"
 #include "hash.h"
@@ -7,6 +28,12 @@
 #include "../const.h"
 #include <assert.h>
 
+/**
+ * @brief 石差を計算する
+ * 
+ * @param tree 探索木
+ * @return score_t 石差
+ */
 inline score_t Judge(const SearchTree *tree)
 {
     const uint8 nbOwn = CountBits(tree->stones->own);
@@ -14,6 +41,16 @@ inline score_t Judge(const SearchTree *tree)
     return (score_t)((nbOwn - nbOpp) * STONE_VALUE);
 }
 
+/**
+ * @brief 終盤探索αβ法
+ * 
+ * @param tree 探索木
+ * @param alpha アルファ値
+ * @param beta ベータ値
+ * @param depth 探索深度
+ * @param passed パスされたか？
+ * @return score_t 探索結果スコア
+ */
 score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
 {
     uint8 bestMove;
@@ -109,6 +146,19 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     return maxScore;
 }
 
+/**
+ * @brief 深い探索での終盤αβ法
+ * 
+ * Movelistの生成・評価を行なわず，ビット位置で処理する。
+ * 高速な探索が可能
+ * 
+ * @param tree 探索木
+ * @param alpha アルファ値
+ * @param beta ベータ値
+ * @param depth 探索深度
+ * @param passed パスされたか
+ * @return score_t 探索スコア
+ */
 score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
 {
 
@@ -203,7 +253,20 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     return maxScore;
 }
 
-// https://www.chessprogramming.org/Principal_Variation_Search
+/**
+ * @brief 深い深度での終盤NWS
+ * 
+ *  move orderingなしで高速なNWS
+ * 
+ * 参考
+ * https://www.chessprogramming.org/Principal_Variation_Search
+ * 
+ * @param tree 探索木
+ * @param beta ベータ値
+ * @param depth 探索深度
+ * @param passed パスされたかどうか
+ * @return score_t 探索スコア
+ */
 score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed)
 {
     const score_t alpha = beta - 1;
@@ -278,7 +341,18 @@ score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
     return maxScore;
 }
 
-// https://www.chessprogramming.org/Principal_Variation_Search
+/**
+ * @brief 終盤探索NWS
+ * 
+ * 参考
+ * https://www.chessprogramming.org/Principal_Variation_Search
+ * 
+ * @param tree 探索木
+ * @param beta ベータ値
+ * @param depth 探索深度
+ * @param passed パスされたかどうか
+ * @return score_t 探索スコア
+ */
 score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed)
 {
     SearchFuncNullWindow_t NextNullSearch;
@@ -364,6 +438,7 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
 /**
  * @brief 終盤のPVS探索
  * 
+ * 参考
  *  https://www.chessprogramming.org/Principal_Variation_Search
  * 
  * @param tree 探索木用データ
@@ -471,6 +546,13 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     return alpha;
 }
 
+/**
+ * @brief 終盤探索のルートノード処理
+ * 
+ * @param tree 探索木
+ * @param choiceSecond 次善手を選ぶか
+ * @return uint8 予測手の位置番号
+ */
 uint8 EndRoot(SearchTree *tree, uint8 choiceSecond)
 {
     SearchFunc_t NextSearch;

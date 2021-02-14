@@ -1,4 +1,20 @@
-﻿
+﻿/**
+ * @file nnet.c
+ * @author Daichi Sato
+ * @brief ニューラルネットを用いた盤面の評価
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ * 3層MLP
+ * 入力はパターンごとのOne-Hot入力，
+ * 出力は最終予想石差
+ * 入力層から隠れ層の間は殆どが0接続になるため，
+ * 必要な接続箇所のみ計算するように実装
+ * 
+ */
+
 #define _CRT_SECURE_NO_WARNINGS
 #include "nnet.h"
 #include "eval.h"

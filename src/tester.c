@@ -1,3 +1,14 @@
+/**
+ * @file tester.c
+ * @author Daichi Sato
+ * @brief 探索の変更前後で着手位置が変化していないかをテストする（未実装）
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ */
+
 #include <stdio.h>
 
 #include "./search/search.h"
@@ -19,6 +30,13 @@ char records[10][61] = {
     "F5D6C4D3E6F4E3F3C6F6",
 };
 
+/**
+ * @brief 対戦の実行
+ * 
+ * @param record 着手位置インデックスの記録
+ * @param logFile 出力ファイル
+ * @return int 黒から見た最終石差
+ */
 int Match(char *record, FILE *logFile)
 {
     SearchTree tree[2];

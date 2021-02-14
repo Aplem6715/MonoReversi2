@@ -1,3 +1,13 @@
+/**
+ * @file random_util.c
+ * @author Daichi Sato
+ * @brief 64bit乱数生成
+ * @version 1.0
+ * @date 2021-02-12
+ * 
+ * @copyright Copyright (c) 2021 Daichi Sato
+ * 
+ */
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -11,6 +21,11 @@
 
 static_assert((RAND_MAX & (RAND_MAX + 1u)) == 0, "RAND_MAX not a Mersenne number");
 
+/**
+ * @brief 64bit乱数の生成
+ * 
+ * @return uint64_t 64bit乱数
+ */
 uint64_t rand64()
 {
     uint64_t r = 0;
