@@ -10,14 +10,25 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 #include "./search/search.h"
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_base.txt"
+#define LOG_FILE "./resources/tester/accurate_mpc_nouse_noregist_noABhash_hash.txt"
 
-char records[10][61] = {
+char records[19][61] = {
+    "F5D6C6",
+    "F5D6C5F4D3",
+    "F5D6C5F4D7",
+    "F5D6C5F4E3D3",
+    "F5D6C5F4E3F6",
+    "F5D6C5F4E3C6E6",
+    "F5D6C5F4E3C6F3",
+    "F5D6C5F4E3C6D3G5",
+    "F5D6C5F4E3C6D3F3",
     "F5D6C5F4E3C6D3F6E6D7",
     "F5D6C3D3C4F4C5B3C2E3",
     "F5D6C3D3C4F4C5B3C2B4",
@@ -35,7 +46,7 @@ char records[10][61] = {
  * 
  * @param record 着手位置インデックスの記録
  * @param logFile 出力ファイル
- * @return int 黒から見た最終石差
+ * @return int 終了ステータス
  */
 int Match(char *record, SearchTree tree[2], FILE *logFile)
 {
@@ -52,7 +63,15 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
     int i = 0;
     while (record[i] != '\0')
     {
+        BoardDraw(board);
         pos = PosIndexFromAscii(&record[i]);
+
+        if (!BoardIsLegalTT(board, pos))
+        {
+            printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!\n 不正な着手位置\n");
+            return -1;
+        }
+
         BoardPutTT(board, pos);
         CalcPosAscii(pos, &posX, &posY);
         fprintf(logFile, "%c%d", posX, posY);
@@ -78,7 +97,7 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
         if (!BoardIsLegalTT(board, pos))
         {
             printf("error!!!!!! iligal move!!\n");
-            return 0;
+            return -1;
         }
 
         // 実際に着手
@@ -91,7 +110,7 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
     } //end of loop:　while (!BoardIsFinished(board))
 
     fprintf(logFile, "\n");
-    return BoardGetStoneCount(board, BLACK) - BoardGetStoneCount(board, WHITE);
+    return 0;
 }
 
 int main()
@@ -100,17 +119,29 @@ int main()
     FILE *fp = fopen(LOG_FILE, "w");
     int i = 0;
 
-    InitTree(&tree[0], 8, 10, 8, 18, 0, 0, 0);
-    InitTree(&tree[1], 8, 10, 8, 18, 0, 0, 0);
-    // 設定上書き
-    tree[0].useIDDS = 0;
-    tree[1].useIDDS = 0;
+    srand((unsigned int)time(NULL));
+    HashInit();
 
-    for (i = 0; i < 10; i++)
+    InitTree(&tree[0], 8, 12, 4, 8, 1, 1, 0);
+    InitTree(&tree[1], 8, 12, 4, 8, 1, 1, 0);
+    // 設定上書き
+    tree[0].useIDDS = 1;
+    tree[1].useIDDS = 1;
+
+    tree[0].hashDepth = 4;
+    tree[1].hashDepth = 4;
+
+    tree[0].orderDepth = 5;
+    tree[1].orderDepth = 5;
+
+    for (i = 0; i < 19; i++)
     {
         ResetTree(&tree[0]);
         ResetTree(&tree[1]);
-        Match(records[i], tree, fp);
+        if (Match(records[i], tree, fp) != 0)
+        {
+            break;
+        }
     }
 
     fclose(fp);
