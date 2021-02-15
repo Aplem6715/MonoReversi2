@@ -24,8 +24,8 @@ int main()
     Game game[1];
 
     // 現状ソースコードで先行/後攻切り替え
-    GameInit(game, HUMAN, AI, 15, 20);
-    //GameInit(game, AI, HUMAN, 15, 20);
+    //GameInit(game, HUMAN, AI, 15, 20);
+    GameInit(game, AI, HUMAN, 15, 20);
     GameStart(game);
 
     // ベンチマークの名残
