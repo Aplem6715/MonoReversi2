@@ -17,14 +17,14 @@
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_nestMPC_nohash.txt"
+#define LOG_FILE "./resources/tester/accurate_nestMPC_hash.txt"
 
 char records[19][61] = {
-    //"F5D6C6",
+    /*"F5D6C6",
     "F5D6C5F4D3",
-    /*"F5D6C5F4D7",
+    "F5D6C5F4D7",*/
     "F5D6C5F4E3D3",
-    "F5D6C5F4E3F6",
+    /*"F5D6C5F4E3F6",
     "F5D6C5F4E3C6E6",
     "F5D6C5F4E3C6F3",
     "F5D6C5F4E3C6D3G5",

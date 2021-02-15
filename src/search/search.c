@@ -52,14 +52,14 @@ void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
 
     if (useHash)
     {
-        tree->table = (HashTable *)malloc(sizeof(HashTable));
-        if (tree->table == NULL)
+        tree->nwsTable = (HashTable *)malloc(sizeof(HashTable));
+        if (tree->nwsTable == NULL)
         {
             printf("ハッシュテーブルのメモリ確保失敗\n");
             return;
         }
 
-        HashTableInit(tree->table);
+        HashTableInit(tree->nwsTable);
     }
 }
 
@@ -73,8 +73,8 @@ void DeleteTree(SearchTree *tree)
     EvalDelete(tree->eval);
     if (tree->useHash)
     {
-        HashTableFree(tree->table);
-        free(tree->table);
+        HashTableFree(tree->nwsTable);
+        free(tree->nwsTable);
     }
 }
 
@@ -99,7 +99,7 @@ void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth
 void ResetTree(SearchTree *tree)
 {
     if (tree->useHash)
-        HashTableReset(tree->table);
+        HashTableReset(tree->nwsTable);
 }
 
 /**
