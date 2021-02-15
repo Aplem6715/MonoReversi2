@@ -432,10 +432,10 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
     else
     {
         // ハッシュを使って探索範囲を狭める・カットする
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        if (tree->useHash == 1 && tree->nbMpcNested == 0 && depth >= tree->hashDepth)
         {
             hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
-            if (tree->nbMpcNested == 0 && hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
+            if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
                 return score;
         }
 
@@ -467,7 +467,7 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
     }
 
     // ハッシュに記録
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
     {
         HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
@@ -524,10 +524,10 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     }
 
     // ハッシュを使って過去に探索した枝は省略
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->useHash == 1 && tree->nbMpcNested == 0 && depth >= tree->hashDepth)
     {
         hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
-        if (tree->nbMpcNested == 0 && hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
+        if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
             return score;
     }
 
@@ -592,7 +592,7 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     }
 
     // ハッシュ表に登録
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
     {
         HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
