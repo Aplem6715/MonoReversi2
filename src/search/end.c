@@ -93,7 +93,7 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     {
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         {
-            hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
                 return score;
         }
@@ -141,7 +141,7 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
 
     if (tree->useHash == 1)
     {
-        HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -180,7 +180,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+        hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
         if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
             return score;
     }
@@ -248,7 +248,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
 
     if (tree->useHash == 1 && hashData != NULL)
     {
-        HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -302,7 +302,7 @@ score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
     {
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         {
-            hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
                 return score;
         }
@@ -336,7 +336,7 @@ score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
 
     if (tree->useHash == 1)
     {
-        HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -399,7 +399,7 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     {
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         {
-            hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
                 return score;
         }
@@ -430,7 +430,7 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
 
     if (tree->useHash == 1)
     {
-        HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -498,7 +498,7 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
 
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         { // ハッシュの記録をもとにカット/探索範囲の縮小
-            hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
             // PVノードはカットしない(性能も殆ど変わらなかった)
             //if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
             //    return score;
@@ -541,7 +541,7 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
 
     if (tree->useHash == 1)
     {
-        HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, alpha);
+        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, alpha);
     }
     return alpha;
 }

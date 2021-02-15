@@ -16,7 +16,7 @@
 typedef struct SearchTree
 {
     // ハッシュ表
-    HashTable *table;
+    HashTable *nwsTable;
     // 評価オブジェクト
     Evaluator eval[1];
     // 石情報

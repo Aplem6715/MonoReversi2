@@ -36,6 +36,10 @@
 #include "../ai/eval.h"
 #include "../bit_operation.h"
 
+#define DONT_USE_MPC_HASH(x)
+#define DONT_CUT_MPC_HASH(x) x
+#define DONT_REGIST_MPC_HASH(x)
+
 score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed);
 
 inline score_t WinJudge(const Stones *stones)
@@ -203,9 +207,11 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
         // ハッシュを使って探索範囲を狭める・カットする
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         {
-            hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+            /*
+            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
                 return score;
+                */
         }
 
         lower = alpha;
@@ -246,10 +252,11 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     }
 
     // ハッシュの記録
-    if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
+    /*
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
-    }
+        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+    }*/
     return maxScore;
 }
 
@@ -312,9 +319,11 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         // ハッシュを使って探索範囲を狭める・カットする
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         {
-            hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+            /*
+            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
                 return score;
+                */
         }
 
         // 探索深度によって探索関数を変更，深い探索では着手の静的評価をしない
@@ -358,10 +367,11 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     }
 
     // ハッシュの記録
-    if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
+    /*
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
-    }
+        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+    }*/
     return maxScore;
 }
 
@@ -426,10 +436,10 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
     else
     {
         // ハッシュを使って探索範囲を狭める・カットする
-        if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
+        if (tree->useHash == 1 && depth >= tree->hashDepth DONT_USE_MPC_HASH(&&tree->nbMpcNested == 0))
         {
-            hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
-            if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
+            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
+            if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score) DONT_CUT_MPC_HASH(&&tree->nbMpcNested == 0))
                 return score;
         }
 
@@ -461,9 +471,9 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
     }
 
     // ハッシュに記録
-    if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
+    if (tree->useHash == 1 && depth >= tree->hashDepth DONT_REGIST_MPC_HASH(&&tree->nbMpcNested == 0))
     {
-        HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -518,10 +528,10 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     }
 
     // ハッシュを使って過去に探索した枝は省略
-    if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
+    if (tree->useHash == 1 && depth >= tree->hashDepth DONT_USE_MPC_HASH(&&tree->nbMpcNested == 0))
     {
-        hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
-        if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
+        hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
+        if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score) DONT_CUT_MPC_HASH(&&tree->nbMpcNested == 0))
             return score;
     }
 
@@ -577,7 +587,7 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
             {
                 maxScore = score;
                 bestMove = move->posIdx;
-                if (score >= beta)
+                if (maxScore >= beta)
                 {
                     break; //探索終了
                 }
@@ -586,9 +596,9 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     }
 
     // ハッシュ表に登録
-    if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
+    if (tree->useHash == 1 && depth >= tree->hashDepth DONT_REGIST_MPC_HASH(&&tree->nbMpcNested == 0))
     {
-        HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -674,7 +684,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
 
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         { // ハッシュの記録をもとにカット/探索範囲の縮小
-            hashData = HashTableGetData(tree->table, tree->stones, depth, &hashCode);
+            //hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
             // PVノードはカットしない(性能も殆ど変わらなかった)
             //if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
             //    return score;
@@ -718,10 +728,11 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     }
 
     // ハッシュ表に登録
-    if (tree->useHash == 1 && depth >= tree->hashDepth && tree->nbMpcNested == 0)
+    /*
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        HashTableRegist(tree->table, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, alpha);
-    }
+        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, alpha);
+    }*/
 
     assert(tree->nbMpcNested == 0);
     return alpha;

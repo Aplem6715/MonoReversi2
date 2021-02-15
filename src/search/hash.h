@@ -4,7 +4,6 @@
 #include "../stones.h"
 #include "../const.h"
 
-
 // ハッシュテーブルに格納されるデータ
 // 8x2 + 1 + 1*2 + 2x2 = 23[byte]
 typedef struct HashData
