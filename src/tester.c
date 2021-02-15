@@ -17,7 +17,7 @@
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_mpc_base_nonest.txt"
+#define LOG_FILE "./resources/tester/accurate_mpc_hash_nopvHash.txt"
 
 #define NB_RECORDS 20
 #define NB_RANDOM_TURN 10
@@ -153,8 +153,8 @@ int main()
     srand(42);
     HashInit();
 
-    InitTree(&tree[0], 8, 12, 4, 8, 1, 1, 1);
-    InitTree(&tree[1], 8, 12, 4, 8, 1, 1, 1);
+    InitTree(&tree[0], 8, 12, 4, 8, 1, 0, 1, 1);
+    InitTree(&tree[1], 8, 12, 4, 8, 1, 0, 1, 1);
     // 設定上書き
     tree[0].useIDDS = 1;
     tree[1].useIDDS = 1;

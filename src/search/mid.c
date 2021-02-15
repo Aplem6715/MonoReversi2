@@ -205,7 +205,7 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     else
     {
         // ハッシュを使って探索範囲を狭める・カットする
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        if (tree->usePvHash == 1 && depth >= tree->hashDepth)
         {
             hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
@@ -250,7 +250,7 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     }
 
     // ハッシュの記録
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
@@ -314,7 +314,7 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     else
     {
         // ハッシュを使って探索範囲を狭める・カットする
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        if (tree->usePvHash == 1 && depth >= tree->hashDepth)
         {
             hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
@@ -362,7 +362,7 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     }
 
     // ハッシュの記録
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
@@ -676,7 +676,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         alpha = in_alpha;
         beta = in_beta;
 
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        if (tree->usePvHash == 1 && depth >= tree->hashDepth)
         { // ハッシュの記録をもとにカット/探索範囲の縮小
             hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
             // PVノードはカットしない(性能も殆ど変わらなかった)
@@ -722,7 +722,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     }
 
     // ハッシュ表に登録
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, alpha);
     }
