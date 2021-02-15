@@ -275,14 +275,14 @@ bool IsHashCutNullWindow(HashData *hashData, const uint8 depth, const score_t al
 
     if (hashData->depth >= depth)
     {
-        if (hashData->upper <= alpha)
-        {
-            *score = hashData->upper;
-            return true;
-        }
-        if (hashData->lower > alpha)
+        if (alpha < hashData->lower)
         {
             *score = hashData->lower;
+            return true;
+        }
+        if (alpha >= hashData->upper)
+        {
+            *score = hashData->upper;
             return true;
         }
     }

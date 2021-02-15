@@ -10,14 +10,29 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 #include "./search/search.h"
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_base.txt"
+#define LOG_FILE "./resources/tester/accurate_mpc_base_nonest.txt"
 
-char records[10][61] = {
+#define NB_RECORDS 20
+#define NB_RANDOM_TURN 10
+
+char records[NB_RECORDS][61] = {
+    "F5F4F3D6C4G5D7C7B7B8",
+    "F5D6C6",
+    "F5D6C5F4D3",
+    "F5D6C5F4D7",
+    "F5D6C5F4E3D3",
+    "F5D6C5F4E3F6",
+    "F5D6C5F4E3C6E6",
+    "F5D6C5F4E3C6F3",
+    "F5D6C5F4E3C6D3G5",
+    "F5D6C5F4E3C6D3F3",
     "F5D6C5F4E3C6D3F6E6D7",
     "F5D6C3D3C4F4C5B3C2E3",
     "F5D6C3D3C4F4C5B3C2B4",
@@ -35,7 +50,7 @@ char records[10][61] = {
  * 
  * @param record 着手位置インデックスの記録
  * @param logFile 出力ファイル
- * @return int 黒から見た最終石差
+ * @return int 終了ステータス
  */
 int Match(char *record, SearchTree tree[2], FILE *logFile)
 {
@@ -50,13 +65,47 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
     BoardReset(board);
 
     int i = 0;
-    while (record[i] != '\0')
+    int record_i = 0;
+    if (record != NULL)
     {
-        pos = PosIndexFromAscii(&record[i]);
-        BoardPutTT(board, pos);
-        CalcPosAscii(pos, &posX, &posY);
-        fprintf(logFile, "%c%d", posX, posY);
-        i += 2;
+        // レコード着手
+        while (record[record_i] != '\0')
+        {
+            BoardDraw(board);
+            pos = PosIndexFromAscii(&record[record_i]);
+
+            if (!BoardIsLegalTT(board, pos))
+            {
+                printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!\n 不正な着手位置\n");
+                return -1;
+            }
+
+            BoardPutTT(board, pos);
+            CalcPosAscii(pos, &posX, &posY);
+            //fprintf(logFile, "%c%d\n", posX, posY);
+            fprintf(logFile, "%c%d", posX, posY);
+            record_i += 2;
+        }
+    }
+    else
+    {
+        // ランダム着手
+        for (i = 0; i < NB_RANDOM_TURN; i++)
+        {
+            BoardDraw(board);
+            pos = BoardGetRandomPosMoveable(board);
+
+            if (!BoardIsLegalTT(board, pos))
+            {
+                printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!\n 不正な着手位置\n");
+                return -1;
+            }
+
+            BoardPutTT(board, pos);
+            CalcPosAscii(pos, &posX, &posY);
+            //fprintf(logFile, "%c%d\n", posX, posY);
+            fprintf(logFile, "%c%d", posX, posY);
+        }
     }
 
     fprintf(logFile, " ");
@@ -78,20 +127,21 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
         if (!BoardIsLegalTT(board, pos))
         {
             printf("error!!!!!! iligal move!!\n");
-            return 0;
+            return -1;
         }
 
         // 実際に着手
         flip = BoardPutTT(board, pos);
 
         CalcPosAscii(pos, &posX, &posY);
+        //fprintf(logFile, "%c%d %d\n", posX, posY, tree->score);
         fprintf(logFile, "%c%d", posX, posY);
         nbEmpty--;
 
     } //end of loop:　while (!BoardIsFinished(board))
 
     fprintf(logFile, "\n");
-    return BoardGetStoneCount(board, BLACK) - BoardGetStoneCount(board, WHITE);
+    return 0;
 }
 
 int main()
@@ -100,17 +150,40 @@ int main()
     FILE *fp = fopen(LOG_FILE, "w");
     int i = 0;
 
-    InitTree(&tree[0], 8, 10, 8, 18, 0, 0, 0);
-    InitTree(&tree[1], 8, 10, 8, 18, 0, 0, 0);
-    // 設定上書き
-    tree[0].useIDDS = 0;
-    tree[1].useIDDS = 0;
+    srand(42);
+    HashInit();
 
-    for (i = 0; i < 10; i++)
+    InitTree(&tree[0], 8, 12, 4, 8, 1, 1, 1);
+    InitTree(&tree[1], 8, 12, 4, 8, 1, 1, 1);
+    // 設定上書き
+    tree[0].useIDDS = 1;
+    tree[1].useIDDS = 1;
+
+    tree[0].hashDepth = 4;
+    tree[1].hashDepth = 4;
+
+    tree[0].orderDepth = 5;
+    tree[1].orderDepth = 5;
+
+    for (i = 0; i < 100; i++)
     {
         ResetTree(&tree[0]);
         ResetTree(&tree[1]);
-        Match(records[i], tree, fp);
+
+        if (i < NB_RECORDS)
+        {
+            if (Match(records[i], tree, fp) != 0)
+            {
+                break;
+            }
+        }
+        else
+        {
+            if (Match(NULL, tree, fp) != 0)
+            {
+                break;
+            }
+        }
     }
 
     fclose(fp);

@@ -125,11 +125,11 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
         }
         if (tree.useHash)
         {
-            logfile << tree.table->nbUsed << ","
-                    << tree.table->nbHit << ","
-                    << tree.table->nb2ndUsed << ","
-                    << tree.table->nb2ndHit << ","
-                    << tree.table->nbCollide << ",";
+            logfile << tree.nwsTable->nbUsed << ","
+                    << tree.nwsTable->nbHit << ","
+                    << tree.nwsTable->nb2ndUsed << ","
+                    << tree.nwsTable->nb2ndHit << ","
+                    << tree.nwsTable->nbCollide << ",";
         }
         else
         {
