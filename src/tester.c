@@ -17,12 +17,12 @@
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_mpc_swapif_hash.txt"
+#define LOG_FILE "./resources/tester/accurate_nestMPC_nohash.txt"
 
 char records[19][61] = {
-    "F5D6C6",
+    //"F5D6C6",
     "F5D6C5F4D3",
-    "F5D6C5F4D7",
+    /*"F5D6C5F4D7",
     "F5D6C5F4E3D3",
     "F5D6C5F4E3F6",
     "F5D6C5F4E3C6E6",
@@ -38,7 +38,7 @@ char records[19][61] = {
     "F5D6C4D3C5F4E3F3E2C6",
     "F5D6C4G5C6C5D7D3B4C3",
     "F5D6C4G5F6F4F3D3C3G6",
-    "F5D6C4D3E6F4E3F3C6F6",
+    "F5D6C4D3E6F4E3F3C6F6",*/
 };
 
 /**
@@ -74,7 +74,7 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
 
         BoardPutTT(board, pos);
         CalcPosAscii(pos, &posX, &posY);
-        fprintf(logFile, "%c%d", posX, posY);
+        fprintf(logFile, "%c%d\n", posX, posY);
         i += 2;
     }
 
@@ -104,7 +104,7 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
         flip = BoardPutTT(board, pos);
 
         CalcPosAscii(pos, &posX, &posY);
-        fprintf(logFile, "%c%d", posX, posY);
+        fprintf(logFile, "%c%d %d\n", posX, posY, tree->score);
         nbEmpty--;
 
     } //end of loop:　while (!BoardIsFinished(board))
@@ -119,11 +119,11 @@ int main()
     FILE *fp = fopen(LOG_FILE, "w");
     int i = 0;
 
-    srand((unsigned int)time(NULL));
+    srand(42);
     HashInit();
 
-    InitTree(&tree[0], 8, 12, 4, 8, 1, 1, 0);
-    InitTree(&tree[1], 8, 12, 4, 8, 1, 1, 0);
+    InitTree(&tree[0], 8, 12, 4, 8, 1, 1, 1);
+    InitTree(&tree[1], 8, 12, 4, 8, 1, 1, 1);
     // 設定上書き
     tree[0].useIDDS = 1;
     tree[1].useIDDS = 1;
@@ -134,7 +134,7 @@ int main()
     tree[0].orderDepth = 5;
     tree[1].orderDepth = 5;
 
-    for (i = 0; i < 19; i++)
+    for (i = 0; i < 1; i++)
     {
         ResetTree(&tree[0]);
         ResetTree(&tree[1]);
