@@ -13,6 +13,8 @@ typedef struct HashData
     uint64_t own, opp;
     // 探索深度
     uint8 depth;
+    // MPCネスト数
+    uint8 mpcNest;
     // 最善手，更新前の最善手
     uint8 bestMove, secondMove;
     // スコアwindow(下限値，上限値)

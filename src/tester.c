@@ -17,7 +17,7 @@
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_mpc_nouse_noregist_noABhash_hash.txt"
+#define LOG_FILE "./resources/tester/accurate_mpc_swapif_hash.txt"
 
 char records[19][61] = {
     "F5D6C6",

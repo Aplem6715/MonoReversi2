@@ -577,7 +577,7 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
             {
                 maxScore = score;
                 bestMove = move->posIdx;
-                if (score >= beta)
+                if (maxScore >= beta)
                 {
                     break; //探索終了
                 }
