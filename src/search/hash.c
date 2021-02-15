@@ -26,8 +26,6 @@
 #include "../bit_operation.h"
 #include "../const.h"
 
-#define HASH_TABLE_SIZE (1 << 24)
-
 // データ位置再探索（偶奇反転）
 #define RETRY_HASH(h) ((h) ^ 1)
 
@@ -66,10 +64,11 @@ void HashInit()
  * @brief ハッシュ表のメモリ確保
  * 
  * @param table 初期化するハッシュ表
+ * @param size ハッシュ表の要素数
  */
-void HashTableInit(HashTable *table)
+void HashTableInit(HashTable *table, uint64_t size)
 {
-    table->size = HASH_TABLE_SIZE;
+    table->size = size;
     table->data = (HashData *)calloc(table->size, sizeof(HashData));
     if (table->data == NULL)
     {

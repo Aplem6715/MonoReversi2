@@ -15,8 +15,11 @@
  */
 typedef struct SearchTree
 {
-    // ハッシュ表
+    // NullWindowSearch用ハッシュ表
     HashTable *nwsTable;
+    // PVノード用ハッシュ表
+    HashTable *pvTable;
+
     // 評価オブジェクト
     Evaluator eval[1];
     // 石情報
