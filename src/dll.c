@@ -14,6 +14,7 @@
  */
 
 #include <time.h>
+#include <stdlib.h>
 #include "search/search.h"
 #include "board.h"
 #include "bit_operation.h"
