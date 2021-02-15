@@ -207,11 +207,9 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
         // ハッシュを使って探索範囲を狭める・カットする
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         {
-            /*
-            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
+            hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
                 return score;
-                */
         }
 
         lower = alpha;
@@ -252,11 +250,10 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     }
 
     // ハッシュの記録
-    /*
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
-    }*/
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+    }
     return maxScore;
 }
 
@@ -319,11 +316,9 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         // ハッシュを使って探索範囲を狭める・カットする
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         {
-            /*
-            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
+            hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
                 return score;
-                */
         }
 
         // 探索深度によって探索関数を変更，深い探索では着手の静的評価をしない
@@ -367,11 +362,10 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     }
 
     // ハッシュの記録
-    /*
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
-    }*/
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+    }
     return maxScore;
 }
 
@@ -684,7 +678,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
 
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         { // ハッシュの記録をもとにカット/探索範囲の縮小
-            //hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
+            hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
             // PVノードはカットしない(性能も殆ど変わらなかった)
             //if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
             //    return score;
@@ -728,11 +722,10 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     }
 
     // ハッシュ表に登録
-    /*
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, alpha);
-    }*/
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, alpha);
+    }
 
     assert(tree->nbMpcNested == 0);
     return alpha;

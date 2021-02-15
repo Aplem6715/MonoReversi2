@@ -130,6 +130,12 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
                     << tree.nwsTable->nb2ndUsed << ","
                     << tree.nwsTable->nb2ndHit << ","
                     << tree.nwsTable->nbCollide << ",";
+
+            logfile << tree.pvTable->nbUsed << ","
+                    << tree.pvTable->nbHit << ","
+                    << tree.pvTable->nb2ndUsed << ","
+                    << tree.pvTable->nb2ndHit << ","
+                    << tree.pvTable->nbCollide << ",";
         }
         else
         {
@@ -157,7 +163,7 @@ void BenchSearching(vector<unsigned char> depths, unsigned char useHash, unsigne
 
     logfile.setf(ios::fixed, ios::floatfield);
     logfile.precision(2);
-    logfile << "探索深度,思考時間,探索ノード数,探索速度,カット数,ハッシュ記録数,ハッシュヒット数,2ndハッシュ記録数,2ndハッシュヒット数,ハッシュ衝突数,推定CPUスコア,着手位置\n";
+    logfile << "探索深度,思考時間,探索ノード数,探索速度,カット数,ハッシュ記録数,ハッシュヒット数,2ndハッシュ記録数,2ndハッシュヒット数,ハッシュ衝突数,pvハッシュ記録数,pvハッシュヒット数,pv2ndハッシュ記録数,pv2ndハッシュヒット数,pvハッシュ衝突数,推定CPUスコア,着手位置\n";
     LoadGameRecords(benchFile.c_str(), records);
 
     InitTree(&tree, 4, 4, midPvsDepth, endPvsDepth, useHash, useMPC, nestMPC);
