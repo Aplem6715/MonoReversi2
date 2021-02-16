@@ -643,6 +643,8 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         return Evaluate(tree->eval, tree->nbEmpty);
     }
 
+    alpha = in_alpha;
+    beta = in_beta;
     if (tree->usePvHash == 1 && depth >= tree->hashDepth)
     { // ハッシュの記録をもとにカット/探索範囲の縮小
         hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
@@ -674,7 +676,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         else
         { // パスして探索続行
             SearchPassMid(tree);
-            alpha = -NextSearch(tree, -in_beta, -in_alpha, depth, true);
+            bestScore = -NextSearch(tree, -in_beta, -in_alpha, depth, true);
             SearchPassMid(tree);
             bestMove = PASS_INDEX;
         }
@@ -685,10 +687,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         // 着手の事前評価
         EvaluateMoveList(tree, &moveList, tree->stones, NULL); //TODO** NULLに一時置き換えーテスト用
 
-        alpha = in_alpha;
-        beta = in_beta;
         bestScore = -MAX_VALUE;
-
         // すべての着手について探索
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
         {

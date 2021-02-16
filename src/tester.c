@@ -17,7 +17,7 @@
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_mpc_hashOrder_fixPVS_afterend.txt"
+#define LOG_FILE "./resources/tester/accurate_mpc_hashOrder_fixPVS_aftermidFix.txt"
 
 #define NB_RECORDS 20
 #define NB_RANDOM_TURN 10
