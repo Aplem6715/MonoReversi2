@@ -17,13 +17,12 @@
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_mpc_hashOrder_fixPVS_aftermidFix.txt"
+#define LOG_FILE "./resources/tester/accurate_mpc_nohash_fixPVS_aftermidFix.txt"
 
-#define NB_RECORDS 20
+#define NB_RECORDS 19
 #define NB_RANDOM_TURN 10
 
 char records[NB_RECORDS][61] = {
-    "E6F6D3C5D6C7B6B5C4E2",
     "F5D6C6",
     "F5D6C5F4D3",
     "F5D6C5F4D7",
@@ -155,8 +154,8 @@ int main()
     srand(42);
     HashInit();
 
-    InitTree(&tree[0], 8, 12, 4, 8, 1, 1, 1, 1);
-    InitTree(&tree[1], 8, 12, 4, 8, 1, 1, 1, 1);
+    InitTree(&tree[0], 8, 12, 4, 8, 1, 0, 1, 1);
+    InitTree(&tree[1], 8, 12, 4, 8, 1, 0, 1, 1);
     // 設定上書き
     tree[0].useIDDS = 1;
     tree[1].useIDDS = 1;
