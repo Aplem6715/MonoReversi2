@@ -773,7 +773,7 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
 
     uint64_t hashCode;
     HashData *hashData = HashTableGetData(tree->pvTable, tree->stones, tree->depth, &hashCode);
-    
+
     EvaluateMoveList(tree, moveList, tree->stones, hashData);
 
     for (move = NextBestMoveWithSwap(moveList->moves); move != NULL; move = NextBestMoveWithSwap(move))

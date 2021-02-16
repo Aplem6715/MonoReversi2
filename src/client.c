@@ -24,7 +24,7 @@
 
 #define ERROR_POS 127
 
-#define MID_DEPTH 12
+#define MID_DEPTH 16
 #define USE_MPC 1
 #define USE_NEST_MPC 1
 
