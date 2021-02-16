@@ -24,7 +24,7 @@
 
 #define ERROR_POS 127
 
-#define MID_DEPTH 15
+#define MID_DEPTH 16
 #define USE_MPC 1
 #define USE_NEST_MPC 1
 
@@ -107,7 +107,7 @@ int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn
     int nbEmpty = 60;
     Board board[1];
 
-    InitTree(tree, MID_DEPTH, 18, 4, 8, 1, USE_MPC, USE_NEST_MPC);
+    InitTree(tree, MID_DEPTH, 18, 4, 8, 1, 1, USE_MPC, USE_NEST_MPC);
     BoardReset(board);
     BoardSetStones(board, black, white, turn);
     while (!BoardIsFinished(board))

@@ -15,8 +15,11 @@
  */
 typedef struct SearchTree
 {
-    // ハッシュ表
+    // NullWindowSearch用ハッシュ表
     HashTable *nwsTable;
+    // PVノード用ハッシュ表
+    HashTable *pvTable;
+
     // 評価オブジェクト
     Evaluator eval[1];
     // 石情報
@@ -44,6 +47,7 @@ typedef struct SearchTree
 
     // ハッシュ表を利用するかどうか
     unsigned char useHash;
+    unsigned char usePvHash;
     // 反復深化を利用するかどうか
     unsigned char useIDDS;
     // Multi Prob Cutを利用するかどうか
@@ -72,7 +76,7 @@ typedef struct SearchTree
 typedef score_t (*SearchFunc_t)(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed);
 typedef score_t (*SearchFuncNullWindow_t)(SearchTree *tree, score_t alpha, unsigned char depth, unsigned char passed);
 
-void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, unsigned char useHash, unsigned char useMPC, unsigned char nestMPC);
+void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, unsigned char useHash, unsigned char usePvHash, unsigned char useMPC, unsigned char nestMPC);
 void DeleteTree(SearchTree *tree);
 void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth);
 void ResetTree(SearchTree *tree);

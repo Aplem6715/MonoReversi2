@@ -205,13 +205,11 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     else
     {
         // ハッシュを使って探索範囲を狭める・カットする
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        if (tree->usePvHash == 1 && depth >= tree->hashDepth)
         {
-            /*
-            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
-            if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
-                return score;
-                */
+            hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
+            //if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
+            //    return score;
         }
 
         lower = alpha;
@@ -252,11 +250,10 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     }
 
     // ハッシュの記録
-    /*
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
     {
-        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
-    }*/
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+    }
     return maxScore;
 }
 
@@ -317,13 +314,11 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     else
     {
         // ハッシュを使って探索範囲を狭める・カットする
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        if (tree->usePvHash == 1 && depth >= tree->hashDepth)
         {
-            /*
-            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
-            if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
-                return score;
-                */
+            hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
+            //if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
+            //    return score;
         }
 
         // 探索深度によって探索関数を変更，深い探索では着手の静的評価をしない
@@ -367,11 +362,10 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     }
 
     // ハッシュの記録
-    /*
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
     {
-        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
-    }*/
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+    }
     return maxScore;
 }
 
@@ -636,7 +630,199 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     Move *move;
     // 現状での予想最善手
     uint8 bestMove;
-    // Principle Variationが見つかっているか
+    // スコア
+    score_t score;
+    // 発見した最大スコア
+    score_t bestScore;
+    // 探索スコアwindow境界
+    score_t alpha, beta;
+
+    tree->nodeCount++;
+    if (depth <= 0)
+    {
+        return Evaluate(tree->eval, tree->nbEmpty);
+    }
+
+    alpha = in_alpha;
+    beta = in_beta;
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
+    { // ハッシュの記録をもとにカット/探索範囲の縮小
+        hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
+        // PVノードはカットしない(性能も殆ど変わらなかった)
+        if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
+            return score;
+    }
+
+    // 探索深度によって次の探索関数を変える
+    if (depth - 1 >= tree->pvsDepth)
+    {
+        NextSearch = MidPVS;
+    }
+    else
+    {
+        NextSearch = MidAlphaBeta;
+    }
+
+    // 着手リストを作成
+    CreateMoveList(&moveList, tree->stones);
+
+    if (moveList.nbMoves <= 0)
+    { // 手があるか
+        if (passed == 1)
+        { // 2連続パスなら終了
+            bestMove = NOMOVE_INDEX;
+            return WinJudge(tree->stones); // 勝敗判定
+        }
+        else
+        { // パスして探索続行
+            SearchPassMid(tree);
+            bestScore = -NextSearch(tree, -in_beta, -in_alpha, depth, true);
+            SearchPassMid(tree);
+            bestMove = PASS_INDEX;
+        }
+    }
+    else
+    { // 着手可能なとき
+
+        // 着手の事前評価
+        EvaluateMoveList(tree, &moveList, tree->stones, hashData); //TODO** NULLに一時置き換えーテスト用
+
+        bestScore = -MAX_VALUE;
+        // すべての着手について探索
+        for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
+        {
+            SearchUpdateMid(tree, move);
+            if (bestScore == -MAX_VALUE)
+            {                                                               // PVが見つかっていないとき
+                score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常探索
+            }
+            else
+            {                                                           // PVが見つかっているとき
+                score = -MidNullWindow(tree, -alpha, depth - 1, false); // 最善かどうかチェック 子ノードをNull Window探索
+                if (score > alpha && score < beta)                      // 予想が外れていたら
+                {
+                    score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常のWindowで再探索
+                }
+            }
+            SearchRestoreMid(tree, move);
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestMove = move->posIdx;
+                if (score >= beta) // 上限突破したら
+                {
+                    tree->nbCut++;
+                    break; // 探索終了（カット）
+                }
+                if (bestScore > alpha) // alphaを上回る着手を発見したら
+                {
+                    alpha = bestScore;
+                }
+            }
+        }
+    }
+
+    // ハッシュ表に登録
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
+    {
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, bestScore);
+    }
+
+    assert(tree->nbMpcNested == 0);
+    return bestScore;
+}
+
+/**
+ * @brief 中盤探索PVSのルートノード処理
+ * 
+ * @param tree 探索木
+ * @param moveList 着手位置リスト
+ * @param depth 探索深度
+ * @param scoreOut 探索スコアの出力参照
+ * @param secondMoveOut 次善手の出力参照
+ * @return uint8 予想最善手の位置番号
+ */
+uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *scoreOut, uint8 *secondMoveOut)
+{
+    // 次の探索関数
+    SearchFunc_t NextSearch;
+    // 現状予想される最善手
+    uint8 bestMove = NOMOVE_INDEX;
+    // 着手情報
+    Move *move;
+    // 一時探索スコア
+    score_t score;
+    // 見つかった最善手のスコア
+    score_t bestScore;
+    // 探索スコアwindow境界
+    score_t alpha, beta;
+
+    if (depth >= tree->pvsDepth)
+    {
+        NextSearch = MidPVS;
+    }
+    else
+    {
+        NextSearch = MidAlphaBeta;
+    }
+
+    alpha = SCORE_MIN - 1;
+    beta = SCORE_MAX + 1;
+    bestScore = -MAX_VALUE;
+
+    uint64_t hashCode;
+    HashData *hashData = HashTableGetData(tree->pvTable, tree->stones, tree->depth, &hashCode);
+
+    EvaluateMoveList(tree, moveList, tree->stones, hashData);
+
+    for (move = NextBestMoveWithSwap(moveList->moves); move != NULL; move = NextBestMoveWithSwap(move))
+    { // すべての着手についてループ
+        SearchUpdateMid(tree, move);
+        if (bestScore == -MAX_VALUE)
+        {                                                           // PVが見つかっていない
+            score = -NextSearch(tree, -beta, -alpha, depth, false); // 通常探索
+        }
+        else
+        {                                                       // PVが見つかっている
+            score = -MidNullWindow(tree, -alpha, depth, false); // 最善かどうかチェック 子ノードをNull Window探索
+            if (score > alpha && score < beta)                  // 予想が外れていたら
+            {
+                score = -NextSearch(tree, -beta, -alpha, depth, false); // 通常のWindowで再探索
+            }
+        }
+        SearchRestoreMid(tree, move);
+
+        if (score > bestScore)
+        {
+            bestScore = score;
+            *secondMoveOut = bestMove;
+            bestMove = move->posIdx;
+            if (bestScore > alpha)
+            {
+                alpha = bestScore;
+            }
+        }
+    } // end of moves loop
+    *scoreOut = bestScore;
+    return bestMove;
+}
+
+/*
+score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, const unsigned char depth, const unsigned char passed)
+{
+    // 次に使用する探索関数
+    SearchFunc_t NextSearch;
+    // 盤面に対応するハッシュデータ
+    HashData *hashData = NULL;
+    // 盤面に対応するハッシュコード
+    uint64_t hashCode;
+    // 着手リスト
+    MoveList moveList;
+    // 探索中の着手
+    Move *move;
+    // 現状での予想最善手
+    uint8 bestMove;
     uint8 foundPV = 0;
     // スコア
     score_t score;
@@ -647,6 +833,16 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     if (depth <= 0)
     {
         return Evaluate(tree->eval, tree->nbEmpty);
+    }
+
+    alpha = in_alpha;
+    beta = in_beta;
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
+    { // ハッシュの記録をもとにカット/探索範囲の縮小
+        hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
+        // PVノードはカットしない(性能も殆ど変わらなかった)
+        if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
+            return score;
     }
 
     // 探索深度によって次の探索関数を変える
@@ -679,19 +875,9 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     }
     else
     { // 着手可能なとき
-        alpha = in_alpha;
-        beta = in_beta;
-
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
-        { // ハッシュの記録をもとにカット/探索範囲の縮小
-            //hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
-            // PVノードはカットしない(性能も殆ど変わらなかった)
-            //if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
-            //    return score;
-        }
 
         // 着手の事前評価
-        EvaluateMoveList(tree, &moveList, tree->stones, hashData);
+        EvaluateMoveList(tree, &moveList, tree->stones, NULL); //TODO** NULLに一時置き換えーテスト用
 
         // すべての着手について探索
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
@@ -704,35 +890,32 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
             else
             {                                                           // PVが見つかっているとき
                 score = -MidNullWindow(tree, -alpha, depth - 1, false); // 最善かどうかチェック 子ノードをNull Window探索
-                if (score > alpha)                                      // 予想が外れていたら
+                if (score > alpha && score < beta)                      // 予想が外れていたら
                 {
                     score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常のWindowで再探索
                 }
             }
             SearchRestoreMid(tree, move);
 
-            if (score >= beta) // 上限突破したら
-            {
-                alpha = score;
-                tree->nbCut++;
-                break; // 探索終了（カット）
-            }
-
             if (score > alpha) // alphaを上回る着手を発見したら
             {
                 alpha = score;
                 bestMove = move->posIdx;
-                foundPV = 1; // PVを発見した！
+                foundPV = 1;
+            }
+            if (score >= beta) // 上限突破したら
+            {
+                tree->nbCut++;
+                break; // 探索終了（カット）
             }
         }
     }
 
     // ハッシュ表に登録
-    /*
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
     {
-        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, alpha);
-    }*/
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, alpha);
+    }
 
     assert(tree->nbMpcNested == 0);
     return alpha;
@@ -748,14 +931,14 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
  * @param secondMoveOut 次善手の出力参照
  * @return uint8 予想最善手の位置番号
  */
+/*
 uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *scoreOut, uint8 *secondMoveOut)
 {
     // 次の探索関数
     SearchFunc_t NextSearch;
-    // Principle Variationが見つかっているか
-    uint8 foundPV = 0;
     // 現状予想される最善手
     uint8 bestMove = NOMOVE_INDEX;
+    uint8 foundPV = 0;
     // 着手情報
     Move *move;
     // 一時探索スコア
@@ -785,26 +968,27 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
         else
         {                                                       // PVが見つかっている
             score = -MidNullWindow(tree, -alpha, depth, false); // 最善かどうかチェック 子ノードをNull Window探索
-            if (score > alpha)                                  // 予想が外れていたら
+            if (score > alpha && score < beta)                  // 予想が外れていたら
             {
                 score = -NextSearch(tree, -beta, -alpha, depth, false); // 通常のWindowで再探索
             }
         }
         SearchRestoreMid(tree, move);
 
-        if (score > alpha) // alphaを上回る着手を発見したら
+        if (score > alpha)
         {
             alpha = score;
             *secondMoveOut = bestMove;
             bestMove = move->posIdx;
-            foundPV = 1; // PVを発見した！
+            foundPV = 1;
         }
     } // end of moves loop
     *scoreOut = alpha;
     return bestMove;
 }
+* /
 
-/**
+    /**
  * @brief 中盤探索のルートノード
  * 
  * 反復深化法+PVS

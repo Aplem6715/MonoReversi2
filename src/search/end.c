@@ -93,7 +93,7 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     {
         if (tree->useHash == 1 && depth >= tree->hashDepth)
         {
-            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
+            hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
                 return score;
         }
@@ -141,7 +141,7 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
 
     if (tree->useHash == 1)
     {
-        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -180,7 +180,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
+        hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
         if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
             return score;
     }
@@ -248,7 +248,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
 
     if (tree->useHash == 1 && hashData != NULL)
     {
-        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -448,6 +448,7 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
  * @param passed パスされたかどうか
  * @return score_t 最善手のスコア
  */
+
 score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, const unsigned char depth, const unsigned char passed)
 {
     SearchFunc_t NextSearch;
@@ -456,13 +457,23 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     Move *move;
     uint64_t hashCode;
     uint8 bestMove;
-    uint8 foundPV = 0;
     score_t score, alpha, beta;
+    score_t bestScore;
 
     tree->nodeCount++;
     if (depth <= 0)
     {
         return Judge(tree);
+    }
+
+    alpha = in_alpha;
+    beta = in_beta;
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    { // ハッシュの記録をもとにカット/探索範囲の縮小
+        hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
+        // PVノードはカットしない(性能も殆ど変わらなかった)
+        if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
+            return score;
     }
 
     if (depth - 1 >= tree->pvsDepth)
@@ -486,30 +497,21 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         else
         { // パスして探索続行
             SearchPassEnd(tree);
-            alpha = -NextSearch(tree, -in_beta, -in_alpha, depth, true);
+            bestScore = -NextSearch(tree, -in_beta, -in_alpha, depth, true);
             SearchPassEnd(tree);
             bestMove = PASS_INDEX;
         }
     }
     else
     { // 着手可能なとき
-        alpha = in_alpha;
-        beta = in_beta;
-
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
-        { // ハッシュの記録をもとにカット/探索範囲の縮小
-            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
-            // PVノードはカットしない(性能も殆ど変わらなかった)
-            //if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
-            //    return score;
-        }
+        bestScore = -MAX_VALUE;
 
         EvaluateMoveList(tree, &moveList, tree->stones, hashData); // 着手の事前評価
 
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
         { // すべての着手についてループ
             SearchUpdateEnd(tree, move);
-            if (!foundPV)
+            if (bestScore == -MAX_VALUE)
             {                                                               // PVが見つかっていない
                 score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常探索
             }
@@ -523,27 +525,29 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
             }
             SearchRestoreEnd(tree, move);
 
-            if (score >= beta) // 上限突破したら
+            if (score > bestScore)
             {
-                alpha = score;
-                tree->nbCut++;
-                break; // 探索終了（カット）
-            }
-
-            if (score > alpha) // alphaを上回る着手を発見したら
-            {
-                alpha = score;
+                bestScore = score;
                 bestMove = move->posIdx;
-                foundPV = 1; // PVを発見した！
+
+                if (score >= beta) // 上限突破したら
+                {
+                    tree->nbCut++;
+                    break; // 探索終了（カット）
+                }
+                if (bestScore > alpha) // alphaを上回る着手を発見したら
+                {
+                    alpha = bestScore;
+                }
             }
         } // end of moves loop
     }
 
     if (tree->useHash == 1)
     {
-        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, alpha);
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, bestScore);
     }
-    return alpha;
+    return bestScore;
 }
 
 /**

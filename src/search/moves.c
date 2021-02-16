@@ -116,10 +116,10 @@ void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *
         // 相手の着手位置が多いとマイナス，少ないとプラス(14~8bit目)
         move->score += (MAX_MOVES + 4 /*角分*/ - (CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 8);
 
-        // 置換表に含まれていたらプラス(8bit目)
-        if (hashData != NULL && IsHashTableContains(tree->nwsTable, nextStones))
+        // 置換表に含まれていたらプラス(2石分8bit目)
+        if (hashData != NULL)
         {
-            move->score += (1 << 8);
+            move->score += 2 * (1 << 8);
         }
     }
 }

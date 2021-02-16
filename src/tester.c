@@ -17,13 +17,12 @@
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_mpc_base_nonest.txt"
+#define LOG_FILE "./resources/tester/accurate_nompc_fullhash_beforeRootOrder_fixPVS_aftermidFix.txt"
 
-#define NB_RECORDS 20
+#define NB_RECORDS 19
 #define NB_RANDOM_TURN 10
 
 char records[NB_RECORDS][61] = {
-    "F5F4F3D6C4G5D7C7B7B8",
     "F5D6C6",
     "F5D6C5F4D3",
     "F5D6C5F4D7",
@@ -85,6 +84,7 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
             //fprintf(logFile, "%c%d\n", posX, posY);
             fprintf(logFile, "%c%d", posX, posY);
             record_i += 2;
+            nbEmpty--;
         }
     }
     else
@@ -105,6 +105,7 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
             CalcPosAscii(pos, &posX, &posY);
             //fprintf(logFile, "%c%d\n", posX, posY);
             fprintf(logFile, "%c%d", posX, posY);
+            nbEmpty--;
         }
     }
 
@@ -140,7 +141,7 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
 
     } //end of loop:　while (!BoardIsFinished(board))
 
-    fprintf(logFile, "\n");
+    fprintf(logFile, " %d\n", BoardGetStoneCount(board, BLACK) - BoardGetStoneCount(board, WHITE));
     return 0;
 }
 
@@ -153,8 +154,8 @@ int main()
     srand(42);
     HashInit();
 
-    InitTree(&tree[0], 8, 12, 4, 8, 1, 1, 1);
-    InitTree(&tree[1], 8, 12, 4, 8, 1, 1, 1);
+    InitTree(&tree[0], 8, 12, 4, 8, 1, 1, 0, 1);
+    InitTree(&tree[1], 8, 12, 4, 8, 1, 1, 0, 1);
     // 設定上書き
     tree[0].useIDDS = 1;
     tree[1].useIDDS = 1;
@@ -170,6 +171,7 @@ int main()
         ResetTree(&tree[0]);
         ResetTree(&tree[1]);
 
+        printf("match %d\n", i);
         if (i < NB_RECORDS)
         {
             if (Match(records[i], tree, fp) != 0)

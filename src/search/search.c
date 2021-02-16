@@ -36,13 +36,14 @@ static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
  * @param useMPC Multi Prob Cutを使うか
  * @param nestMPC MPCの浅い探索中にさらにMPCを許可するか
  */
-void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, unsigned char useHash, unsigned char useMPC, unsigned char nestMPC)
+void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, unsigned char useHash, unsigned char usePvHash, unsigned char useMPC, unsigned char nestMPC)
 {
     tree->midDepth = midDepth;
     tree->endDepth = endDepth;
     tree->midPvsDepth = midPvsDepth;
     tree->endPvsDepth = endPvsDepth;
     tree->useHash = useHash;
+    tree->usePvHash = usePvHash;
     tree->useMPC = useMPC;
     tree->enableMpcNest = nestMPC;
 
@@ -53,13 +54,15 @@ void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
     if (useHash)
     {
         tree->nwsTable = (HashTable *)malloc(sizeof(HashTable));
-        if (tree->nwsTable == NULL)
+        tree->pvTable = (HashTable *)malloc(sizeof(HashTable));
+        if (tree->nwsTable == NULL || tree->pvTable == NULL)
         {
             printf("ハッシュテーブルのメモリ確保失敗\n");
             return;
         }
 
-        HashTableInit(tree->nwsTable);
+        HashTableInit(tree->nwsTable, NWS_TABLE_SIZE);
+        HashTableInit(tree->pvTable, PV_TABLE_SIZE);
     }
 }
 
@@ -74,7 +77,9 @@ void DeleteTree(SearchTree *tree)
     if (tree->useHash)
     {
         HashTableFree(tree->nwsTable);
+        HashTableFree(tree->pvTable);
         free(tree->nwsTable);
+        free(tree->pvTable);
     }
 }
 
@@ -99,7 +104,10 @@ void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth
 void ResetTree(SearchTree *tree)
 {
     if (tree->useHash)
+    {
         HashTableReset(tree->nwsTable);
+        HashTableReset(tree->pvTable);
+    }
 }
 
 /**

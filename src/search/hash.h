@@ -4,6 +4,9 @@
 #include "../stones.h"
 #include "../const.h"
 
+#define NWS_TABLE_SIZE (1 << 24)
+#define PV_TABLE_SIZE (1 << 22)
+
 // ハッシュテーブルに格納されるデータ
 // 8x2 + 1 + 1*2 + 2x2 = 23[byte]
 typedef struct HashData
@@ -38,7 +41,7 @@ typedef struct HashTable
 void HashInit();
 
 // ハッシュテーブルの初期化
-void HashTableInit(HashTable *table);
+void HashTableInit(HashTable *table, uint64_t size);
 
 // ハッシュテーブルの開放
 void HashTableFree(HashTable *table);
