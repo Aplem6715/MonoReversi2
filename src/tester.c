@@ -17,13 +17,13 @@
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_mpc_hashOrder_fixPVS_end.txt"
+#define LOG_FILE "./resources/tester/accurate_mpc_hashOrder_fixPVS_afterend.txt"
 
 #define NB_RECORDS 20
 #define NB_RANDOM_TURN 10
 
 char records[NB_RECORDS][61] = {
-    "F5F4F3D6C4G5D7C7B7B8",
+    "E6F6D3C5D6C7B6B5C4E2",
     "F5D6C6",
     "F5D6C5F4D3",
     "F5D6C5F4D7",
@@ -71,7 +71,7 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
         // レコード着手
         while (record[record_i] != '\0')
         {
-            //BoardDraw(board);
+            BoardDraw(board);
             pos = PosIndexFromAscii(&record[record_i]);
 
             if (!BoardIsLegalTT(board, pos))
@@ -85,6 +85,7 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
             //fprintf(logFile, "%c%d\n", posX, posY);
             fprintf(logFile, "%c%d", posX, posY);
             record_i += 2;
+            nbEmpty--;
         }
     }
     else
@@ -105,6 +106,7 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
             CalcPosAscii(pos, &posX, &posY);
             //fprintf(logFile, "%c%d\n", posX, posY);
             fprintf(logFile, "%c%d", posX, posY);
+            nbEmpty--;
         }
     }
 
@@ -112,7 +114,7 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
 
     while (!BoardIsFinished(board))
     {
-        //BoardDraw(board);
+        BoardDraw(board);
 
         // 置ける場所がなかったらスキップ
         if (BoardGetMobility(board) == 0)
@@ -140,7 +142,7 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
 
     } //end of loop:　while (!BoardIsFinished(board))
 
-    fprintf(logFile, "\n");
+    fprintf(logFile, " %d\n", BoardGetStoneCount(board, BLACK) - BoardGetStoneCount(board, WHITE));
     return 0;
 }
 

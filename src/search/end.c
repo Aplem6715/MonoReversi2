@@ -448,6 +448,7 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
  * @param passed パスされたかどうか
  * @return score_t 最善手のスコア
  */
+
 score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, const unsigned char depth, const unsigned char passed)
 {
     SearchFunc_t NextSearch;
@@ -465,6 +466,8 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         return Judge(tree);
     }
 
+    alpha = in_alpha;
+    beta = in_beta;
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     { // ハッシュの記録をもとにカット/探索範囲の縮小
         hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
@@ -494,15 +497,13 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         else
         { // パスして探索続行
             SearchPassEnd(tree);
-            alpha = -NextSearch(tree, -in_beta, -in_alpha, depth, true);
+            bestScore = -NextSearch(tree, -in_beta, -in_alpha, depth, true);
             SearchPassEnd(tree);
             bestMove = PASS_INDEX;
         }
     }
     else
     { // 着手可能なとき
-        alpha = in_alpha;
-        beta = in_beta;
         bestScore = -MAX_VALUE;
 
         EvaluateMoveList(tree, &moveList, tree->stones, hashData); // 着手の事前評価
@@ -517,7 +518,7 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
             else
             {                                                           // PVが見つかっている
                 score = -EndNullWindow(tree, -alpha, depth - 1, false); // 最善かどうかチェック 子ノードをNull Window探索
-                if (score > alpha && score < beta)                      // 予想が外れていたら
+                if (score > alpha)                                      // 予想が外れていたら
                 {
                     score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常のWindowで再探索
                 }
@@ -528,14 +529,15 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
             {
                 bestScore = score;
                 bestMove = move->posIdx;
+
                 if (score >= beta) // 上限突破したら
                 {
                     tree->nbCut++;
                     break; // 探索終了（カット）
                 }
-                if (score > alpha) // alphaを上回る着手を発見したら
+                if (bestScore > alpha) // alphaを上回る着手を発見したら
                 {
-                    alpha = score;
+                    alpha = bestScore;
                 }
             }
         } // end of moves loop
@@ -559,8 +561,8 @@ uint8 EndRoot(SearchTree *tree, uint8 choiceSecond)
 {
     SearchFunc_t NextSearch;
     score_t score, alpha, beta;
-    score_t bestScore;
     uint8 bestMove = NOMOVE_INDEX, secondMove = NOMOVE_INDEX;
+    uint8 foundPV = 0;
     uint8 depth = tree->depth;
     MoveList moveList;
     Move *move;
@@ -576,7 +578,6 @@ uint8 EndRoot(SearchTree *tree, uint8 choiceSecond)
 
     alpha = -MAX_VALUE;
     beta = MAX_VALUE;
-    bestScore = -MAX_VALUE;
 
     CreateMoveList(&moveList, tree->stones);               // 着手リストを作成
     EvaluateMoveList(tree, &moveList, tree->stones, NULL); // 着手の事前評価
@@ -585,30 +586,29 @@ uint8 EndRoot(SearchTree *tree, uint8 choiceSecond)
     for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
     { // すべての着手についてループ
         SearchUpdateEnd(tree, move);
-        if (bestScore == -MAX_VALUE)
+        if (!foundPV)
         {                                                               // PVが見つかっていない
             score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常探索
         }
         else
         {                                                           // PVが見つかっている
             score = -EndNullWindow(tree, -alpha, depth - 1, false); // 最善かどうかチェック 子ノードをNull Window探索
-            if (score > alpha && score < beta)                      // 予想が外れていたら
+            if (score > alpha)                                      // 予想が外れていたら
             {
                 score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常のWindowで再探索
             }
         }
         SearchRestoreEnd(tree, move);
 
-        if (score > bestScore) // alphaを上回る着手を発見したら
+        if (score > alpha) // alphaを上回る着手を発見したら
         {
-            bestScore = score;
+            alpha = score;
             bestMove = move->posIdx;
-            if (bestScore > alpha)
-                alpha = score;
+            foundPV = 1; // PVを発見した！
         }
     } // end of moves loop
 
-    tree->score = bestScore;
+    tree->score = alpha;
 
     if (choiceSecond == 1 && secondMove != NOMOVE_INDEX)
     {

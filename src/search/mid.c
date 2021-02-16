@@ -645,7 +645,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
 
     if (tree->usePvHash == 1 && depth >= tree->hashDepth)
     { // ハッシュの記録をもとにカット/探索範囲の縮小
-        //hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
+        hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
         // PVノードはカットしない(性能も殆ど変わらなかった)
         if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
             return score;
@@ -683,7 +683,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     { // 着手可能なとき
 
         // 着手の事前評価
-        EvaluateMoveList(tree, &moveList, tree->stones, hashData);
+        EvaluateMoveList(tree, &moveList, tree->stones, NULL); //TODO** NULLに一時置き換えーテスト用
 
         alpha = in_alpha;
         beta = in_beta;
