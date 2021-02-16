@@ -771,6 +771,11 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
     beta = SCORE_MAX + 1;
     bestScore = -MAX_VALUE;
 
+    uint64_t hashCode;
+    HashData *hashData = HashTableGetData(tree->pvTable, tree->stones, tree->depth, &hashCode);
+    
+    EvaluateMoveList(tree, moveList, tree->stones, hashData);
+
     for (move = NextBestMoveWithSwap(moveList->moves); move != NULL; move = NextBestMoveWithSwap(move))
     { // すべての着手についてループ
         SearchUpdateMid(tree, move);
