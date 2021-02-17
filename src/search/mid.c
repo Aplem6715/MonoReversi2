@@ -208,8 +208,8 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
         if (tree->usePvHash == 1 && depth >= tree->hashDepth)
         {
             hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
-            //if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
-            //    return score;
+            if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
+                return score;
         }
 
         lower = alpha;
@@ -317,8 +317,8 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         if (tree->usePvHash == 1 && depth >= tree->hashDepth)
         {
             hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
-            //if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
-            //    return score;
+            if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
+                return score;
         }
 
         // 探索深度によって探索関数を変更，深い探索では着手の静的評価をしない
