@@ -58,7 +58,7 @@ void HashTableResetStats(HashTable *table);
 HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64_t *hashCode);
 
 // ハッシュ内に含まれているか
-uint8 IsHashTableContains(HashTable *table, Stones *stones);
+bool IsHashTableContains(HashTable *table, Stones *stones);
 
 // ハッシュテーブルに追加
 void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t in_alpha, score_t in_beta, score_t maxScore);

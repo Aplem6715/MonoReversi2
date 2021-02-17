@@ -557,12 +557,12 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
  * @param choiceSecond 次善手を選ぶか
  * @return uint8 予測手の位置番号
  */
-uint8 EndRoot(SearchTree *tree, uint8 choiceSecond)
+uint8 EndRoot(SearchTree *tree, bool choiceSecond)
 {
     SearchFunc_t NextSearch;
     score_t score, alpha, beta;
     uint8 bestMove = NOMOVE_INDEX, secondMove = NOMOVE_INDEX;
-    uint8 foundPV = 0;
+    bool foundPV = 0;
     uint8 depth = tree->depth;
     MoveList moveList;
     Move *move;
@@ -604,13 +604,13 @@ uint8 EndRoot(SearchTree *tree, uint8 choiceSecond)
         {
             alpha = score;
             bestMove = move->posIdx;
-            foundPV = 1; // PVを発見した！
+            foundPV = true; // PVを発見した！
         }
     } // end of moves loop
 
     tree->score = alpha;
 
-    if (choiceSecond == 1 && secondMove != NOMOVE_INDEX)
+    if (choiceSecond && secondMove != NOMOVE_INDEX)
     {
         return secondMove;
     }

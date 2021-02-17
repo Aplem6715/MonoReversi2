@@ -32,7 +32,7 @@ static random_device rnd;
 static mt19937 mt(rnd());
 static uniform_real_distribution<double> rnd_prob(0.0, 1.0);
 
-void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enableLog, int matchIdxShift, uint8 shallow, uint8 deep, uint8 minimum)
+void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, bool enableLog, int matchIdxShift, uint8 shallow, uint8 deep, uint8 minimum)
 {
     SearchTree deepTree[1], shallowTree[1];
     Board board[1];
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
     int idxShift;
     int nbPlay;
     uint8 shallow, deep;
-    uint8 showBoard;
+    bool showBoard;
 
     if (argc < 6)
     {

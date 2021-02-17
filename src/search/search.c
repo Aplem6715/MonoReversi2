@@ -275,7 +275,7 @@ void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
  * @param choiceSecond 次善手を選ぶかどうか
  * @return uint8 予想最善手の位置番号
  */
-uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond)
+uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
 {
     uint8 pos = NOMOVE_INDEX;
     uint8 nbEmpty = CountBits(~(own | opp));

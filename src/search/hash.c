@@ -195,9 +195,9 @@ HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64
  * 
  * @param table ハッシュ表
  * @param stones 盤面情報
- * @return uint8 True/False
+ * @return bool True/False
  */
-uint8 IsHashTableContains(HashTable *table, Stones *stones)
+bool IsHashTableContains(HashTable *table, Stones *stones)
 {
     // ハッシュコード取得
     uint64_t hashCode = GetHashCode(stones);
@@ -207,15 +207,15 @@ uint8 IsHashTableContains(HashTable *table, Stones *stones)
     HashData *data = &table->data[index];
     if (data->own == stones->own && data->opp == stones->opp)
     {
-        return 1;
+        return true;
     }
 
     data = &table->data[RETRY_HASH(index)];
     if (data->own == stones->own && data->opp == stones->opp)
     {
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 /**
@@ -394,16 +394,16 @@ void HashDataLevelUP(HashData *data, const uint8 bestMove, const uint8 depth, co
  * @param alpha アルファ値
  * @param beta ベータ値
  * @param maxScore 最善手のスコア
- * @return uint8 上書きされたか
+ * @return bool 上書きされたか
  */
-uint8 HashDataPriorityOverwrite(HashData *data, const Stones *stones, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
+bool HashDataPriorityOverwrite(HashData *data, const Stones *stones, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
 {
     if (depth > data->depth)
     {
         HashDataSaveNew(data, stones, bestMove, depth, alpha, beta, maxScore);
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 /**

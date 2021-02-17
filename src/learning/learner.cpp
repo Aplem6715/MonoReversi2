@@ -83,7 +83,7 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
     uint64_t flip;
     uint8 pos;
     int nbEmpty = 60;
-    uint8 useSecondMove;
+    bool useSecondMove;
     Board board[1];
     Evaluator eval[2];
     FeatureRecord record;
@@ -128,7 +128,7 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
         }
         else
         {
-            useSecondMove = rnd_prob(mt) < secondMoveRatio ? 1 : 0;
+            useSecondMove = rnd_prob(mt) < secondMoveRatio;
             if (BoardGetTurnColor(board) == BLACK)
             {
                 // AIが着手位置を決める

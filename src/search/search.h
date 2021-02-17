@@ -94,6 +94,6 @@ void SearchRestoreEnd(SearchTree *tree, Move *move);
 void SearchUpdateEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip);
 void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip);
 
-uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, uint8 choiceSecond);
+uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond);
 
 #endif

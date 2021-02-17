@@ -823,7 +823,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     Move *move;
     // 現状での予想最善手
     uint8 bestMove;
-    uint8 foundPV = 0;
+    bool foundPV = 0;
     // スコア
     score_t score;
     // 探索スコアwindow境界
@@ -901,7 +901,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
             {
                 alpha = score;
                 bestMove = move->posIdx;
-                foundPV = 1;
+                foundPV = true;
             }
             if (score >= beta) // 上限突破したら
             {
@@ -938,7 +938,7 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
     SearchFunc_t NextSearch;
     // 現状予想される最善手
     uint8 bestMove = NOMOVE_INDEX;
-    uint8 foundPV = 0;
+    bool foundPV = false;
     // 着手情報
     Move *move;
     // 一時探索スコア
@@ -980,7 +980,7 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
             alpha = score;
             *secondMoveOut = bestMove;
             bestMove = move->posIdx;
-            foundPV = 1;
+            foundPV = true;
         }
     } // end of moves loop
     *scoreOut = alpha;
@@ -988,7 +988,7 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
 }
 * /
 
-    /**
+/**
  * @brief 中盤探索のルートノード
  * 
  * 反復深化法+PVS
@@ -998,7 +998,7 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
  * @param choiceSecond 次善手を選ぶかどうか
  * @return uint8 予想最善手位置の番号
  */
-uint8 MidRoot(SearchTree *tree, uint8 choiceSecond)
+uint8 MidRoot(SearchTree *tree, bool choiceSecond)
 {
     // 着手リスト
     MoveList moveList;
