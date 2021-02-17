@@ -24,9 +24,9 @@
 
 #define ERROR_POS 127
 
-#define MID_DEPTH 16
-#define USE_MPC 1
-#define USE_NEST_MPC 1
+#define MID_DEPTH 14
+#define USE_MPC 0
+#define USE_NEST_MPC 0
 
 /**
  * @brief 盤面情報をサーバーからダウンロードする
