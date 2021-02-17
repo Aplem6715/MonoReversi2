@@ -561,8 +561,8 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
 {
     SearchFunc_t NextSearch;
     score_t score, alpha, beta;
+    score_t bestScore;
     uint8 bestMove = NOMOVE_INDEX, secondMove = NOMOVE_INDEX;
-    bool foundPV = 0;
     uint8 depth = tree->depth;
     MoveList moveList;
     Move *move;
@@ -578,6 +578,7 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
 
     alpha = -MAX_VALUE;
     beta = MAX_VALUE;
+    bestScore = -MAX_VALUE;
 
     CreateMoveList(&moveList, tree->stones);               // 着手リストを作成
     EvaluateMoveList(tree, &moveList, tree->stones, NULL); // 着手の事前評価
@@ -586,7 +587,7 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
     for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
     { // すべての着手についてループ
         SearchUpdateEnd(tree, move);
-        if (!foundPV)
+        if (bestScore == -MAX_VALUE)
         {                                                               // PVが見つかっていない
             score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常探索
         }
@@ -600,15 +601,18 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
         }
         SearchRestoreEnd(tree, move);
 
-        if (score > alpha) // alphaを上回る着手を発見したら
+        if (score > bestScore) // alphaを上回る着手を発見したら
         {
-            alpha = score;
+            bestScore = score;
             bestMove = move->posIdx;
-            foundPV = true; // PVを発見した！
+            if (bestScore > alpha)
+            {
+                alpha = bestScore;
+            }
         }
     } // end of moves loop
 
-    tree->score = alpha;
+    tree->score = bestScore;
 
     if (choiceSecond && secondMove != NOMOVE_INDEX)
     {

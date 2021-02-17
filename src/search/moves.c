@@ -106,10 +106,10 @@ void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *
         // 着手して相手のターンに進める
         EvalUpdate(tree->eval, move->posIdx, move->flip);
         score = Evaluate(tree->eval, tree->nbEmpty - 1);
-        mScore = (uint16_t)((SCORE_MAX - score) / STONE_VALUE);
+        mScore = (uint16_t)(10.0 * (SCORE_MAX - score) / STONE_VALUE);
         assert(SCORE_MAX - score >= 0);
 
-        // 相手のスコアを±反転してスコア加算(精度は1石単位で)
+        // 相手のスコアを±反転してスコア加算(精度は0.1石単位で)
         move->score += (mScore * (1 << 8));
         EvalUndo(tree->eval, move->posIdx, move->flip);
 
