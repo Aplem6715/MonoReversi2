@@ -473,7 +473,6 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     if (tree->usePvHash == 1 && depth >= tree->hashDepth)
     { // ハッシュの記録をもとにカット/探索範囲の縮小
         hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
-        // PVノードはカットしない(性能も殆ど変わらなかった)
         if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
             return score;
     }
