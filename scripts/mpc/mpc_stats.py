@@ -21,7 +21,7 @@ use_plt = False
 
 mpc_stats_pkl_file = "./resources/mpc/mpc_stats.pkl"
 raw_csv_file = "./resources/mpc/mpc_raw_tmp.csv"
-target_c_file = "./src/search/mpc_info.cpp"
+target_c_file = "./src/search/mpc_info.c"
 mpc_playout_exe = "./build/release/learn/mpc_playout.exe"
 
 dummy_data_str = "\t{\n" + \

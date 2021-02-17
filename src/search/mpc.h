@@ -24,12 +24,13 @@ typedef struct MPCPair
 
 extern const MPCPair mpcPairs[60][MPC_DEEP_MAX - MPC_DEEP_MIN + 1][MPC_NB_TRY];
 
+/*
 static const double MPC_T[MPC_NEST_MAX] = {
     1.036, // 85%
     1.405, // 92%
     2.054, // 98%
     99999, // LAST
-};
+};*/
 
 // sample:130 t分布
 static const double MPC_DEPTH_T[MPC_DEEP_MAX + 1] = {

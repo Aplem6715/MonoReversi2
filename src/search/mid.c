@@ -76,7 +76,7 @@ bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 d
     // MPC統計情報
     const MPCPair *mpcStat;
     // ベータ値
-    score_t beta = alpha + 1;
+    const score_t beta = alpha + 1;
     // 浅い探索でのスコア
     score_t shallowScore;
     // 浅い探索の深度
@@ -84,7 +84,7 @@ bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 d
     // 標準偏差に乗算されるしきい値係数
     double thresh;
     // カットしきい値
-    long bound;
+    score_t bound;
     // イテレータ
     int i;
 
@@ -106,12 +106,12 @@ bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 d
         if (shallowDepth > 0)
         {
             // ベータカット予測
-            bound = lround((thresh * mpcStat->std + beta - mpcStat->bias) / mpcStat->slope);
+            bound = (score_t)lround((beta + thresh * mpcStat->std - mpcStat->bias) / mpcStat->slope);
             if (bound < SCORE_MAX)
             {
                 tree->nbMpcNested++;
                 {
-                    shallowScore = MidNullWindow(tree, (score_t)bound, shallowDepth, 0);
+                    shallowScore = MidNullWindow(tree, bound, shallowDepth, 0);
                 }
                 tree->nbMpcNested--;
                 if (shallowScore >= bound)
@@ -122,12 +122,12 @@ bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 d
             }
 
             // アルファカット予測
-            bound = lround((-thresh * mpcStat->std + alpha - mpcStat->bias) / mpcStat->slope);
+            bound = (score_t)lround((alpha - thresh * mpcStat->std - mpcStat->bias) / mpcStat->slope);
             if (bound > SCORE_MIN)
             {
                 tree->nbMpcNested++;
                 {
-                    shallowScore = MidNullWindow(tree, (score_t)bound + 1, shallowDepth, 0);
+                    shallowScore = MidNullWindow(tree, bound + 1, shallowDepth, 0);
                 }
                 tree->nbMpcNested--;
                 if (shallowScore <= bound)

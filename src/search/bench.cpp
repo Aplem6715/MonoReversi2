@@ -166,7 +166,7 @@ void BenchSearching(vector<unsigned char> depths, unsigned char useHash, unsigne
     logfile << "探索深度,思考時間,探索ノード数,探索速度,カット数,ハッシュ記録数,ハッシュヒット数,2ndハッシュ記録数,2ndハッシュヒット数,ハッシュ衝突数,pvハッシュ記録数,pvハッシュヒット数,pv2ndハッシュ記録数,pv2ndハッシュヒット数,pvハッシュ衝突数,推定CPUスコア,着手位置\n";
     LoadGameRecords(benchFile.c_str(), records);
 
-    InitTree(&tree, 4, 4, midPvsDepth, endPvsDepth, useHash, useMPC, nestMPC);
+    InitTree(&tree, 4, 4, midPvsDepth, endPvsDepth, useHash, useHash, useMPC, nestMPC);
     for (vector<uint8> moves : records)
     {
         for (uint8 move : moves)

@@ -154,8 +154,8 @@ int main()
     srand(42);
     HashInit();
 
-    InitTree(&tree[0], 8, 12, 4, 8, 1, 1, 0, 1);
-    InitTree(&tree[1], 8, 12, 4, 8, 1, 1, 0, 1);
+    InitTree(&tree[0], 8, 12, 4, 8, 1, 1, 0, 0);
+    InitTree(&tree[1], 8, 12, 4, 8, 1, 1, 0, 0);
     // 設定上書き
     tree[0].useIDDS = 1;
     tree[1].useIDDS = 1;

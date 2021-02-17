@@ -42,8 +42,9 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
     int i;
 
     minimum = deep > minimum ? deep : minimum;
-    InitTree(shallowTree, 0, minimum, 4, 8, 1, 1, 1);
-    InitTree(deepTree, 0, minimum, 4, 8, 1, 1, 1);
+    // 中盤探索深度は後から設定される
+    InitTree(shallowTree, 100, minimum, 4, 8, 1, 1, 1, 1); // 深すぎる深度 = 超遅い 設定忘れを防ぐ
+    InitTree(deepTree, 100, minimum, 4, 8, 1, 1, 1, 1);
     logFile = fopen(MPC_RAW_FILE, "a");
 
     for (i = 0; i < nbPlay; i++)
