@@ -361,13 +361,20 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     Move *move;
     uint64_t hashCode;
     uint8 bestMove;
-    score_t score, maxScore;
+    score_t score, bestScore;
     const score_t alpha = beta - 1;
 
     tree->nodeCount++;
     if (depth <= 0)
     {
         return Judge(tree);
+    }
+
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    {
+        hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
+        if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
+            return score;
     }
 
     if (depth - 1 >= tree->orderDepth)
@@ -390,23 +397,17 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
         else
         { // パスして探索続行
             SearchPassEnd(tree);
-            maxScore = -NextNullSearch(tree, -alpha, depth, true);
+            bestScore = -NextNullSearch(tree, -alpha, depth, true);
             SearchPassEnd(tree);
             bestMove = PASS_INDEX;
         }
     }
     else
     {
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
-        {
-            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
-            if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
-                return score;
-        }
 
         EvaluateMoveList(tree, &moveList, tree->stones, hashData);
 
-        maxScore = -MAX_VALUE;
+        bestScore = -MAX_VALUE;
 
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
         {
@@ -416,9 +417,9 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
             }
             SearchRestoreEnd(tree, move);
 
-            if (score > maxScore)
+            if (score > bestScore)
             {
-                maxScore = score;
+                bestScore = score;
                 bestMove = move->posIdx;
                 if (score >= beta)
                 {
@@ -430,9 +431,9 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
 
     if (tree->useHash == 1)
     {
-        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, bestScore);
     }
-    return maxScore;
+    return bestScore;
 }
 
 /**
