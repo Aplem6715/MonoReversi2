@@ -17,14 +17,14 @@
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_miniEndFix_fullhash.txt"
+#define LOG_FILE "./resources/tester/accurate_midHashCut_nohash.txt"
 
-#define NB_RECORDS 6
+#define NB_RECORDS 19
 #define NB_RANDOM_TURN 40
 
-/*
 char records[NB_RECORDS][61 * 2] = {
-    "F5D6C6",
+    "F5D6C5F4E3F6",
+    //"F5D6C6",
     "F5D6C5F4D3",
     "F5D6C5F4D7",
     "F5D6C5F4E3D3",
@@ -43,8 +43,9 @@ char records[NB_RECORDS][61 * 2] = {
     "F5D6C4G5C6C5D7D3B4C3",
     "F5D6C4G5F6F4F3D3C3G6",
     "F5D6C4D3E6F4E3F3C6F6",
-};*/
+};
 
+/*
 char records[NB_RECORDS][61 * 2] = {
     "D3C5B6F3F4B5E6F5C6B7F6D7G4C2D6G6C7C3C8B8B1E8A8D2F7B2B3G3A5H3E7F8D1E3G5C4A7B4H6G7",
     "F5D6C3D3C4F4C5B3C2E3D2C6B4A3G4E1D1C1E2G6B5E6A4F1F7G3F3F6H3H4A2E8H5F2B1A1B2B6A5A6G5H6H7G2H1H2G7",
@@ -54,6 +55,7 @@ char records[NB_RECORDS][61 * 2] = {
     "F5D6C4D3C5F4E3F3C2C6E6D2G4B6B5C3B4C1F2A6A5B3A7F6A4A3A2E2E7D7G5G6F7F8H7G3H4F1B2H5H6H2C8D8E8A1G8",
 };
 
+* /
 /**
  * @brief 対戦の実行
  * 
@@ -151,8 +153,8 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
         flip = BoardPutTT(board, pos);
 
         CalcPosAscii(pos, &posX, &posY);
-        //fprintf(logFile, "%c%d %d\n", posX, posY, tree->score);
-        fprintf(logFile, "%c%d", posX, posY);
+        fprintf(logFile, "%c%d %d\n", posX, posY, tree[BoardGetTurnColor(board)].score);
+        //fprintf(logFile, "%c%d", posX, posY);
         nbEmpty--;
 
     } //end of loop:　while (!BoardIsFinished(board))
@@ -170,8 +172,8 @@ int main()
     srand(522);
     HashInit();
 
-    InitTree(&tree[0], 6, 14, 4, 8, 1, 1, 0, 0);
-    InitTree(&tree[1], 6, 14, 4, 8, 1, 1, 0, 0);
+    InitTree(&tree[0], 6, 14, 4, 8, 0, 0, 0, 0);
+    InitTree(&tree[1], 6, 14, 4, 8, 0, 0, 0, 0);
     // 設定上書き
     tree[0].useIDDS = 1;
     tree[1].useIDDS = 1;
@@ -182,7 +184,7 @@ int main()
     tree[0].orderDepth = 5;
     tree[1].orderDepth = 5;
 
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < 1; i++)
     {
         ResetTree(&tree[0]);
         ResetTree(&tree[1]);
