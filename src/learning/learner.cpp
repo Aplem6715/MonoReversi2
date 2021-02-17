@@ -194,8 +194,8 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
 {
 
     SearchTree trees[2];
-    InitTree(&trees[0], midDepth, endDepth, 4, 8, 1, 0, 0); // 旧
-    InitTree(&trees[1], midDepth, endDepth, 4, 8, 1, 0, 0); // 新
+    InitTree(&trees[0], midDepth, endDepth, 4, 8, 1, 1, 0, 0); // 旧
+    InitTree(&trees[1], midDepth, endDepth, 4, 8, 1, 1, 0, 0); // 新
 
 #ifdef USE_NN
 #elif USE_REGRESSION
