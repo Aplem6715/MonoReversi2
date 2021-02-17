@@ -102,6 +102,18 @@
             "preLaunchTask": "make_release"
         },
         {
+            "name": "Tester_リリース",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build\\release\\play\\tester.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "externalTerminal",
+            "preLaunchTask": "make-tester_release"
+        },
+        {
             "name": "Client_リリース",
             "type": "cppvsdbg",
             "request": "launch",

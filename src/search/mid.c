@@ -749,6 +749,9 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
     SearchFunc_t NextSearch;
     // 現状予想される最善手
     uint8 bestMove = NOMOVE_INDEX;
+    // 盤面に対応するハッシュデータ
+    HashData *hashData = NULL;
+    uint64_t hashCode;
     // 着手情報
     Move *move;
     // 一時探索スコア
@@ -771,8 +774,10 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
     beta = SCORE_MAX + 1;
     bestScore = -MAX_VALUE;
 
-    uint64_t hashCode;
-    HashData *hashData = HashTableGetData(tree->pvTable, tree->stones, tree->depth, &hashCode);
+    if (tree->usePvHash)
+    {
+        hashData = HashTableGetData(tree->pvTable, tree->stones, tree->depth, &hashCode);
+    }
 
     EvaluateMoveList(tree, moveList, tree->stones, hashData);
 

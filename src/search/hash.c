@@ -106,6 +106,23 @@ void HashTableReset(HashTable *table)
 }
 
 /**
+ * @brief 中盤 ⇔ 終盤切替時，予想最善手を残してスコアのみをリセット
+ * 
+ * @param table スコアをリセットするハッシュ表
+ */
+void HashTableResetScoreWindows(HashTable *table)
+{
+    for (size_t i = 0; i < table->size; i++)
+    {
+        if (table->data[i].depth != 0)
+        {
+            table->data[i].lower = -MAX_VALUE;
+            table->data[i].upper = MAX_VALUE;
+        }
+    }
+}
+
+/**
  * @brief ハッシュ表の利用状況などの統計をリセット
  * 
  * @param table 統計をリセットするハッシュ表

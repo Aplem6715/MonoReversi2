@@ -91,7 +91,7 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     }
     else
     {
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
+        if (tree->usePvHash == 1 && depth >= tree->hashDepth)
         {
             hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
@@ -139,7 +139,7 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         }
     }
 
-    if (tree->useHash == 1)
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
@@ -178,7 +178,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
         return Judge(tree);
     }
 
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
     {
         hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
         if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
@@ -246,7 +246,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
         }
     }
 
-    if (tree->useHash == 1 && hashData != NULL)
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
     }
@@ -272,7 +272,7 @@ score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
     const score_t alpha = beta - 1;
     HashData *hashData = NULL;
     uint64_t mob, pos, flip, hashCode;
-    score_t score, maxScore;
+    score_t score, bestScore;
     uint8 posIdx;
     uint8 bestMove;
 
@@ -280,6 +280,13 @@ score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
     if (depth <= 0)
     {
         return Judge(tree);
+    }
+
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    {
+        hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
+        if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
+            return score;
     }
 
     mob = CalcMobility(tree->stones);
@@ -293,21 +300,15 @@ score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
         else
         { // パスして探索続行
             SearchPassEnd(tree);
-            maxScore = -EndNullWindowDeep(tree, -alpha, depth, true);
+            bestScore = -EndNullWindowDeep(tree, -alpha, depth, true);
             SearchPassEnd(tree);
             bestMove = PASS_INDEX;
         }
     }
     else
     {
-        if (tree->useHash == 1 && depth >= tree->hashDepth)
-        {
-            hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
-            if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
-                return score;
-        }
 
-        maxScore = -MAX_VALUE;
+        bestScore = -MAX_VALUE;
         while (mob != 0)
         {
             // 着手位置・反転位置を取得
@@ -322,9 +323,9 @@ score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
             }
             SearchRestoreEndDeep(tree, pos, flip);
 
-            if (score > maxScore)
+            if (score > bestScore)
             {
-                maxScore = score;
+                bestScore = score;
                 bestMove = posIdx;
                 if (score >= beta)
                 {
@@ -334,11 +335,11 @@ score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
         }
     } // end of if(mob == 0) else
 
-    if (tree->useHash == 1)
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
-        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, bestScore);
     }
-    return maxScore;
+    return bestScore;
 }
 
 /**
@@ -429,7 +430,7 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
         }
     } // end of if(moveList.nbMoves > 0)
 
-    if (tree->useHash == 1)
+    if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, bestScore);
     }
@@ -469,7 +470,7 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
 
     alpha = in_alpha;
     beta = in_beta;
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
     { // ハッシュの記録をもとにカット/探索範囲の縮小
         hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
         // PVノードはカットしない(性能も殆ど変わらなかった)
@@ -507,7 +508,8 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     { // 着手可能なとき
         bestScore = -MAX_VALUE;
 
-        EvaluateMoveList(tree, &moveList, tree->stones, hashData); // 着手の事前評価
+        // 着手の事前評価
+        EvaluateMoveList(tree, &moveList, tree->stones, hashData);
 
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
         { // すべての着手についてループ
@@ -544,7 +546,7 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         } // end of moves loop
     }
 
-    if (tree->useHash == 1)
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, bestScore);
     }

@@ -291,7 +291,15 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
     }
     else if (nbEmpty <= tree->endDepth)
     {
-        tree->isEndSearch = 1;
+        if (!tree->isEndSearch)
+        {
+            tree->isEndSearch = true;
+            // 中盤 ⇔ 終盤切り替え時，スコアが切り替わるので置換表内のスコアをリセット
+            if (tree->usePvHash)
+                HashTableResetScoreWindows(tree->pvTable);
+            if (tree->useHash)
+                HashTableResetScoreWindows(tree->nwsTable);
+        }
         tree->depth = nbEmpty;
         tree->pvsDepth = tree->endPvsDepth;
         tree->orderDepth = tree->pvsDepth;

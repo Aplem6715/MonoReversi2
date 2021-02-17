@@ -12,10 +12,7 @@
             "problemMatcher": [
                 "$msCompile"
             ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+            "group": "build"
         },
         {
             "type": "shell",
@@ -82,7 +79,10 @@
             "problemMatcher": [
                 "$msCompile"
             ],
-            "group": "build"
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "type": "shell",
@@ -96,6 +96,22 @@
                 "$msCompile"
             ],
             "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "make-tester_release",
+            "command": "nmake.exe",
+            "args": [
+                "/frelease_tester.mk",
+                "reversi"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "type": "shell",

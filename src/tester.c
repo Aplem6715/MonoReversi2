@@ -17,12 +17,13 @@
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_miniEndFix.txt"
+#define LOG_FILE "./resources/tester/accurate_miniEndFix_fullhash.txt"
 
-#define NB_RECORDS 19
-#define NB_RANDOM_TURN 10
+#define NB_RECORDS 6
+#define NB_RANDOM_TURN 40
 
-char records[NB_RECORDS][61] = {
+/*
+char records[NB_RECORDS][61 * 2] = {
     "F5D6C6",
     "F5D6C5F4D3",
     "F5D6C5F4D7",
@@ -42,6 +43,15 @@ char records[NB_RECORDS][61] = {
     "F5D6C4G5C6C5D7D3B4C3",
     "F5D6C4G5F6F4F3D3C3G6",
     "F5D6C4D3E6F4E3F3C6F6",
+};*/
+
+char records[NB_RECORDS][61 * 2] = {
+    "D3C5B6F3F4B5E6F5C6B7F6D7G4C2D6G6C7C3C8B8B1E8A8D2F7B2B3G3A5H3E7F8D1E3G5C4A7B4H6G7",
+    "F5D6C3D3C4F4C5B3C2E3D2C6B4A3G4E1D1C1E2G6B5E6A4F1F7G3F3F6H3H4A2E8H5F2B1A1B2B6A5A6G5H6H7G2H1H2G7",
+    "F5D6C3D3C4F4C5B3C2B4E3E6B6C6B5A4A6C1A2G4G6G5C7D7F6F7D8E7H5H4H3H6G3E2F3D2F2H2G8F8E8A3A5E1G2C8B8",
+    "F5D6C3D3C4F4C5B3C2E6B4F6C6B6G4B5A6A5A3A7G6C1E7G5D2C7F7E8D7D8F8G8B8H3H5D1E3G3H4F3E2E1F2H7F1H6B1",
+    "F5D6C3D3C4F4F6F3E6E7C6G5D2D7F8F7E8C8E3C5G8C7B4B5G3A3G4H3A6A5B6F2H5H4H6G6H2D8B8G7A4E2A2C1G1F1E1",
+    "F5D6C4D3C5F4E3F3C2C6E6D2G4B6B5C3B4C1F2A6A5B3A7F6A4A3A2E2E7D7G5G6F7F8H7G3H4F1B2H5H6H2C8D8E8A1G8",
 };
 
 /**
@@ -70,12 +80,12 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
         // レコード着手
         while (record[record_i] != '\0')
         {
-            BoardDraw(board);
+            //BoardDraw(board);
             pos = PosIndexFromAscii(&record[record_i]);
 
             if (!BoardIsLegalTT(board, pos))
             {
-                printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!\n 不正な着手位置\n");
+                printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!\n 不正な着手位置1\n");
                 return -1;
             }
 
@@ -92,12 +102,18 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
         // ランダム着手
         for (i = 0; i < NB_RANDOM_TURN; i++)
         {
-            BoardDraw(board);
+            if (BoardGetMobility(board) == 0)
+            {
+                BoardSkip(board);
+                continue;
+            }
+
+            //BoardDraw(board);
             pos = BoardGetRandomPosMoveable(board);
 
             if (!BoardIsLegalTT(board, pos))
             {
-                printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!\n 不正な着手位置\n");
+                printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!\n 不正な着手位置2\n");
                 return -1;
             }
 
@@ -113,7 +129,7 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
 
     while (!BoardIsFinished(board))
     {
-        BoardDraw(board);
+        //BoardDraw(board);
 
         // 置ける場所がなかったらスキップ
         if (BoardGetMobility(board) == 0)
@@ -151,11 +167,11 @@ int main()
     FILE *fp = fopen(LOG_FILE, "w");
     int i = 0;
 
-    srand(42);
+    srand(522);
     HashInit();
 
-    InitTree(&tree[0], 8, 12, 4, 8, 1, 1, 0, 0);
-    InitTree(&tree[1], 8, 12, 4, 8, 1, 1, 0, 0);
+    InitTree(&tree[0], 6, 14, 4, 8, 1, 1, 0, 0);
+    InitTree(&tree[1], 6, 14, 4, 8, 1, 1, 0, 0);
     // 設定上書き
     tree[0].useIDDS = 1;
     tree[1].useIDDS = 1;

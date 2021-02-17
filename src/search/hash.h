@@ -49,6 +49,8 @@ void HashTableFree(HashTable *table);
 // ハッシュテーブル内のデータをリセット
 void HashTableReset(HashTable *table);
 
+void HashTableResetScoreWindows(HashTable *table);
+
 // ハッシュテーブル内の統計情報をリセット
 void HashTableResetStats(HashTable *table);
 
