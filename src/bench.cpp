@@ -13,11 +13,16 @@
 #include <iostream>
 #include <string>
 #include <chrono>
+#include <vector>
 
-#include "bench.hpp"
-#include "../board.h"
-#include "../game.h"
-#include "../bit_operation.h"
+extern "C"
+{
+#include "board.h"
+#include "game.h"
+#include "bit_operation.h"
+}
+
+#define BENCH_LOG_DIR "./resources/bench/"
 
 using namespace std;
 
@@ -148,7 +153,7 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
     }
 }
 
-void BenchSearching(vector<unsigned char> depths, unsigned char useHash, unsigned char useMPC, unsigned char nestMPC, unsigned char midPvsDepth, unsigned char endPvsDepth, string benchFile)
+void BenchSearching(vector<unsigned char> depths, bool useHash, bool useMPC, bool nestMPC, unsigned char midPvsDepth, unsigned char endPvsDepth, string benchFile)
 {
     SearchTree tree;
     vector<vector<uint8>> records;
@@ -187,4 +192,18 @@ void BenchSearching(vector<unsigned char> depths, unsigned char useHash, unsigne
 
     logfile.unsetf(ios::floatfield);
     logfile.close();
+}
+
+int main()
+{
+    srand((unsigned int)time(NULL));
+    HashInit();
+
+    std::vector<unsigned char> depths = {10, 12, 14};
+    //std::vector<unsigned char> depths = {8, 10, 12};
+
+    BenchSearching(depths, true, false, false, 4, 8, "./resources/bench/search.txt");
+    //MakeBench(2, 38);
+
+    return 0;
 }

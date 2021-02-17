@@ -74,6 +74,18 @@
         },
         {
             "type": "shell",
+            "label": "make-bench",
+            "command": "nmake.exe",
+            "args": [
+                "/fdebug_bench.mk"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
             "label": "make_release",
             "command": "nmake.exe",
             "args": [
@@ -121,6 +133,18 @@
             "args": [
                 "/frelease_mpc.mk",
                 "learn"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "make-bench_release",
+            "command": "nmake.exe",
+            "args": [
+                "/frelease_bench.mk"
             ],
             "problemMatcher": [
                 "$msCompile"
