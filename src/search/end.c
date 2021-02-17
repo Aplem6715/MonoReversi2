@@ -562,6 +562,8 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
 uint8 EndRoot(SearchTree *tree, bool choiceSecond)
 {
     SearchFunc_t NextSearch;
+    HashData *hashData = NULL;
+    uint64_t hashCode;
     score_t score, alpha, beta;
     score_t bestScore;
     uint8 bestMove = NOMOVE_INDEX, secondMove = NOMOVE_INDEX;
@@ -582,8 +584,13 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
     beta = MAX_VALUE;
     bestScore = -MAX_VALUE;
 
-    CreateMoveList(&moveList, tree->stones);               // 着手リストを作成
-    EvaluateMoveList(tree, &moveList, tree->stones, NULL); // 着手の事前評価
+    if (tree->usePvHash)
+    {
+        hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
+    }
+
+    CreateMoveList(&moveList, tree->stones);                   // 着手リストを作成
+    EvaluateMoveList(tree, &moveList, tree->stones, hashData); // 着手の事前評価
     assert(moveList.nbMoves > 0);
 
     for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))

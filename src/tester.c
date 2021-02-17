@@ -17,7 +17,7 @@
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_midHashCut_nohash.txt"
+#define LOG_FILE "./resources/tester/accurate_endRootHashOrder_nohash.txt"
 
 #define NB_RECORDS 19
 #define NB_RANDOM_TURN 40
@@ -153,8 +153,8 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
         flip = BoardPutTT(board, pos);
 
         CalcPosAscii(pos, &posX, &posY);
-        fprintf(logFile, "%c%d %d\n", posX, posY, tree[BoardGetTurnColor(board)].score);
-        //fprintf(logFile, "%c%d", posX, posY);
+        //fprintf(logFile, "%c%d %d\n", posX, posY, tree[BoardGetTurnColor(board)].score);
+        fprintf(logFile, "%c%d", posX, posY);
         nbEmpty--;
 
     } //end of loop:　while (!BoardIsFinished(board))
@@ -169,7 +169,7 @@ int main()
     FILE *fp = fopen(LOG_FILE, "w");
     int i = 0;
 
-    srand(522);
+    srand(42);
     HashInit();
 
     InitTree(&tree[0], 6, 14, 4, 8, 0, 0, 0, 0);
@@ -184,7 +184,7 @@ int main()
     tree[0].orderDepth = 5;
     tree[1].orderDepth = 5;
 
-    for (i = 0; i < 1; i++)
+    for (i = 0; i < 100; i++)
     {
         ResetTree(&tree[0]);
         ResetTree(&tree[1]);
