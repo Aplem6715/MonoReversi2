@@ -51,7 +51,7 @@ inline score_t Judge(const SearchTree *tree)
  * @param passed パスされたか？
  * @return score_t 探索結果スコア
  */
-score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
+score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, bool passed)
 {
     uint8 bestMove;
     uint64_t hashCode;
@@ -159,7 +159,7 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
  * @param passed パスされたか
  * @return score_t 探索スコア
  */
-score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
+score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, bool passed)
 {
 
     assert(depth <= tree->orderDepth);
@@ -267,7 +267,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
  * @param passed パスされたかどうか
  * @return score_t 探索スコア
  */
-score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed)
+score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char depth, bool passed)
 {
     const score_t alpha = beta - 1;
     HashData *hashData = NULL;
@@ -354,7 +354,7 @@ score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
  * @param passed パスされたかどうか
  * @return score_t 探索スコア
  */
-score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed)
+score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, bool passed)
 {
     SearchFuncNullWindow_t NextNullSearch;
     HashData *hashData = NULL;
@@ -451,7 +451,7 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
  * @return score_t 最善手のスコア
  */
 
-score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, const unsigned char depth, const unsigned char passed)
+score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, const unsigned char depth, const bool passed)
 {
     SearchFunc_t NextSearch;
     HashData *hashData = NULL;

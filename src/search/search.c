@@ -36,7 +36,7 @@ static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
  * @param useMPC Multi Prob Cutを使うか
  * @param nestMPC MPCの浅い探索中にさらにMPCを許可するか
  */
-void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, unsigned char useHash, unsigned char usePvHash, unsigned char useMPC, unsigned char nestMPC)
+void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, bool useHash, bool usePvHash, bool useMPC, bool nestMPC)
 {
     tree->midDepth = midDepth;
     tree->endDepth = endDepth;

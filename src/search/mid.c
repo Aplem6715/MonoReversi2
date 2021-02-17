@@ -40,7 +40,7 @@
 #define DONT_CUT_MPC_HASH(x) x
 #define DONT_REGIST_MPC_HASH(x)
 
-score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed);
+score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, bool passed);
 
 inline score_t WinJudge(const Stones *stones)
 {
@@ -154,7 +154,7 @@ bool NullWindowMultiProbCut(SearchTree *tree, const score_t alpha, const uint8 d
  * @param passed 親ノードでパスされたかどうか
  * @return score_t この枝の探索スコア
  */
-score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
+score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, bool passed)
 {
     assert(depth <= tree->orderDepth);
 
@@ -267,7 +267,7 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
  * @param passed 前の盤面がパスだったか？
  * @return score_t この枝の探索スコア
  */
-score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, unsigned char passed)
+score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, bool passed)
 {
     // 次の探索に利用する探索関数
     SearchFunc_t NextSearch;
@@ -386,7 +386,7 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
  * @param passed 前の盤面でパスされたかどうか
  * @return score_t この枝の探索スコア
  */
-score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed)
+score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char depth, bool passed)
 {
     // アルファ値
     const score_t alpha = beta - 1;
@@ -489,7 +489,7 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
  * @param passed パスされたか
  * @return score_t この枝の探索スコア
  */
-score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, unsigned char passed)
+score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth, bool passed)
 {
     // アルファ値
     const score_t alpha = beta - 1;
@@ -616,7 +616,7 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
  * @param passed パスされたかどうか
  * @return score_t 最善手のスコア
  */
-score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, const unsigned char depth, const unsigned char passed)
+score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, const unsigned char depth, const bool passed)
 {
     // 次に使用する探索関数
     SearchFunc_t NextSearch;
