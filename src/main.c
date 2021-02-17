@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include "bit_operation.h"
 
-//#include "search/bench.hpp"
 #include "game.h"
 
 int main()
