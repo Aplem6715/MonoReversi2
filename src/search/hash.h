@@ -15,6 +15,8 @@ typedef struct HashData
     uint64_t own, opp;
     // 最終使用時のハッシュ表バージョン(過去の盤面が消えていくように)
     uint8 latestUsedVersion;
+    // 探索コスト
+    uint8 cost;
     // 探索深度
     uint8 depth;
     // 最善手，更新前の最善手
@@ -70,7 +72,7 @@ HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64
 bool IsHashTableContains(HashTable *table, Stones *stones);
 
 // ハッシュテーブルに追加
-void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t in_alpha, score_t in_beta, score_t maxScore);
+void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 cost, uint8 depth, score_t in_alpha, score_t in_beta, score_t maxScore);
 
 // ハッシュによる枝刈りが起こるかを返し，ハッシュテーブルに登録されている情報をalpha・beta値などに適用する
 bool IsHashCut(HashData *hashData, const uint8 depth, score_t *alpha, score_t *beta, score_t *score);
