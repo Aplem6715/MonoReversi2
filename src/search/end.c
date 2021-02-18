@@ -110,7 +110,7 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         }
         if (depth >= tree->orderDepth)
         {
-            EvaluateMoveList(tree, &moveList, tree->stones, hashData);
+            EvaluateMoveList(tree, &moveList, tree->stones, alpha, hashData);
             //SortMoveList(&moveList);
             NextSearch = EndAlphaBeta;
         }
@@ -444,7 +444,7 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     else
     {
 
-        EvaluateMoveList(tree, &moveList, tree->stones, hashData);
+        EvaluateMoveList(tree, &moveList, tree->stones, alpha, hashData);
 
         bestScore = -MAX_VALUE;
 
@@ -555,7 +555,7 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
         bestScore = -MAX_VALUE;
 
         // 着手の事前評価
-        EvaluateMoveList(tree, &moveList, tree->stones, hashData);
+        EvaluateMoveList(tree, &moveList, tree->stones, alpha, hashData);
 
         for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
         { // すべての着手についてループ
@@ -644,8 +644,8 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
         }
     }
 
-    CreateMoveList(&moveList, tree->stones);                   // 着手リストを作成
-    EvaluateMoveList(tree, &moveList, tree->stones, hashData); // 着手の事前評価
+    CreateMoveList(&moveList, tree->stones);                          // 着手リストを作成
+    EvaluateMoveList(tree, &moveList, tree->stones, alpha, hashData); // 着手の事前評価
     assert(moveList.nbMoves > 0);
 
     for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))

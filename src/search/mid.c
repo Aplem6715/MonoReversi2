@@ -342,7 +342,7 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         // 探索深度によって探索関数を変更，深い探索では着手の静的評価をしない
         if (depth >= tree->orderDepth)
         {
-            EvaluateMoveList(tree, &moveList, tree->stones, hashData);
+            EvaluateMoveList(tree, &moveList, tree->stones, alpha, hashData);
             NextSearch = MidAlphaBeta;
         }
         else
@@ -600,7 +600,7 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
         }
 
         // すべての手を静的評価
-        EvaluateMoveList(tree, &moveList, tree->stones, hashData);
+        EvaluateMoveList(tree, &moveList, tree->stones, alpha, hashData);
 
         // すべての手を探索
         maxScore = -MAX_VALUE;
@@ -727,7 +727,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     { // 着手可能なとき
 
         // 着手の事前評価
-        EvaluateMoveList(tree, &moveList, tree->stones, hashData); //TODO** NULLに一時置き換えーテスト用
+        EvaluateMoveList(tree, &moveList, tree->stones, alpha, hashData); //TODO** NULLに一時置き換えーテスト用
 
         bestScore = -MAX_VALUE;
         // すべての着手について探索
@@ -833,7 +833,7 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
         }
     }
 
-    EvaluateMoveList(tree, moveList, tree->stones, hashData);
+    EvaluateMoveList(tree, moveList, tree->stones, alpha, hashData);
 
     for (move = NextBestMoveWithSwap(moveList->moves); move != NULL; move = NextBestMoveWithSwap(move))
     { // すべての着手についてループ
@@ -904,7 +904,7 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
     uint8 nDepths;
 
     CreateMoveList(&moveList, tree->stones);
-    EvaluateMoveList(tree, &moveList, tree->stones, NULL); // 着手の事前評価
+    EvaluateMoveList(tree, &moveList, tree->stones, SCORE_MIN, NULL); // 着手の事前評価
     assert(moveList.nbMoves > 0);
 
     nDepths = 0;
@@ -971,8 +971,8 @@ uint8 MidRootWithMpcLog(SearchTree *deepTree, SearchTree *shallowTree, FILE *log
 
     // 深い探索・浅い探索での着手リスト作成
     CreateMoveList(&moveList, deepTree->stones);
-    EvaluateMoveList(deepTree, &moveList, deepTree->stones, NULL);       // 着手の事前評価
-    EvaluateMoveList(shallowTree, &moveList, shallowTree->stones, NULL); // 着手の事前評価
+    EvaluateMoveList(deepTree, &moveList, deepTree->stones, SCORE_MIN, NULL);       // 着手の事前評価
+    EvaluateMoveList(shallowTree, &moveList, shallowTree->stones, SCORE_MIN, NULL); // 着手の事前評価
     assert(moveList.nbMoves > 0);
 
     // 深い探索の設定

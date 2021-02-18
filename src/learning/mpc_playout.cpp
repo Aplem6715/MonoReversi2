@@ -105,7 +105,7 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, bool enableL
 int main(int argc, char **argv)
 {
     HashInit();
-    srand((unsigned int)time(NULL));
+    srand(GLOBAL_SEED);
 
     int idxShift;
     int nbPlay;

@@ -213,7 +213,7 @@ int main()
     uint64_t black, white;
     uint8 turn;
 
-    srand((unsigned int)time(NULL));
+    srand(GLOBAL_SEED);
     HashInit();
 
     printf("Mid:%d MPC:%d", MID_DEPTH, USE_MPC);

@@ -68,7 +68,7 @@ DLLAPI void DllShowMsg();
  */
 void DllInit()
 {
-    srand((unsigned int)time(NULL));
+    srand(GLOBAL_SEED);
     HashInit();
     InitTree(dllTree, 12, 20, 4, 8, 1, 1, 0, 0);
     BoardReset(dllBoard);

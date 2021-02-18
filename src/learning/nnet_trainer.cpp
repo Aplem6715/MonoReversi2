@@ -69,7 +69,7 @@ float d_mse(float y, float t)
 void InitWeight(NNet *net)
 {
     int i, j, phase;
-    srand(WEIGHT_SEED);
+    srand(GLOBAL_SEED);
     for (phase = 0; phase < NB_PHASE; phase++)
     {
         net[phase].lr = lrInit;

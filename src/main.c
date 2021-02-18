@@ -18,7 +18,7 @@
 
 int main()
 {
-    srand((unsigned int)time(NULL));
+    srand(GLOBAL_SEED);
     HashInit();
     Game game[1];
 
