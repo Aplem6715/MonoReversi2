@@ -512,7 +512,7 @@ void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 
     else
     {
         // 更新できなかったら優先度の低い方に上書き
-        if (HashDataCalcPriority(hashData) < HashDataCalcPriority(secondData))
+        if (HashDataCalcPriority(hashData) <= HashDataCalcPriority(secondData))
         {
             dataToUpdate = hashData;
         }
