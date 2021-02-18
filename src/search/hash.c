@@ -520,6 +520,7 @@ void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 
         {
             dataToUpdate = secondData;
         }
+        HASH_STATS(table->nbCollide++;)
         HASH_STATS(if (dataToUpdate->depth == 0) { table->nbUsed++; })
         HashDataSaveNew(dataToUpdate, stones, bestMove, version, depth, in_alpha, in_beta, maxScore);
     }

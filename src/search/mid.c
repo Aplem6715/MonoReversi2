@@ -808,6 +808,13 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
             }
         }
     } // end of moves loop
+
+    // ハッシュ表に登録
+    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
+    {
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, SCORE_MIN - 1, SCORE_MAX + 1, bestScore);
+    }
+
     *scoreOut = bestScore;
     return bestMove;
 }
