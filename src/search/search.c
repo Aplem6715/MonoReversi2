@@ -312,6 +312,7 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
         tree->pvsDepth = tree->endPvsDepth;
         tree->orderDepth = tree->pvsDepth;
         tree->hashDepth = tree->pvsDepth;
+        tree->pvHashDepth = tree->pvsDepth - 1;
         pos = EndRoot(tree, choiceSecond);
     }
     else
@@ -321,6 +322,7 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
         tree->pvsDepth = tree->midPvsDepth;
         tree->orderDepth = tree->pvsDepth;
         tree->hashDepth = tree->pvsDepth;
+        tree->pvHashDepth = tree->pvsDepth - 1;
         pos = MidRoot(tree, choiceSecond);
     }
 

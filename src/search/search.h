@@ -33,6 +33,8 @@ typedef struct SearchTree
     unsigned char orderDepth;
     // ハッシュ表限界深度
     unsigned char hashDepth;
+    // PVハッシュの限界深度
+    unsigned char pvHashDepth;
     // PVS限界深度
     unsigned char pvsDepth;
 
