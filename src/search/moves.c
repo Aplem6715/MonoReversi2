@@ -69,9 +69,11 @@ void CreateMoveList(MoveList *moveList, Stones *stones)
  * @param tree 探索木
  * @param move 着手オブジェクト
  * @param stones 盤面石情報
+ * @param alpha 浅い探索のアルファ値
+ * @param shallowDepth 浅い探索の深度
  * @param hashData 盤面に対応するハッシュデータ
  */
-void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *hashData)
+void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, score_t alpha, uint8 shallowDepth, const HashData *hashData)
 {
     if (move->flip == stones->opp)
     {
@@ -90,20 +92,23 @@ void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *
     }
     else
     {
+
         uint64_t posBit = CalcPosBit(move->posIdx);
         Stones nextStones[1];
         nextStones->own = stones->opp ^ move->flip;
         nextStones->opp = stones->own ^ move->flip ^ posBit;
 
         uint64_t next_mob = CalcMobility(nextStones);
+
         score_t score;
         uint16_t mScore;
 
         // 着手位置でスコア付け(8~0bit)
-        move->score = (uint32_t)VALUE_TABLE[move->posIdx];
+        move->score = (uint8)VALUE_TABLE[move->posIdx];
 
         // 一手読みのスコア付け（24~8bit目)
         // 着手して相手のターンに進める
+        /*
         EvalUpdate(tree->eval, move->posIdx, move->flip);
         score = Evaluate(tree->eval, tree->nbEmpty - 1);
         mScore = (uint16_t)(10.0 * (SCORE_MAX - score) / STONE_VALUE);
@@ -112,15 +117,20 @@ void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *
         // 相手のスコアを±反転してスコア加算(精度は0.1石単位で)
         move->score += (mScore * (1 << 8));
         EvalUndo(tree->eval, move->posIdx, move->flip);
+        */
+        //   浅い探索スコアで評価
+        SearchUpdateMid(tree, move);
+        {
+            score = -MidAlphaBetaDeep(tree, SCORE_MIN, -alpha, 0, false);
+        }
+        SearchRestoreMid(tree, move);
+
+        assert(SCORE_MAX - score >= 0);
+        mScore = (uint16_t)((SCORE_MAX + score) / STONE_VALUE);
+        move->score += mScore * (1 << 8);
 
         // 相手の着手位置が多いとマイナス，少ないとプラス(14~8bit目)
-        move->score += (MAX_MOVES + 4 /*角分*/ - (CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 8);
-
-        // 置換表に含まれていたらプラス(2石分8bit目)
-        if (hashData != NULL)
-        {
-            move->score += 2 * (1 << 8);
-        }
+        move->score += (MAX_MOVES + 4 /*角分*/ - (CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 10);
     }
 }
 
@@ -132,12 +142,13 @@ void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, const HashData *
  * @param stones 盤面石情報
  * @param hashData 盤面に対応するハッシュデータ
  */
-void EvaluateMoveList(SearchTree *tree, MoveList *movelist, Stones *stones, const HashData *hashData)
+void EvaluateMoveList(SearchTree *tree, MoveList *movelist, Stones *stones, score_t alpha, uint8 depth, const HashData *hashData)
 {
+    uint8 shallowDepth = depth / 12;
     Move *move;
     for (move = movelist->moves->next; move != NULL; move = move->next)
     {
-        EvaluateMove(tree, move, tree->stones, hashData);
+        EvaluateMove(tree, move, tree->stones, alpha, shallowDepth, hashData);
     }
 }
 
