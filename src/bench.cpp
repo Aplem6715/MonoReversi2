@@ -90,7 +90,7 @@ void MakeBench(int nbGames, uint8 nbRandomTurn, string benchFile)
     }
 }
 
-void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logfile)
+void Bench1Game(SearchTree tree[2], vector<uint8> moves, int nbPut, ofstream &logfile)
 {
     Board board[1];
     uint8 pos;
@@ -98,6 +98,8 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
     int y;
 
     BoardReset(board);
+    ResetTree(&tree[0]);
+    ResetTree(&tree[1]);
 
     for (uint8 move : moves)
     {
@@ -107,7 +109,8 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
     BoardDraw(board);
     for (int i = 0; i < nbPut; i++)
     {
-        ResetTree(&tree);
+        SearchTree *turnTree;
+        turnTree = &tree[BoardGetTurnColor(board)];
         if (BoardIsFinished(board))
         {
             break;
@@ -116,38 +119,38 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
         {
             BoardSkip(board);
         }
-        pos = Search(&tree, BoardGetOwn(board), BoardGetOpp(board), 0);
+        pos = Search(turnTree, BoardGetOwn(board), BoardGetOpp(board), 0);
         BoardPutTT(board, pos);
         BoardDraw(board);
         CalcPosAscii(pos, &xAscii, &y);
 
         {
-            logfile << (int)tree.depth << ","
-                    << tree.usedTime << ","
-                    << tree.nodeCount << ","
-                    << tree.nodeCount / tree.usedTime << ","
-                    << tree.nbCut << ",";
+            logfile << (int)turnTree->depth << ","
+                    << turnTree->usedTime << ","
+                    << turnTree->nodeCount << ","
+                    << turnTree->nodeCount / turnTree->usedTime << ","
+                    << turnTree->nbCut << ",";
         }
-        if (tree.useHash)
+        if (turnTree->useHash)
         {
-            logfile << tree.nwsTable->nbUsed << ","
-                    << tree.nwsTable->nbHit << ","
-                    << tree.nwsTable->nb2ndUsed << ","
-                    << tree.nwsTable->nb2ndHit << ","
-                    << tree.nwsTable->nbCollide << ",";
+            logfile << turnTree->nwsTable->nbUsed << ","
+                    << turnTree->nwsTable->nbHit << ","
+                    << turnTree->nwsTable->nb2ndUsed << ","
+                    << turnTree->nwsTable->nb2ndHit << ","
+                    << turnTree->nwsTable->nbCollide << ",";
 
-            logfile << tree.pvTable->nbUsed << ","
-                    << tree.pvTable->nbHit << ","
-                    << tree.pvTable->nb2ndUsed << ","
-                    << tree.pvTable->nb2ndHit << ","
-                    << tree.pvTable->nbCollide << ",";
+            logfile << turnTree->pvTable->nbUsed << ","
+                    << turnTree->pvTable->nbHit << ","
+                    << turnTree->pvTable->nb2ndUsed << ","
+                    << turnTree->pvTable->nb2ndHit << ","
+                    << turnTree->pvTable->nbCollide << ",";
         }
         else
         {
             logfile << ",,,";
         }
         {
-            logfile << tree.score / (float)(STONE_VALUE) << ","
+            logfile << turnTree->score / (float)(STONE_VALUE) << ","
                     << xAscii << y << "\n";
         }
     }
@@ -155,7 +158,7 @@ void Bench1Game(SearchTree &tree, vector<uint8> moves, int nbPut, ofstream &logf
 
 void BenchSearching(vector<unsigned char> depths, bool useHash, bool useMPC, bool nestMPC, unsigned char midPvsDepth, unsigned char endPvsDepth, string benchFile)
 {
-    SearchTree tree;
+    SearchTree tree[2];
     vector<vector<uint8>> records;
     string logFileName;
 
@@ -171,23 +174,25 @@ void BenchSearching(vector<unsigned char> depths, bool useHash, bool useMPC, boo
     logfile << "探索深度,思考時間,探索ノード数,探索速度,カット数,ハッシュ記録数,ハッシュヒット数,2ndハッシュ記録数,2ndハッシュヒット数,ハッシュ衝突数,pvハッシュ記録数,pvハッシュヒット数,pv2ndハッシュ記録数,pv2ndハッシュヒット数,pvハッシュ衝突数,推定CPUスコア,着手位置\n";
     LoadGameRecords(benchFile.c_str(), records);
 
-    InitTree(&tree, 4, 4, midPvsDepth, endPvsDepth, useHash, useHash, useMPC, nestMPC);
-    for (vector<uint8> moves : records)
+    InitTree(&tree[0], 4, 4, midPvsDepth, endPvsDepth, useHash, useHash, useMPC, nestMPC);
+    InitTree(&tree[1], 4, 4, midPvsDepth, endPvsDepth, useHash, useHash, useMPC, nestMPC);
+    for (unsigned char depth : depths)
     {
-        for (uint8 move : moves)
+        ConfigTree(&tree[0], depth, depth);
+        ConfigTree(&tree[1], depth, depth);
+        for (vector<uint8> moves : records)
         {
-            char x;
-            int y;
-            CalcPosAscii(move, &x, &y);
-            logfile << x << y;
+            for (uint8 move : moves)
+            {
+                char x;
+                int y;
+                CalcPosAscii(move, &x, &y);
+                logfile << x << y;
+            }
+            logfile << "\n";
+            Bench1Game(tree, moves, 16, logfile);
+            logfile << "\n";
         }
-        logfile << "\n";
-        for (unsigned char depth : depths)
-        {
-            ConfigTree(&tree, depth, depth);
-            Bench1Game(tree, moves, 2, logfile);
-        }
-        logfile << "\n";
     }
 
     logfile.unsetf(ios::floatfield);
@@ -199,8 +204,8 @@ int main()
     srand((unsigned int)time(NULL));
     HashInit();
 
-    std::vector<unsigned char> depths = {10, 12, 14};
-    //std::vector<unsigned char> depths = {8, 10, 12};
+    //std::vector<unsigned char> depths = {10, 12, 14};
+    std::vector<unsigned char> depths = {8, 10, 12};
 
     BenchSearching(depths, true, false, false, 4, 8, "./resources/bench/search.txt");
     //MakeBench(2, 38);
