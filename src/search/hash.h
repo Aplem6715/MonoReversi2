@@ -4,17 +4,20 @@
 #include "../stones.h"
 #include "../const.h"
 
-#define NWS_TABLE_SIZE (1 << 24)
-#define PV_TABLE_SIZE (1 << 22)
+#define NWS_TABLE_SIZE (1 << 20)
+#define PV_TABLE_SIZE (1 << 12)
 
 // ハッシュテーブルに格納されるデータ
-// 8x2 + 1 + 1*2 + 2x2 = 23[byte]
+// 8x2 + 3 + 1*2 + 2x2 = 25[byte]
 typedef struct HashData
 {
     // 石情報
     uint64_t own, opp;
     // 最終使用時のハッシュ表バージョン(過去の盤面が消えていくように)
     uint8 latestUsedVersion;
+    // 探索コスト(depthと統合したい・・・)depthは0~64, costを0~64としても127余る
+    // 25->24[byte]になればパディング含めメモリ最適化が期待できる(はず？)
+    uint8 cost;
     // 探索深度
     uint8 depth;
     // 最善手，更新前の最善手
@@ -70,7 +73,7 @@ HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64
 bool IsHashTableContains(HashTable *table, Stones *stones);
 
 // ハッシュテーブルに追加
-void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t in_alpha, score_t in_beta, score_t maxScore);
+void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 cost, uint8 depth, score_t in_alpha, score_t in_beta, score_t maxScore);
 
 // ハッシュによる枝刈りが起こるかを返し，ハッシュテーブルに登録されている情報をalpha・beta値などに適用する
 bool IsHashCut(HashData *hashData, const uint8 depth, score_t *alpha, score_t *beta, score_t *score);

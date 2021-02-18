@@ -17,7 +17,7 @@
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_hashPriority_fullhash.txt"
+#define LOG_FILE "./resources/tester/accurate_hashPriority_WithCost.txt"
 
 #define NB_RECORDS 19
 #define NB_RANDOM_TURN 40

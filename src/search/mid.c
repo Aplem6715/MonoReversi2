@@ -60,6 +60,11 @@ inline score_t WinJudge(const Stones *stones)
     }
 }
 
+inline uint8 CalcCost(uint64_t nbNodes)
+{
+    return (uint8)log2l((long double)nbNodes);
+}
+
 /**
  * @brief Multi Prob Cutによる枝刈り
  * 
@@ -175,6 +180,11 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     // 予想最善手
     uint8 bestMove;
 
+    // 子ノード数（スタート時点でのノード数で初期化）
+    uint64_t nbChildNode = tree->nodeCount;
+    // 探索コスト
+    uint8 cost;
+
     tree->nodeCount++;
     if (depth <= 0)
     {
@@ -205,7 +215,7 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     else
     {
         // ハッシュを使って探索範囲を狭める・カットする
-        if (tree->usePvHash == 1 && depth >= tree->hashDepth)
+        if (tree->usePvHash == 1 && depth >= tree->pvHashDepth)
         {
             hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
@@ -248,11 +258,14 @@ score_t MidAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
             }
         }
     }
+    // 「現在のノード数」と「スタート時点でのノード数」の差分＝子ノード数
+    nbChildNode = tree->nodeCount - nbChildNode;
+    cost = CalcCost(nbChildNode);
 
     // ハッシュの記録
-    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
+    if (tree->usePvHash == 1 && depth >= tree->pvHashDepth)
     {
-        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, cost, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -288,6 +301,11 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     // 探索スコア下限値
     score_t lower;
 
+    // 子ノード数（スタート時点でのノード数で初期化）
+    uint64_t nbChildNode = tree->nodeCount;
+    // 探索コスト
+    uint8 cost;
+
     tree->nodeCount++;
     if (depth <= 0)
     {
@@ -314,7 +332,7 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     else
     {
         // ハッシュを使って探索範囲を狭める・カットする
-        if (tree->usePvHash == 1 && depth >= tree->hashDepth)
+        if (tree->usePvHash == 1 && depth >= tree->pvHashDepth)
         {
             hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
@@ -361,10 +379,14 @@ score_t MidAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
         }
     }
 
+    // 「現在のノード数」と「スタート時点でのノード数」の差分＝子ノード数
+    nbChildNode = tree->nodeCount - nbChildNode;
+    cost = CalcCost(nbChildNode);
+
     // ハッシュの記録
-    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
+    if (tree->usePvHash == 1 && depth >= tree->pvHashDepth)
     {
-        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, cost, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -404,6 +426,11 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
     uint8 posIdx;
     // 予想最善手
     uint8 bestMove;
+
+    // 子ノード数（スタート時点でのノード数で初期化）
+    uint64_t nbChildNode = tree->nodeCount;
+    // 探索コスト
+    uint8 cost;
 
     tree->nodeCount++;
     if (depth <= 0)
@@ -464,10 +491,13 @@ score_t MidNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
         }
     }
 
+    // 「現在のノード数」と「スタート時点でのノード数」の差分＝子ノード数
+    nbChildNode = tree->nodeCount - nbChildNode;
+    cost = CalcCost(nbChildNode);
     // ハッシュに記録
     if (tree->useHash == 1 && depth >= tree->hashDepth DONT_REGIST_MPC_HASH(&&tree->nbMpcNested == 0))
     {
-        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, cost, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -509,6 +539,11 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     score_t score;
     // 発見した最大スコア
     score_t maxScore;
+
+    // 子ノード数（スタート時点でのノード数で初期化）
+    uint64_t nbChildNode = tree->nodeCount;
+    // 探索コスト
+    uint8 cost;
 
     if (!tree->enableMpcNest)
     {
@@ -589,10 +624,13 @@ score_t MidNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
         }
     }
 
+    // 「現在のノード数」と「スタート時点でのノード数」の差分＝子ノード数
+    nbChildNode = tree->nodeCount - nbChildNode;
+    cost = CalcCost(nbChildNode);
     // ハッシュ表に登録
     if (tree->useHash == 1 && depth >= tree->hashDepth DONT_REGIST_MPC_HASH(&&tree->nbMpcNested == 0))
     {
-        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, depth, alpha, beta, maxScore);
+        HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, cost, depth, alpha, beta, maxScore);
     }
     return maxScore;
 }
@@ -636,6 +674,11 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     score_t bestScore;
     // 探索スコアwindow境界
     score_t alpha, beta;
+
+    // 子ノード数（スタート時点でのノード数で初期化）
+    uint64_t nbChildNode = tree->nodeCount;
+    // 探索コスト
+    uint8 cost;
 
     tree->nodeCount++;
     if (depth <= 0)
@@ -721,11 +764,14 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
             }
         }
     }
+    // 「現在のノード数」と「スタート時点でのノード数」の差分＝子ノード数
+    nbChildNode = tree->nodeCount - nbChildNode;
+    cost = CalcCost(nbChildNode);
 
     // ハッシュ表に登録
-    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
+    if (tree->usePvHash == 1)
     {
-        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, depth, in_alpha, in_beta, bestScore);
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, cost, depth, in_alpha, in_beta, bestScore);
     }
 
     assert(tree->nbMpcNested == 0);
@@ -760,6 +806,11 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
     // 探索スコアwindow境界
     score_t alpha, beta;
 
+    // 子ノード数（スタート時点でのノード数で初期化）
+    uint64_t nbChildNode = tree->nodeCount;
+    // 探索コスト
+    uint8 cost;
+
     if (depth >= tree->pvsDepth)
     {
         NextSearch = MidPVS;
@@ -776,6 +827,10 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
     if (tree->usePvHash)
     {
         hashData = HashTableGetData(tree->pvTable, tree->stones, tree->depth, &hashCode);
+        if (hashData != NULL)
+        {
+            IsHashCut(hashData, depth, &alpha, &beta, &score);
+        }
     }
 
     EvaluateMoveList(tree, moveList, tree->stones, hashData);
@@ -808,6 +863,17 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
             }
         }
     } // end of moves loop
+
+    // 「現在のノード数」と「スタート時点でのノード数」の差分＝子ノード数
+    nbChildNode = tree->nodeCount - nbChildNode;
+    cost = CalcCost(nbChildNode);
+
+    // ハッシュ表に登録
+    if (tree->usePvHash == 1)
+    {
+        HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, cost, depth, SCORE_MIN - 1, SCORE_MAX + 1, bestScore);
+    }
+
     *scoreOut = bestScore;
     return bestMove;
 }
