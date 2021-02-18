@@ -638,6 +638,10 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
     if (tree->usePvHash)
     {
         hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
+        if (hashData != NULL)
+        {
+            IsHashCut(hashData, depth, &alpha, &beta, &score);
+        }
     }
 
     CreateMoveList(&moveList, tree->stones);                   // 着手リストを作成
