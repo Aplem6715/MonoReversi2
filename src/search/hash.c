@@ -32,12 +32,16 @@
 #define HASH_SEED (160510)
 #define RAWHASH_MIN_TRUE_BITS (8)
 
+// 統計マクロ　有効/無効
+#define HASH_STATS(x) x
+
 // RawHash[8行x2色][列内8石のパターン]
 uint64_t RawHash[8 * 2][1 << 8];
 
 // 空ハッシュデータ
 static const HashData EMPTY_HASH_DATA = {
     0, 0,                       // stones
+    0,                          // latestUsedTurn
     0,                          // depth
     NOMOVE_INDEX, NOMOVE_INDEX, // moves
     -MAX_VALUE, MAX_VALUE       // scores
@@ -69,6 +73,7 @@ void HashInit()
 void HashTableInit(HashTable *table, uint64_t size)
 {
     table->size = size;
+    table->version = 0;
     table->data = (HashData *)calloc(table->size, sizeof(HashData));
     if (table->data == NULL)
     {
@@ -102,7 +107,22 @@ void HashTableReset(HashTable *table)
     {
         table->data[i] = EMPTY_HASH_DATA;
     }
-    HashTableResetStats(table);
+    table->version = 0;
+    HASH_STATS(HashTableResetStats(table);)
+}
+
+/**
+ * @brief ハッシュ表のバージョンアップ
+ * 
+ * @param table ハッシュ表
+ */
+void HashTableVersionUp(HashTable *table)
+{
+    table->version++;
+    if (table->version >= 255)
+    {
+        HashTableReset(table);
+    }
 }
 
 /**
@@ -134,6 +154,18 @@ void HashTableResetStats(HashTable *table)
     table->nbCollide = 0;
     table->nbHit = 0;
     table->nb2ndHit = 0;
+}
+
+/**
+ * @brief ハッシュデータの優先度を計算
+ * 
+ * @param data ハッシュデータ
+ * @return uint64_t 優先度
+ */
+uint64_t HashDataCalcPriority(HashData *data)
+{
+    // TODO: 探索コストを優先度計算に含める
+    return data->latestUsedVersion << 56 | data->depth << 48;
 }
 
 /**
@@ -192,7 +224,8 @@ HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64
     // データの衝突チェック（同じ盤面かどうかで確認）
     if (data->own == stones->own && data->opp == stones->opp)
     {
-        table->nbHit++;
+        HASH_STATS(table->nbHit++;)
+        data->latestUsedVersion = table->version;
         return data;
     }
 
@@ -200,7 +233,8 @@ HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64
     secondData = &table->data[RETRY_HASH(index)];
     if (secondData->own == stones->own && secondData->opp == stones->opp)
     {
-        table->nb2ndHit++;
+        HASH_STATS(table->nb2ndHit++;)
+        data->latestUsedVersion = table->version;
         return secondData;
     }
 
@@ -311,12 +345,13 @@ bool IsHashCutNullWindow(HashData *hashData, const uint8 depth, const score_t al
  * @param data 上書きするデータ
  * @param stones 盤面石情報
  * @param bestMove 予測される最善手
+ * @param version ハッシュ表のバージョン
  * @param depth 探索深度
  * @param alpha アルファ値
  * @param beta ベータ値
  * @param maxScore 最大探索スコア
  */
-void HashDataSaveNew(HashData *data, const Stones *stones, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
+void HashDataSaveNew(HashData *data, const Stones *stones, const uint8 bestMove, const uint8 version, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
 {
     if (maxScore < beta)
         data->upper = maxScore;
@@ -336,6 +371,7 @@ void HashDataSaveNew(HashData *data, const Stones *stones, const uint8 bestMove,
     data->own = stones->own;
     data->opp = stones->opp;
     data->secondMove = NOMOVE_INDEX;
+    data->latestUsedVersion = version;
     data->depth = depth;
     assert(data->lower <= data->upper);
 }
@@ -345,12 +381,13 @@ void HashDataSaveNew(HashData *data, const Stones *stones, const uint8 bestMove,
  * 
  * @param data 更新するデータ
  * @param bestMove 見つかった最善手
+ * @param version ハッシュ表のバージョン
  * @param depth 探索深度
  * @param alpha アルファ値
  * @param beta ベータ値
  * @param maxScore 最善手のスコア
  */
-void HashDataUpdate(HashData *data, const uint8 bestMove, const score_t alpha, const score_t beta, const score_t maxScore)
+void HashDataUpdate(HashData *data, const uint8 bestMove, const uint8 version, const score_t alpha, const score_t beta, const score_t maxScore)
 {
     if (maxScore < beta && maxScore < data->upper)
         data->upper = maxScore;
@@ -363,6 +400,7 @@ void HashDataUpdate(HashData *data, const uint8 bestMove, const score_t alpha, c
         data->secondMove = data->bestMove;
         data->bestMove = bestMove;
     }
+    data->latestUsedVersion = version;
 }
 
 /**
@@ -370,12 +408,13 @@ void HashDataUpdate(HashData *data, const uint8 bestMove, const score_t alpha, c
  * 
  * @param data 更新するデータ
  * @param bestMove 見つかった最善手
+ * @param version ハッシュ表のバージョン
  * @param depth 探索深度
  * @param alpha アルファ値
  * @param beta ベータ値
  * @param maxScore 最善手のスコア
  */
-void HashDataLevelUP(HashData *data, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
+void HashDataLevelUP(HashData *data, const uint8 bestMove, const uint8 version, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
 {
     if (maxScore < beta)
         data->upper = maxScore;
@@ -397,27 +436,40 @@ void HashDataLevelUP(HashData *data, const uint8 bestMove, const uint8 depth, co
         data->bestMove = NOMOVE_INDEX;
     }
 
+    data->latestUsedVersion = version;
     data->depth = depth;
     assert(data->lower <= data->upper);
 }
 
 /**
- * @brief 優先度をつけてハッシュデータを上書きする
+ * @brief ハッシュ表内の特定データを更新
  * 
- * @param data ハッシュデータ
- * @param stones 盤面の状態
- * @param bestMove 発見された最善手
- * @param depth データ取得時の探索深度
+ * @param hashData ハッシュデータ
+ * @param stones 盤面石情報
+ * @param bestMove 予想最善手
+ * @param version ハッシュ表のバージョン
+ * @param depth 探索深度
  * @param alpha アルファ値
  * @param beta ベータ値
- * @param maxScore 最善手のスコア
- * @return bool 上書きされたか
+ * @param maxScore 予想最善スコア
+ * @return bool 更新できたか
  */
-bool HashDataPriorityOverwrite(HashData *data, const Stones *stones, const uint8 bestMove, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
+bool HashTableUpdateData(HashData *hashData, const Stones *stones, const uint8 bestMove, const uint8 version, const uint8 depth, const score_t alpha, const score_t beta, const score_t maxScore)
 {
-    if (depth > data->depth)
+    if (hashData->own == stones->own && hashData->opp == stones->opp)
     {
-        HashDataSaveNew(data, stones, bestMove, depth, alpha, beta, maxScore);
+        if (depth == hashData->depth)
+        {
+            HashDataUpdate(hashData, bestMove, version, alpha, beta, maxScore);
+            if (hashData->lower > hashData->upper)
+            {
+                HashDataSaveNew(hashData, stones, bestMove, version, depth, alpha, beta, maxScore);
+            }
+        }
+        else
+        {
+            HashDataLevelUP(hashData, bestMove, version, depth, alpha, beta, maxScore);
+        }
         return true;
     }
     return false;
@@ -427,6 +479,7 @@ bool HashDataPriorityOverwrite(HashData *data, const Stones *stones, const uint8
  * @brief ハッシュ表に探索情報を記録する
  * 
  * 探索情報によって優先度付けを行い，衝突した際は優先度の高い方を記録する。
+ * 新しいデータは必ず記録される。
  * 
  * @param table ハッシュ表
  * @param hashCode ハッシュコード
@@ -440,65 +493,39 @@ bool HashDataPriorityOverwrite(HashData *data, const Stones *stones, const uint8
 void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 bestMove, uint8 depth, score_t in_alpha, score_t in_beta, score_t maxScore)
 {
     uint64_t index = hashCode & (table->size - 1);
-    HashData *hashData = &table->data[index];
-    HashData *secondData;
+    HashData *secondData, *dataToUpdate;
+    uint8 version = table->version;
 
-    if ((hashData->own | hashData->opp) == 0)
+    // ハッシュの更新を試す
+    HashData *hashData = &table->data[index];
+    if (HashTableUpdateData(hashData, stones, bestMove, version, depth, in_alpha, in_beta, maxScore))
     {
-        HashDataSaveNew(hashData, stones, bestMove, depth, in_alpha, in_beta, maxScore);
-        table->nbUsed++;
+        return;
     }
-    else if (hashData->own == stones->own && hashData->opp == stones->opp)
+
+    // 更新できなかったらインデックスを再計算
+    secondData = &table->data[RETRY_HASH(index)];
+    if (HashTableUpdateData(secondData, stones, bestMove, version, depth, in_alpha, in_beta, maxScore))
     {
-        if (depth == hashData->depth)
-        {
-            HashDataUpdate(hashData, bestMove, in_alpha, in_beta, maxScore);
-            if (hashData->lower > hashData->upper)
-            {
-                HashDataSaveNew(hashData, stones, bestMove, depth, in_alpha, in_beta, maxScore);
-            }
-        }
-        else
-        {
-            HashDataLevelUP(hashData, bestMove, depth, in_alpha, in_beta, maxScore);
-        }
+        return;
     }
     else
     {
-        // 見つからなかったらインデックスを再計算
-        secondData = &table->data[RETRY_HASH(index)];
-        if ((secondData->own | secondData->opp) == 0)
+        // 更新できなかったら優先度の低い方を上書き保存
+        if (HashDataCalcPriority(hashData) < HashDataCalcPriority(secondData))
         {
-            HashDataSaveNew(secondData, stones, bestMove, depth, in_alpha, in_beta, maxScore);
-            table->nb2ndUsed++;
-        }
-        else if (secondData->own == stones->own && secondData->opp == stones->opp)
-        {
-            if (depth == secondData->depth)
-            {
-                HashDataUpdate(secondData, bestMove, in_alpha, in_beta, maxScore);
-                if (secondData->lower > secondData->upper)
-                {
-                    HashDataSaveNew(secondData, stones, bestMove, depth, in_alpha, in_beta, maxScore);
-                }
-            }
-            else
-            {
-                HashDataLevelUP(secondData, bestMove, depth, in_alpha, in_beta, maxScore);
-            }
+            dataToUpdate = hashData;
         }
         else
         {
-            // 優先度が高いデータだったら上書き
-            if (!HashDataPriorityOverwrite(hashData, stones, bestMove, depth, in_alpha, in_beta, maxScore))
-            {
-                // 上書きされなかったら，次のインデックスで上書きを試す
-                if (!HashDataPriorityOverwrite(secondData, stones, bestMove, depth, in_alpha, in_beta, maxScore))
-                {
-                    // それでもだめなら衝突判定
-                    table->nbCollide++;
-                }
-            }
+            dataToUpdate = secondData;
         }
+        HashDataSaveNew(dataToUpdate, stones, bestMove, version, depth, in_alpha, in_beta, maxScore);
+
+        HASH_STATS(
+            if (dataToUpdate->depth == 0) {
+                table->nbUsed++;
+            } //
+        )
     }
 }
