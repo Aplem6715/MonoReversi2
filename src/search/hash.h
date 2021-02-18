@@ -13,6 +13,8 @@ typedef struct HashData
 {
     // 石情報
     uint64_t own, opp;
+    // 最終使用時のハッシュ表バージョン(過去の盤面が消えていくように)
+    uint8 latestUsedVersion;
     // 探索深度
     uint8 depth;
     // 最善手，更新前の最善手
@@ -28,6 +30,9 @@ typedef struct HashTable
     HashData *data;
     // サイズは2のべき乗
     size_t size;
+
+    // バージョン: ハッシュ表が使用された探索実行数
+    uint8 version;
 
     /* 計測用 */
     uint64_t nbUsed;
@@ -48,6 +53,8 @@ void HashTableFree(HashTable *table);
 
 // ハッシュテーブル内のデータをリセット
 void HashTableReset(HashTable *table);
+
+void HashTableVersionUp(HashTable *table);
 
 void HashTableResetScoreWindows(HashTable *table);
 

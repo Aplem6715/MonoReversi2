@@ -17,7 +17,7 @@
 #include "board.h"
 #include "bit_operation.h"
 
-#define LOG_FILE "./resources/tester/accurate_endRootHashOrder_nohash.txt"
+#define LOG_FILE "./resources/tester/accurate_hashPriority_fullhash.txt"
 
 #define NB_RECORDS 19
 #define NB_RANDOM_TURN 40
@@ -172,8 +172,8 @@ int main()
     srand(42);
     HashInit();
 
-    InitTree(&tree[0], 6, 14, 4, 8, 0, 0, 0, 0);
-    InitTree(&tree[1], 6, 14, 4, 8, 0, 0, 0, 0);
+    InitTree(&tree[0], 6, 14, 4, 8, 1, 1, 0, 0);
+    InitTree(&tree[1], 6, 14, 4, 8, 1, 1, 0, 0);
     // 設定上書き
     tree[0].useIDDS = 1;
     tree[1].useIDDS = 1;

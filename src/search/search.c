@@ -122,6 +122,14 @@ void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
     //ResetTree(tree);
     // 評価パターンの初期化
     EvalReload(tree->eval, own, opp, OWN);
+    if (tree->usePvHash)
+    {
+        HashTableVersionUp(tree->pvTable);
+    }
+    if (tree->useHash)
+    {
+        HashTableVersionUp(tree->nwsTable);
+    }
 
     tree->nbEmpty = CountBits(~(own | opp));
     tree->nodeCount = 0;
