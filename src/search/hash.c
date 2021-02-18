@@ -234,7 +234,7 @@ HashData *HashTableGetData(HashTable *table, Stones *stones, uint8 depth, uint64
     if (secondData->own == stones->own && secondData->opp == stones->opp)
     {
         HASH_STATS(table->nb2ndHit++;)
-        data->latestUsedVersion = table->version;
+        secondData->latestUsedVersion = table->version;
         return secondData;
     }
 
@@ -511,7 +511,7 @@ void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 
     }
     else
     {
-        // 更新できなかったら優先度の低い方を上書き保存
+        // 更新できなかったら優先度の低い方に上書き
         if (HashDataCalcPriority(hashData) < HashDataCalcPriority(secondData))
         {
             dataToUpdate = hashData;
@@ -520,12 +520,7 @@ void HashTableRegist(HashTable *table, uint64_t hashCode, Stones *stones, uint8 
         {
             dataToUpdate = secondData;
         }
+        HASH_STATS(if (dataToUpdate->depth == 0) { table->nbUsed++; })
         HashDataSaveNew(dataToUpdate, stones, bestMove, version, depth, in_alpha, in_beta, maxScore);
-
-        HASH_STATS(
-            if (dataToUpdate->depth == 0) {
-                table->nbUsed++;
-            } //
-        )
     }
 }
