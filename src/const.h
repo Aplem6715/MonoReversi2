@@ -13,6 +13,9 @@ typedef int16_t score_t;
 typedef int16_t score_strict_t;
 typedef unsigned char uint8;
 
+#define GLOBAL_SEED 42
+//#define GLOBAL_SEED ((unsigned int)time(NULL))
+
 // 1石の価値 (signed 16bit)
 #define STONE_VALUE (100)
 // 評価関数の最大値 (50 x 64[stone])

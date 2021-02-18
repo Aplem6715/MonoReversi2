@@ -169,7 +169,7 @@ int main()
     FILE *fp = fopen(LOG_FILE, "w");
     int i = 0;
 
-    srand(42);
+    srand(GLOBAL_SEED);
     HashInit();
 
     InitTree(&tree[0], 6, 14, 4, 8, 1, 1, 0, 0);

@@ -93,6 +93,7 @@ void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, score_t alpha, c
     {
 
         uint64_t posBit = CalcPosBit(move->posIdx);
+        int8_t mobCnt;
         Stones nextStones[1];
         nextStones->own = stones->opp ^ move->flip;
         nextStones->opp = stones->own ^ move->flip ^ posBit;
@@ -117,8 +118,14 @@ void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, score_t alpha, c
         mScore = (uint16_t)((SCORE_MAX + score) / STONE_VALUE);
         move->score += mScore * (1 << 8);
 
+        // 正の値にするためのバイアス
+        mobCnt = MAX_MOVES + 4;
+        // 着手可能数
+        mobCnt -= CountBits(next_mob);
+        // 角ボーナス
+        mobCnt -= CountBits(next_mob & 0x8100000000000081);
         // 相手の着手位置が多いとマイナス，少ないとプラス(14~8bit目)
-        move->score += (MAX_MOVES + 4 /*角分*/ - (CountBits(next_mob) + CountBits(next_mob & 0x8100000000000081))) * (1 << 10);
+        move->score += mobCnt * (1 << 10);
     }
 }
 

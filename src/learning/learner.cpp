@@ -543,7 +543,7 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enable
 int main(int argc, char **argv)
 {
     HashInit();
-    srand((unsigned int)time(NULL));
+    srand(GLOBAL_SEED);
 
     char input[20];
     int idxShift;

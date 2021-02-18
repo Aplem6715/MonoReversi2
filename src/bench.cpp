@@ -201,7 +201,7 @@ void BenchSearching(vector<unsigned char> depths, bool useHash, bool useMPC, boo
 
 int main()
 {
-    srand((unsigned int)time(NULL));
+    srand(GLOBAL_SEED);
     HashInit();
 
     //std::vector<unsigned char> depths = {10, 12, 14};
