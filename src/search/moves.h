@@ -31,8 +31,8 @@ Move *NextBestMoveWithSwap(Move *prev);
 
 void SortMoveList(MoveList *moveList);
 
-void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, score_t alpha, uint8 shallowDepth, const HashData *hashData);
+void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, score_t alpha, const HashData *hashData);
 
-void EvaluateMoveList(SearchTree *tree, MoveList *movelist, Stones *stones, score_t alpha, uint8 depth, const HashData *hashData);
+void EvaluateMoveList(SearchTree *tree, MoveList *movelist, Stones *stones, score_t alpha, const HashData *hashData);
 
 #endif

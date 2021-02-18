@@ -70,10 +70,9 @@ void CreateMoveList(MoveList *moveList, Stones *stones)
  * @param move 着手オブジェクト
  * @param stones 盤面石情報
  * @param alpha 浅い探索のアルファ値
- * @param shallowDepth 浅い探索の深度
  * @param hashData 盤面に対応するハッシュデータ
  */
-void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, score_t alpha, uint8 shallowDepth, const HashData *hashData)
+void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, score_t alpha, const HashData *hashData)
 {
     if (move->flip == stones->opp)
     {
@@ -140,15 +139,15 @@ void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, score_t alpha, u
  * @param tree 探索木
  * @param movelist 着手可能位置リスト
  * @param stones 盤面石情報
+ * @param alpha 浅い探索のアルファ値
  * @param hashData 盤面に対応するハッシュデータ
  */
-void EvaluateMoveList(SearchTree *tree, MoveList *movelist, Stones *stones, score_t alpha, uint8 depth, const HashData *hashData)
+void EvaluateMoveList(SearchTree *tree, MoveList *movelist, Stones *stones, score_t alpha, const HashData *hashData)
 {
-    uint8 shallowDepth = depth / 12;
     Move *move;
     for (move = movelist->moves->next; move != NULL; move = move->next)
     {
-        EvaluateMove(tree, move, tree->stones, alpha, shallowDepth, hashData);
+        EvaluateMove(tree, move, tree->stones, alpha, hashData);
     }
 }
 
