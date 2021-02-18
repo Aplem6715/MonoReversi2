@@ -190,7 +190,7 @@ void BenchSearching(vector<unsigned char> depths, bool useHash, bool useMPC, boo
                 logfile << x << y;
             }
             logfile << "\n";
-            Bench1Game(tree, moves, 16, logfile);
+            Bench1Game(tree, moves, 2, logfile);
             logfile << "\n";
         }
     }
@@ -205,9 +205,9 @@ int main()
     HashInit();
 
     //std::vector<unsigned char> depths = {10, 12, 14};
-    std::vector<unsigned char> depths = {12};
+    std::vector<unsigned char> depths = {22};
 
-    BenchSearching(depths, /*useHash=*/true, /*useMPC=*/false, /*nestMPC=*/false, 4, 8, "./resources/bench/search2.txt");
+    BenchSearching(depths, /*useHash=*/true, /*useMPC=*/false, /*nestMPC=*/false, 4, 8, "./resources/bench/end_search.txt");
     //MakeBench(2, 38);
 
     return 0;
