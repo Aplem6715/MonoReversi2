@@ -31,7 +31,7 @@ extern "C"
 #ifdef LEARN_MODE
 
 #define BATCH_SIZE 128
-static const float BETA_INIT = 0.00075f;
+static const float BETA_INIT = 0.001f;
 
 static const uint32_t FeatTypeMaxIndex[] = {
     POW3_8,  // LINE2  26244

@@ -941,7 +941,7 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
     // 最終深度で探索
     bestMove = MidPVSRoot(tree, &moveList, endDepth, &tree->score, &secondMove);
 
-    if (choiceSecond && moveList.nbMoves >= 2)
+    if (choiceSecond && secondMove != NOMOVE_INDEX)
     {
         return secondMove;
     }

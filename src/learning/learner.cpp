@@ -49,9 +49,9 @@ using namespace std;
 // 初期ランダム手数
 static const uint8 TRAIN_RANDOM_TURNS = 6;
 // ランダム行動割合（１試合に1回くらい）
-static const double TRAIN_RANDOM_RATIO = 1.0 / 60.0;
+static const double TRAIN_RANDOM_RATIO = 0.0 / 60.0;
 // 次善手割合(PVS探索-orderingで次善手が探索されない事が多々ある→かなり高めの設定)
-static const double TRAIN_SECOND_RATIO = 2.0 / 60.0;
+static const double TRAIN_SECOND_RATIO = 4.0 / 60.0;
 
 // 学習結果確認の対戦回数（１色で50試合＝全体で100）
 static const int TRAIN_NB_VERSUS = 50;
@@ -64,10 +64,10 @@ static const string modelName = "model_";
 static const int nbGameOneCycle = 512; //1024;
 #elif USE_REGRESSION
 static const string modelFolder = "resources/regressor/";
-static const string modelName = "regrV2-3_";
+static const string modelName = "regrV3_";
 static const int nbGameOneCycle = 256;
 #endif
-static const string selfPlayLogFileName = "log/self_play2.log";
+static const string selfPlayLogFileName = "log/self_play3.log";
 static const string recordLearnLogFileName = "log/record_learn.log";
 static const string testRecordDir = "./resources/record/WTH_7789/WTH_1982.wtb";
 static const int nbTest = 100;
@@ -257,6 +257,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         for (int gameCnt = 0; gameCnt < nbGameOneCycle; gameCnt++)
         {
             cout << "Cycle: " << nbCycles << "\tPlaying: " << gameCnt << "\r";
+            ResetTree(&trees[0]);
             PlayOneGame(featRecords, &trees[0], &trees[0], TRAIN_RANDOM_TURNS, TRAIN_RANDOM_RATIO, TRAIN_SECOND_RATIO, true);
         }
 
@@ -271,6 +272,8 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         winCount = 0;
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
+            ResetTree(&trees[0]);
+            ResetTree(&trees[1]);
             // 新規ウェイトを黒にしてプレイ
             if (PlayOneGame(dummyRecords, &trees[1], &trees[0], VERSUS_RANDOM_TURNS, 0, 0, false) == BLACK)
             {
@@ -281,6 +284,8 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight)
         // 白黒入れ替えて
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
+            ResetTree(&trees[0]);
+            ResetTree(&trees[1]);
             // 新規ウェイトを白にしてプレイ
             if (PlayOneGame(dummyRecords, &trees[0], &trees[1], VERSUS_RANDOM_TURNS, 0, 0, false) == WHITE)
             {
@@ -472,92 +477,12 @@ void LearnFromRecords(Evaluator *eval, string recordFileName)
     fclose(tfp);
 }
 
-/*
-void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, uint8 enableLog, int matchIdxShift)
-{
-    SearchTree tree[1];
-    Board board[1];
-    uint8 pos;
-    uint8 nbEmpty;
-    FILE *logFile;
-    int i;
-
-    InitTree(tree, 0, 16, 4, 8, 1, 0, 0);
-    logFile = fopen(MPC_RAW_FILE, "a");
-    fprintf(logFile, "matchIdx,nbEmpty,depth,score\n");
-
-    for (i = 0; i < nbPlay; i++)
-    {
-        nbEmpty = 60;
-        BoardReset(board);
-        while (!BoardIsFinished(board))
-        {
-            if (enableLog)
-            {
-                BoardDraw(board);
-                //_sleep(500);
-            }
-
-            // 置ける場所がなかったらスキップ
-            if (BoardGetMobility(board) == 0)
-            {
-                BoardSkip(board);
-                continue;
-            }
-
-            // 着手
-            if (nbEmpty > tree->endDepth && ((nbEmpty >= 60 - randomTurns) || rnd_prob(mt) < randMoveRatio))
-            {
-                // ランダム着手位置
-                pos = BoardGetRandomPosMoveable(board);
-                //printf("Random!!!\n");
-            }
-            else
-            {
-                SearchSetup(tree, BoardGetOwn(board), BoardGetOpp(board));
-                pos = MidRootWithMpcLog(tree, logFile, matchIdxShift + i);
-                if (nbEmpty <= tree->endDepth)
-                {
-                    printf("EndSearching            \r");
-                    pos = Search(tree, BoardGetOwn(board), BoardGetOpp(board), 0);
-                }
-                if (enableLog)
-                    printf("探索ノード数：%zu[Node]  推定CPUスコア：%.1f\n",
-                           tree->nodeCount, tree->score / (float)(STONE_VALUE));
-            }
-            // 合法手判定
-            assert(BoardIsLegalTT(board, pos));
-
-            // 実際に着手
-            BoardPutTT(board, pos);
-            nbEmpty--;
-
-        } //end of loop:　while (!BoardIsFinished(board))
-        printf("Game %d Finished\n", i);
-    }
-
-    fclose(logFile);
-}
-*/
-
 int main(int argc, char **argv)
 {
     HashInit();
     srand(GLOBAL_SEED);
 
-    char input[20];
-    int idxShift;
-    int nbPlay;
-
-    printf("ゲーム数を入力:");
-    gets_s(input);
-    nbPlay = atoi(input);
-
-    printf("通し番号シフトを入力（複数実行による競合防止）:");
-    gets_s(input);
-    idxShift = atoi(input);
-
-    //SelfPlay(6, 17, false);
+    SelfPlay(5, 17, true);
     //MPCSampling(nbPlay, 6, 4.0 / 60.0, 1, idxShift);
     /*
     string recordDir = "./resources/record/";
