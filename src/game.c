@@ -220,8 +220,8 @@ void GameStart(Game *game)
         }
         else
         {
-            printf("%cが%c%dに置きました\n",
-                   (BoardGetTurnColor(game->board) == BLACK ? '○' : '●'),
+            printf("%sが%c%dに置きました\n",
+                   (BoardGetTurnColor(game->board) == BLACK ? "○" : "●"),
                    (char)('A' + pos % 8),
                    pos / 8 + 1);
             game->moves[game->turn] = pos;
