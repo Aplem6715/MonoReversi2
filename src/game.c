@@ -237,9 +237,20 @@ void GameStart(Game *game)
     BoardDraw(game->board);
     int numBlack = BoardGetStoneCount(game->board, BLACK);
     int numWhite = BoardGetStoneCount(game->board, WHITE);
-    printf((
-        (numBlack == numWhite) ? "引き分け！！"
-                               : ((numBlack > numWhite) ? "○の勝ち！" : "●の勝ち！\n")));
+
+    if (numBlack == numWhite)
+    {
+        printf("引き分け！！\n");
+    }
+    else if (numBlack > numWhite)
+    {
+        printf("○の勝ち！\n");
+    }
+    else
+    {
+        printf("●の勝ち！\n");
+    }
+
     char xAscii;
     int y;
     int i;
