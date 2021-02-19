@@ -42,6 +42,61 @@ inline score_t Judge(const SearchTree *tree)
     return (score_t)((nbOwn - nbOpp) * STONE_VALUE);
 }
 
+/**
+ * @brief 残り1マス状態で最終石差を計算する
+ * 
+ *      
+ * [nbOwn - nbOpp]は
+ * nbOpp = 64 - nbOwn - 1 なので
+ * nbOwn - nbOpp = nbOwn - (64 - nbOwn - 1) = [2*nbOwm - 64 + 1]
+ * 
+ * score = [nbOwn - nbOpp] - 2*nbFlip - 1(put)
+ *       = [2*nbOwm - 64 + 1] - 2*nbFlip -1
+ *       = [2*nbOwn - 64 + 1] - [(2*nbFlip + 1)]
+ *       = [2*nbOwn - 64 + 1](パスでも不変)    [-(2*nbFlip + 1)]か[+(2*nbFlip + 1)]
+ * 
+ * @param stones 
+ * @param alpha 
+ * @return score_t 石差
+ */
+inline score_t SolveLast1(Stones *stones, const score_t alpha)
+{
+    score_t ownScore;
+    uint64_t flips;
+    uint64_t posBit = ~(stones->own | stones->opp);
+    uint8 pos = PosIndexFromBit(posBit);
+    uint8 nbFlips;
+    assert(CountBits(posBit) == 1);
+
+    // [2*nbOwn - 64]
+    ownScore = 2 * CountBits(stones->own) - 64 + 1;
+
+    flips = CalcFlip64(stones->own, stones->opp, pos);
+    if (flips != 0)
+    {
+        nbFlips = CountBits(flips);
+        // -[2*nbFlip]
+        ownScore += 2 * nbFlips + 1;
+    }
+    else
+    {
+        if (ownScore < alpha)
+        {
+            return ownScore;
+        }
+        else
+        {
+            flips = CalcFlip64(stones->opp, stones->own, pos);
+            if (flips != 0)
+            {
+                nbFlips = CountBits(flips);
+                ownScore -= 2 * nbFlips + 1;
+            }
+        }
+    }
+    return ownScore;
+}
+
 inline uint8 CalcCost(uint64_t nbNodes)
 {
     return (uint8)log2l((long double)nbNodes);
@@ -77,6 +132,10 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     {
         //return EvalPosTable(own, opp);
         return Judge(tree);
+    }
+    if (depth == 1)
+    {
+        return SolveLast1(tree->stones, alpha);
     }
 
     CreateMoveList(&moveList, tree->stones);
@@ -197,6 +256,10 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
         //return EvalTinyDnn(tree, tree->nbEmpty);
         return Judge(tree);
     }
+    if (depth == 1)
+    {
+        return SolveLast1(tree->stones, alpha);
+    }
 
     if (tree->usePvHash == 1 && depth >= tree->pvHashDepth)
     {
@@ -310,6 +373,10 @@ score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
     {
         return Judge(tree);
     }
+    if (depth == 1)
+    {
+        return SolveLast1(tree->stones, alpha);
+    }
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
     {
@@ -407,6 +474,10 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     if (depth <= 0)
     {
         return Judge(tree);
+    }
+    if (depth == 1)
+    {
+        return SolveLast1(tree->stones, alpha);
     }
 
     if (tree->useHash == 1 && depth >= tree->hashDepth)
@@ -513,6 +584,10 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     if (depth <= 0)
     {
         return Judge(tree);
+    }
+    if (depth == 1)
+    {
+        return SolveLast1(tree->stones, in_alpha);
     }
 
     alpha = in_alpha;
