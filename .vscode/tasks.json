@@ -1,0 +1,171 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "make",
+            "command": "nmake.exe",
+            "args": [
+                "/fdebug_play.mk",
+                "reversi"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "make-tester",
+            "command": "nmake.exe",
+            "args": [
+                "/fdebug_tester.mk",
+                "reversi"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "make-client",
+            "command": "nmake.exe",
+            "args": [
+                "/fdebug_client.mk",
+                "reversi"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "make-learn",
+            "command": "nmake.exe",
+            "args": [
+                "/fdebug_learn.mk",
+                "learn"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "make-mpc",
+            "command": "nmake.exe",
+            "args": [
+                "/fdebug_mpc.mk",
+                "learn"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "make-bench",
+            "command": "nmake.exe",
+            "args": [
+                "/fdebug_bench.mk"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "make_release",
+            "command": "nmake.exe",
+            "args": [
+                "/frelease_play.mk",
+                "reversi"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "make-tester_release",
+            "command": "nmake.exe",
+            "args": [
+                "/frelease_tester.mk",
+                "reversi"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "make-client_release",
+            "command": "nmake.exe",
+            "args": [
+                "/frelease_client.mk",
+                "reversi"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "make-learn_release",
+            "command": "nmake.exe",
+            "args": [
+                "/frelease_learn.mk",
+                "learn"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "make-mpc_release",
+            "command": "nmake.exe",
+            "args": [
+                "/frelease_mpc.mk",
+                "learn"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "make-bench_release",
+            "command": "nmake.exe",
+            "args": [
+                "/frelease_bench.mk"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build"
+        }
+    ]
+}

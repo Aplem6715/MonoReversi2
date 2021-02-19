@@ -1,0 +1,22 @@
+
+build/*
+/resources/*
+!/resources/regressor
+/resources/regressor/*
+!/resources/regressor/best/
+!/resources/bench
+tool/GGFToWThor/
+
+# external lib
+tiny_dnn/
+cereal/
+third_party/
+
+paper/
+
+*.pdb
+*.obj
+*.exe
+
+.vscode/settings.json
+.vscode/c_cpp_properties.json
