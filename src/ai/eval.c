@@ -171,6 +171,7 @@ extern const uint8 FeatDigits[46] = {
 //static const uint16 DEBUG_TARGET_FEAT = 3;
 static const char modelFolder[] = "resources/model/model_2003-epoch1/";
 static const char regrFolder[] = "resources/regressor/best/"; //"resources/regressor/regr_1981_Loss1473/";
+//static const char regrFolder[] = "resources/regressor/regrV3_393_Loss1528/";弱かった・・・
 
 void EvalInit(Evaluator *eval)
 {
