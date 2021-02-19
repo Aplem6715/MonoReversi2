@@ -45,12 +45,12 @@ extern const uint8 WHITE;
 extern const uint8 EMPTY;
 
 extern const uint8 PASS;
-extern const uint8 UNDO;
 
 extern const uint8 BOARD_SIZE;
 
 #define NOMOVE_INDEX 64
 #define PASS_INDEX 65
+#define UNDO_INDEX 66
 
 // 1ターンでの最大着手可能位置数
 #define MAX_MOVES 32

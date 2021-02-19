@@ -386,7 +386,33 @@ uint8 PosIndexFromBit(uint64_t pos64)
  */
 uint8 PosIndexFromAscii(const char *ascii)
 {
-    return 63 - ((ascii[0] - 'A') + (ascii[1] - '1') * 8);
+    int x, y;
+    if (ascii[0] == 'U' || ascii[0] == 'u')
+        return UNDO_INDEX;
+
+    if (ascii[0] >= 'A' && ascii[0] <= 'H')
+    {
+        x = ascii[0] - 'A';
+    }
+    else if (ascii[0] >= 'a' && ascii[0] <= 'h')
+    {
+        x = ascii[0] - 'a';
+    }
+    else
+    {
+        return NOMOVE_INDEX;
+    }
+
+    if (ascii[1] >= '1' && ascii[1] <= '8')
+    {
+        y = ascii[1] - '1';
+    }
+    else
+    {
+        return NOMOVE_INDEX;
+    }
+
+    return 63 - (x + y * 8);
 }
 
 /**

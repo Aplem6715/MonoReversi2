@@ -77,27 +77,26 @@ void GameFree(Game *game)
 uint8 WaitPosHumanInput(Game *game)
 {
     char str_pos[5];
-    int x, y;
+    uint8 posIdx;
 
     while (true)
     {
         printf("位置を入力してください（A1～H8）:");
         fgets(str_pos, 5, stdin);
-        if (str_pos[0] == 'U')
+
+        posIdx = PosIndexFromAscii(str_pos);
+
+        if (posIdx == NOMOVE_INDEX)
         {
-            return UNDO;
+            printf("(%c, %c) には置けません\n", str_pos[0], str_pos[1]);
         }
-
-        x = str_pos[0] - 'A';
-        y = atoi(&str_pos[1]) - 1;
-
-        if (x >= 0 && x < 8 && y >= 0 && y < 8)
+        else if (posIdx == UNDO_INDEX)
         {
-            return x + y * 8;
+            return UNDO_INDEX;
         }
         else
         {
-            printf("(%d, %d) には置けません\n", x, y);
+            return 63 - posIdx;
         }
     }
 }
@@ -195,7 +194,7 @@ void GameStart(Game *game)
 
         // 入力/解析の着手位置を待機
         pos = WaitPos(game, BoardGetTurnColor(game->board));
-        if (pos == UNDO)
+        if (pos == UNDO_INDEX)
         {
             // 人間同士対戦なら一手戻す
             if (game->player[0] == game->player[1])
