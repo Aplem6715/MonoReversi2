@@ -286,7 +286,7 @@ bool BoardUndoUntilColorChange(Board *board)
         while (board->turn == oppTurn)
         {
             if (!BoardUndo(board))
-                return;
+                return true;
         }
     }
     else

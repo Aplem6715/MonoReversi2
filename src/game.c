@@ -197,7 +197,17 @@ void GameStart(Game *game)
         pos = WaitPos(game, BoardGetTurnColor(game->board));
         if (pos == UNDO)
         {
-            BoardUndoUntilColorChange(game->board);
+            // 人間同士対戦なら一手戻す
+            if (game->player[0] == game->player[1])
+            {
+                BoardUndo(game->board);
+            }
+            else //AI対戦なら直前の自分の手まで戻す
+            {
+                BoardUndoUntilColorChange(game->board);
+            }
+            printf("戻しました");
+            continue;
         }
 
         // 合法手判定
