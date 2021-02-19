@@ -198,7 +198,6 @@ void GameStart(Game *game)
         if (pos == UNDO)
         {
             BoardUndoUntilColorChange(game->board);
-            BoardUndoUntilColorChange(game->board);
         }
 
         // 合法手判定

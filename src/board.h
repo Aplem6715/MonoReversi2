@@ -8,7 +8,7 @@
 typedef struct History
 {
     uint64_t flip;
-    uint64_t pos;
+    uint8 pos;
     uint8 color;
 } History;
 
@@ -34,8 +34,8 @@ void BoardReset(Board *board);
 void BoardSetStones(Board *board, uint64_t black, uint64_t white, uint8 turn);
 uint64_t BoardPutTT(Board *board, uint8 pos);
 uint8 BoardGetRandomPosMoveable(Board *board);
-int BoardUndo(Board *board);
-void BoardUndoUntilColorChange(Board *board);
+bool BoardUndo(Board *board);
+bool BoardUndoUntilColorChange(Board *board);
 void BoardSkip(Board *board);
 void BoardDraw(Board *board);
 int BoardGetStoneCount(Board *board, uint8 color);

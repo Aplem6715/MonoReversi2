@@ -238,27 +238,29 @@ uint8 BoardGetRandomPosMoveable(Board *board)
  * @brief 待った・もとに戻す機能
  * 
  * @param board 盤面情報
- * @return int 戻せたら1ダメなら0
+ * @return bool 戻せたらtrue, ダメならfalse
  */
-int BoardUndo(Board *board)
+bool BoardUndo(Board *board)
 {
-    uint64_t flip, pos;
+    uint64_t flip, posBit;
     uint8 hist_turn;
     if (board->nbPlayed > 0)
     {
         board->nbPlayed--;
+
         hist_turn = board->history[board->nbPlayed].color;
         flip = board->history[board->nbPlayed].flip;
-        pos = board->history[board->nbPlayed].pos;
+        posBit = CalcPosBit(board->history[board->nbPlayed].pos);
+
         if (hist_turn == BLACK)
         {
-            board->black = board->black ^ flip ^ pos;
+            board->black = board->black ^ flip ^ posBit;
             board->white = board->white ^ flip;
         }
         else
         {
             board->black = board->black ^ flip;
-            board->white = board->white ^ flip ^ pos;
+            board->white = board->white ^ flip ^ posBit;
         }
         board->turn = hist_turn;
     }
@@ -274,14 +276,24 @@ int BoardUndo(Board *board)
  * @brief 前の手番まで戻す
  * 
  * @param board 盤面情報
+ * @return bool 戻せたかどうか
  */
-void BoardUndoUntilColorChange(Board *board)
+bool BoardUndoUntilColorChange(Board *board)
 {
-    uint8 prev_turn = board->turn;
-    while (prev_turn == board->turn)
+    uint8 oppTurn = AntiColor(board->turn);
+    if (BoardUndo(board))
     {
-        BoardUndo(board);
+        while (board->turn == oppTurn)
+        {
+            if (!BoardUndo(board))
+                return;
+        }
     }
+    else
+    {
+        return false;
+    }
+    return true;
 }
 
 /**
