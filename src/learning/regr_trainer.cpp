@@ -1,7 +1,7 @@
 /**
  * @file regr_trainer.cpp
  * @author Daichi Sato
- * @brief 重線形回帰を用いたパターンの重み付け
+ * @brief 重線形回帰を用いたパターンの重み付け(学習時のみのコード)
  * @version 1.0
  * @date 2021-02-12
  * 
@@ -196,7 +196,7 @@ void TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inpu
     ResetRegrState(regr);
     for (i = 0; i < inputSize; i++)
     {
-        teacher = inputs[i]->stoneDiff;
+        teacher = (float)inputs[i]->stoneDiff;
         output = RegrPred(regr, inputs[i]->featStats[OWN], OWN);
         CalcWeightDelta(regr, inputs[i]->featStats[OWN], teacher - output);
 
@@ -371,6 +371,7 @@ float RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, Fe
         testCnt = 0;
         for (i = 0; i < testSize[phase]; i++)
         {
+
             loss += fabsf(tests[phase][i]->stoneDiff - RegrPred(&regr[phase], tests[phase][i]->featStats[0], 0));
             testCnt++;
             totalCnt++;

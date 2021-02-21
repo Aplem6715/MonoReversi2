@@ -46,6 +46,8 @@ extern "C"
 
 using namespace std;
 
+static const signed char WIN_BONUS = 10;
+
 // 初期ランダム手数
 static const uint8 TRAIN_RANDOM_TURNS = 6;
 // ランダム行動割合（１試合に1回くらい）
@@ -184,6 +186,14 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
         for (; topOfAddition < featRecords.size(); topOfAddition++)
         {
             featRecords[topOfAddition].stoneDiff *= stoneDiff;
+            if (numBlack > numWhite)
+            {
+                featRecords[topOfAddition].stoneDiff += WIN_BONUS;
+            }
+            else if (numWhite > numBlack)
+            {
+                featRecords[topOfAddition].stoneDiff -= WIN_BONUS;
+            }
         }
     }
 
@@ -408,6 +418,14 @@ void ConverWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor)
     for (; topOfAddition < featRecords.size(); topOfAddition++)
     {
         featRecords[topOfAddition].stoneDiff *= stoneDiff;
+        if (numBlack > numWhite)
+        {
+            featRecords[topOfAddition].stoneDiff += WIN_BONUS;
+        }
+        else if (numWhite > numBlack)
+        {
+            featRecords[topOfAddition].stoneDiff -= WIN_BONUS;
+        }
     }
 }
 
@@ -482,7 +500,7 @@ int main(int argc, char **argv)
     HashInit();
     srand(GLOBAL_SEED);
 
-    SelfPlay(5, 17, true);
+    SelfPlay(4, 16, false);
     //MPCSampling(nbPlay, 6, 4.0 / 60.0, 1, idxShift);
     /*
     string recordDir = "./resources/record/";
