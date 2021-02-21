@@ -46,7 +46,7 @@ extern "C"
 
 using namespace std;
 
-static const signed char WIN_BONUS = 10;
+static const signed char WIN_BONUS = 2;
 
 // 初期ランダム手数
 static const uint8 TRAIN_RANDOM_TURNS = 6;
@@ -69,7 +69,7 @@ static const string modelFolder = "resources/regressor/";
 static const string modelName = "regrV3_";
 static const int nbGameOneCycle = 256;
 #endif
-static const string selfPlayLogFileName = "log/self_play3.log";
+static const string selfPlayLogFileName = "log/self_play_bonus2.log";
 static const string recordLearnLogFileName = "log/record_learn.log";
 static const string testRecordDir = "./resources/record/WTH_7789/WTH_1982.wtb";
 static const int nbTest = 100;
