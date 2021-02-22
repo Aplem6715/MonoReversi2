@@ -19,6 +19,7 @@
 
 extern "C"
 {
+#include "../ai/eval.h"
 #include "../const.h"
 #include "../board.h"
 #include "../bit_operation.h"
@@ -45,8 +46,6 @@ extern "C"
 #include <direct.h>
 
 using namespace std;
-
-static const signed char WIN_BONUS = 2;
 
 // 初期ランダム手数
 static const uint8 TRAIN_RANDOM_TURNS = 6;

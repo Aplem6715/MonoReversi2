@@ -88,6 +88,8 @@
 #define FEAT_BOX10_7 44
 #define FEAT_BOX10_8 45
 
+#define WIN_BONUS 0
+
 extern const uint32_t FeatMaxIndex[46];
 extern const uint8 FeatDigits[46];
 
