@@ -18,6 +18,7 @@ typedef struct Regressor
 
 void InitRegr(Regressor regr[NB_PHASE]);
 void DelRegr(Regressor regr[NB_PHASE]);
+void RegrCopyWeight(Regressor src[NB_PHASE], Regressor dst[NB_PHASE]);
 void RegrClearWeight(Regressor regr[NB_PHASE]);
 void RegrApplyWeightToOpp(Regressor *regr);
 double RegrPred(Regressor *regr, const uint16_t features[], uint8 player);

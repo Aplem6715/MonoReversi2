@@ -52,6 +52,24 @@ void DelRegr(Regressor regr[NB_PHASE])
     }
 }
 
+void RegrCopyWeight(Regressor src[NB_PHASE], Regressor dst[NB_PHASE])
+{
+    int phase;
+    int feat;
+    uint32_t i;
+    for (phase = 0; phase < NB_PHASE; phase++)
+    {
+        for (feat = 0; feat < FEAT_NUM; feat++)
+        {
+            for (i = 0; i < FeatMaxIndex[feat]; i++)
+            {
+                dst[phase].weight[0][feat][i] = src[phase].weight[0][feat][i];
+                dst[phase].weight[1][feat][i] = src[phase].weight[1][feat][i];
+            }
+        }
+    }
+}
+
 void RegrClearWeight(Regressor regr[NB_PHASE])
 {
     int phase, feat;

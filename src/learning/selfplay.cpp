@@ -272,10 +272,12 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight, vector<FeatureRe
 #elif USE_REGRESSION
             RegrSave(trees[1].eval->regr, modelDir.c_str());
             // 旧ツリーに新Weightを上書きコピー
+            RegrCopyWeight(trees[1].eval->regr, trees[0].eval->regr);
+            /*
             for (int phase = 0; phase < NB_PHASE; phase++)
             {
                 trees[0].eval->regr[phase] = trees[1].eval->regr[phase];
-            }
+            }*/
 #endif
             logFile << "Model Updated!!!";
             cout << "Model Updated!!!";

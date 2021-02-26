@@ -276,10 +276,12 @@ double LearnFromAscii(SearchTree trees[2], string recordFileName, vector<Feature
         _mkdir(modelDir.c_str());
         RegrSave(trees[1].eval->regr, modelDir.c_str());
         // 旧ツリーに新Weightを上書きコピー
+        RegrCopyWeight(trees[1].eval->regr, trees[0].eval->regr);
+        /*
         for (int phase = 0; phase < NB_PHASE; phase++)
         {
             trees[0].eval->regr[phase] = trees[1].eval->regr[phase];
-        }
+        }*/
         logFile << "Model Updated!!!";
         cout << "Model Updated!!!";
     }

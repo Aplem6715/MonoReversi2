@@ -138,7 +138,6 @@ void UpdateRegrWeights(Regressor *regr)
             // ウェイト調整
             regr->weight[0][feat][idx] += alpha * delSum;
 
-            /*
             // 同タイプ，同インデックス，対象型の出現回数と誤差の合計を求める
             for (rot = 0; rot < FeatTypeNbRots[featType]; rot++)
             {
@@ -168,8 +167,7 @@ void UpdateRegrWeights(Regressor *regr)
                 }
             }
         }
-        */
-        }
+
         feat += FeatTypeNbRots[featType];
     }
 }
