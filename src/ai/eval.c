@@ -138,6 +138,7 @@ static const PosToFeature Pos2Feat[] = {
 };
 
 // ALL 211,734
+/*
 extern const uint32_t FeatMaxIndex[46] = {
     POW3_8, POW3_8, POW3_8, POW3_8,     // LINE2  26244
     POW3_8, POW3_8, POW3_8, POW3_8,     // LINE3  26244
@@ -166,6 +167,48 @@ extern const uint8 FeatDigits[46] = {
     9, 9, 9, 9,     // CORNR
     10, 10, 10, 10, // BOX10
     10, 10, 10, 10  // BOX10
+};*/
+
+extern const uint32_t FTYPE_INDEX_MAX[FEAT_TYPE_NUM] = {
+    POW3_8,  // LINE2  26244
+    POW3_8,  // LINE3  26244
+    POW3_8,  // LINE4  26244
+    POW3_4,  // DIAG4    324
+    POW3_5,  // DIAG5    972
+    POW3_6,  // DIAG6   2916
+    POW3_7,  // DIAG7   8748
+    POW3_8,  // DIAG8  13122
+    POW3_10, // EDGEX 236196
+    POW3_9,  // CORNR  78732
+    POW3_10, // BOX10 236196
+};
+/*
+extern const uint8 FeatDigits[46] = {
+    8,  // LINE2
+    8,  // LINE3
+    8,  // LINE4
+    4,  // DIAG4
+    5,  // DIAG5
+    6,  // DIAG6
+    7,  // DIAG7
+    8,  // DIAG8
+    10, // EDGEX
+    9,  // CORNR
+    10, // BOX10
+};*/
+
+extern const uint32_t FTYPE_DIGIT[FEAT_TYPE_NUM] = {
+    8,  // LINE2
+    8,  // LINE3
+    8,  // LINE4
+    4,  // DIAG4
+    5,  // DIAG5
+    6,  // DIAG6
+    7,  // DIAG7
+    8,  // DIAG8
+    10, // EDGEX
+    9,  // CORNR
+    10, // BOX10
 };
 
 //static const uint16 DEBUG_TARGET_FEAT = 3;
@@ -198,36 +241,34 @@ void EvalDelete(Evaluator *eval)
 void EvalReload(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player)
 {
     const PosToFeature *pos2f;
-    uint8 pos;
     int nbFeat;
-    int i;
 
     // 自分の手番
     eval->player = player;
-    for (i = 0; i < FEAT_NUM; i++)
+    for (int ftype = 0; ftype < FEAT_NUM; ftype++)
     {
-        eval->FeatureStates[i] = 0;
+        eval->FeatureStates[ftype] = 0;
     }
 
     // 自分の石がある位置について
-    for (pos = PosIndexFromBit(own); own; pos = NextIndex(&own))
+    for (uint8 pos = PosIndexFromBit(own); own; pos = NextIndex(&own))
     {
         pos2f = &(Pos2Feat[pos]);
         nbFeat = pos2f->nbFeature;
         // 関連するすべての特徴のインデックスを更新
-        for (i = 0; i < nbFeat; i++)
+        for (int i = 0; i < nbFeat; i++)
         {
             // 0(empty) -> 1(own)
             eval->FeatureStates[pos2f->feature[i].feat] += pos2f->feature[i].idx;
         }
     }
     // 相手の石がある位置について
-    for (pos = PosIndexFromBit(opp); opp; pos = NextIndex(&opp))
+    for (uint8 pos = PosIndexFromBit(opp); opp; pos = NextIndex(&opp))
     {
         pos2f = &(Pos2Feat[pos]);
         nbFeat = pos2f->nbFeature;
         // 関連するすべての特徴のインデックスを更新
-        for (i = 0; i < nbFeat; i++)
+        for (int i = 0; i < nbFeat; i++)
         {
             // 0(empty) -> 2(opp)
             eval->FeatureStates[pos2f->feature[i].feat] += 2 * pos2f->feature[i].idx;
@@ -240,17 +281,16 @@ void EvalUpdate(Evaluator *eval, uint8 pos, uint64_t flip)
 {
     const PosToFeature *pos2f = &(Pos2Feat[pos]);
     int nbFeat = pos2f->nbFeature;
-    int i;
     uint8 flipIdx;
     if (eval->player == OWN)
     {
         // 着手箇所について
         // 関連するすべての特徴のインデックスを更新
-        for (i = 0; i < nbFeat; i++)
+        for (int i = 0; i < nbFeat; i++)
         {
             // 0(empty) -> 1(own)
             eval->FeatureStates[pos2f->feature[i].feat] += pos2f->feature[i].idx;
-            assert(eval->FeatureStates[pos2f->feature[i].feat] < FeatMaxIndex[pos2f->feature[i].feat]);
+            assert(eval->FeatureStates[pos2f->feature[i].feat] < FTYPE_INDEX_MAX[FeatID2Type[pos2f->feature[i].feat]]);
         }
 
         // 反転箇所について
@@ -259,11 +299,11 @@ void EvalUpdate(Evaluator *eval, uint8 pos, uint64_t flip)
             pos2f = &(Pos2Feat[flipIdx]);
             nbFeat = pos2f->nbFeature;
             // 関連するすべての特徴のインデックスを更新
-            for (i = 0; i < nbFeat; i++)
+            for (int i = 0; i < nbFeat; i++)
             {
                 // 2(opp) -> 1(own)
                 eval->FeatureStates[pos2f->feature[i].feat] -= pos2f->feature[i].idx;
-                assert(eval->FeatureStates[pos2f->feature[i].feat] < FeatMaxIndex[pos2f->feature[i].feat]);
+                assert(eval->FeatureStates[pos2f->feature[i].feat] < FTYPE_INDEX_MAX[FeatID2Type[pos2f->feature[i].feat]]);
             }
         }
     }
@@ -271,11 +311,11 @@ void EvalUpdate(Evaluator *eval, uint8 pos, uint64_t flip)
     {
         // 着手箇所について
         // 関連するすべての特徴のインデックスを戻す
-        for (i = 0; i < nbFeat; i++)
+        for (int i = 0; i < nbFeat; i++)
         {
             // 0(empty) -> 2(opp)
             eval->FeatureStates[pos2f->feature[i].feat] += 2 * pos2f->feature[i].idx;
-            assert(eval->FeatureStates[pos2f->feature[i].feat] < FeatMaxIndex[pos2f->feature[i].feat]);
+            assert(eval->FeatureStates[pos2f->feature[i].feat] < FTYPE_INDEX_MAX[FeatID2Type[pos2f->feature[i].feat]]);
         }
 
         // 反転箇所について
@@ -284,11 +324,11 @@ void EvalUpdate(Evaluator *eval, uint8 pos, uint64_t flip)
             pos2f = &(Pos2Feat[flipIdx]);
             nbFeat = pos2f->nbFeature;
             // 関連するすべての特徴のインデックスを戻す
-            for (i = 0; i < nbFeat; i++)
+            for (int i = 0; i < nbFeat; i++)
             {
                 // 1(own) -> 2(opp)
                 eval->FeatureStates[pos2f->feature[i].feat] += pos2f->feature[i].idx;
-                assert(eval->FeatureStates[pos2f->feature[i].feat] < FeatMaxIndex[pos2f->feature[i].feat]);
+                assert(eval->FeatureStates[pos2f->feature[i].feat] < FTYPE_INDEX_MAX[FeatID2Type[pos2f->feature[i].feat]]);
             }
         }
     }

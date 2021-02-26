@@ -122,7 +122,7 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
                 for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
                 {
                     record.featStats[OWN][featIdx] = eval[0].FeatureStates[featIdx];
-                    record.featStats[OPP][featIdx] = OpponentIndex(eval[0].FeatureStates[featIdx], FeatDigits[featIdx]);
+                    record.featStats[OPP][featIdx] = OpponentIndex(eval[0].FeatureStates[featIdx], FTYPE_DIGIT[FeatID2Type[featIdx]]);
                 }
                 record.nbEmpty = nbEmpty;
                 record.stoneDiff = 1;

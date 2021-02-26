@@ -30,10 +30,10 @@ void InitRegr(Regressor regr[NB_PHASE])
     int feat;
     for (phase = 0; phase < NB_PHASE; phase++)
     {
-        for (feat = 0; feat < FEAT_NUM; feat++)
+        for (feat = 0; feat < FEAT_TYPE_NUM; feat++)
         {
-            regr[phase].weight[0][feat] = (double *)calloc(FeatMaxIndex[feat], sizeof(double));
-            regr[phase].weight[1][feat] = (double *)calloc(FeatMaxIndex[feat], sizeof(double));
+            regr[phase].weight[0][feat] = (double *)calloc(FTYPE_INDEX_MAX[feat], sizeof(double));
+            regr[phase].weight[1][feat] = (double *)calloc(FTYPE_INDEX_MAX[feat], sizeof(double));
         }
     }
 }
@@ -44,7 +44,7 @@ void DelRegr(Regressor regr[NB_PHASE])
     int feat;
     for (phase = 0; phase < NB_PHASE; phase++)
     {
-        for (feat = 0; feat < FEAT_NUM; feat++)
+        for (feat = 0; feat < FEAT_TYPE_NUM; feat++)
         {
             free(regr[phase].weight[0][feat]);
             free(regr[phase].weight[1][feat]);
@@ -59,9 +59,9 @@ void RegrCopyWeight(Regressor src[NB_PHASE], Regressor dst[NB_PHASE])
     uint32_t i;
     for (phase = 0; phase < NB_PHASE; phase++)
     {
-        for (feat = 0; feat < FEAT_NUM; feat++)
+        for (feat = 0; feat < FEAT_TYPE_NUM; feat++)
         {
-            for (i = 0; i < FeatMaxIndex[feat]; i++)
+            for (i = 0; i < FTYPE_INDEX_MAX[feat]; i++)
             {
                 dst[phase].weight[0][feat][i] = src[phase].weight[0][feat][i];
                 dst[phase].weight[1][feat][i] = src[phase].weight[1][feat][i];
@@ -76,9 +76,9 @@ void RegrClearWeight(Regressor regr[NB_PHASE])
     uint32_t i;
     for (phase = 0; phase < NB_PHASE; phase++)
     {
-        for (feat = 0; feat < FEAT_NUM; feat++)
+        for (feat = 0; feat < FEAT_TYPE_NUM; feat++)
         {
-            for (i = 0; i < FeatMaxIndex[feat]; i++)
+            for (i = 0; i < FTYPE_INDEX_MAX[feat]; i++)
             {
                 regr[phase].weight[0][feat][i] = 0;
                 regr[phase].weight[1][feat][i] = 0;
@@ -89,26 +89,27 @@ void RegrClearWeight(Regressor regr[NB_PHASE])
 
 void RegrApplyWeightToOpp(Regressor *regr)
 {
-    uint8 feat;
+    uint8 type;
     uint16_t i;
-    for (feat = 0; feat < FEAT_NUM; feat++)
+    for (type = 0; type < FEAT_TYPE_NUM; type++)
     {
-        for (i = 0; i < FeatMaxIndex[feat]; i++)
+        for (i = 0; i < FTYPE_INDEX_MAX[type]; i++)
         {
-            regr->weight[1][feat][i] = regr->weight[0][feat][OpponentIndex(i, FeatDigits[feat])];
+            regr->weight[1][type][i] = regr->weight[0][type][OpponentIndex(i, FTYPE_DIGIT[type])];
         }
     }
 }
 
 double RegrPred(Regressor *regr, const uint16_t features[FEAT_NUM], uint8 player)
 {
-    int feat;
+    int feat, ftype;
     double score = 0;
 
     for (feat = 0; feat < FEAT_NUM; feat++)
     {
-        score += regr->weight[player][feat][features[feat]];
-        assert(features[feat] < FeatMaxIndex[feat]);
+        ftype = FeatID2Type[feat];
+        score += regr->weight[player][ftype][features[feat]];
+        assert(features[feat] < FTYPE_INDEX_MAX[ftype]);
     }
 
 #ifdef LEARN_MODE
@@ -120,7 +121,7 @@ double RegrPred(Regressor *regr, const uint16_t features[FEAT_NUM], uint8 player
 
 void RegrSave(Regressor regr[NB_PHASE], const char *file)
 {
-    int phase, feat;
+    int phase, ftype;
     size_t writed;
     char fileName[100];
     FILE *fp;
@@ -135,9 +136,9 @@ void RegrSave(Regressor regr[NB_PHASE], const char *file)
         }
 
         writed = 0;
-        for (feat = 0; feat < FEAT_NUM; feat++)
+        for (ftype = 0; ftype < FEAT_TYPE_NUM; ftype++)
         {
-            writed += fwrite(regr[phase].weight[0][feat], sizeof(double), FeatMaxIndex[feat], fp);
+            writed += fwrite(regr[phase].weight[0][ftype], sizeof(double), FTYPE_INDEX_MAX[ftype], fp);
         }
         if (writed < NB_FEAT_COMB)
         {
@@ -155,7 +156,7 @@ void RegrSave(Regressor regr[NB_PHASE], const char *file)
 
 void RegrLoad(Regressor regr[NB_PHASE], const char *file)
 {
-    int phase, feat;
+    int phase, ftype;
     size_t readed;
     char fileName[100];
     FILE *fp;
@@ -170,9 +171,9 @@ void RegrLoad(Regressor regr[NB_PHASE], const char *file)
         }
 
         readed = 0;
-        for (feat = 0; feat < FEAT_NUM; feat++)
+        for (ftype = 0; ftype < FEAT_TYPE_NUM; ftype++)
         {
-            readed += fread(regr[phase].weight[0][feat], sizeof(double), FeatMaxIndex[feat], fp);
+            readed += fread(regr[phase].weight[0][ftype], sizeof(double), FTYPE_INDEX_MAX[ftype], fp);
         }
 
         RegrApplyWeightToOpp(&regr[phase]);
