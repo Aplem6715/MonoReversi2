@@ -93,19 +93,19 @@ static const PosToFeature Pos2Feat[] = {
     //
     /*A4*/ {6, {{FEAT_LINE4_1, POW3_0}, {FEAT_DIAG4_1, POW3_3}, {FEAT_DIAG5_4, POW3_0}, {FEAT_EDGEX_4, POW3_5}, {FEAT_BOX10_7, POW3_4}, {FEAT_BOX10_8, POW3_3}}},
     /*B4*/ {6, {{FEAT_LINE4_1, POW3_1}, {FEAT_LINE2_4, POW3_3}, {FEAT_DIAG5_1, POW3_3}, {FEAT_DIAG6_4, POW3_1}, {FEAT_BOX10_7, POW3_9}, {FEAT_BOX10_8, POW3_8}}},
-    /*C4*/ {5, {{FEAT_LINE4_1, POW3_2}, {FEAT_LINE3_4, POW3_3}, {FEAT_DIAG6_1, POW3_3}, {FEAT_DIAG7_4, POW3_2}}},
-    /*D4*/ {5, {{FEAT_LINE4_1, POW3_3}, {FEAT_LINE4_4, POW3_3}, {FEAT_DIAG7_1, POW3_3}, {FEAT_DIAG8_2, POW3_3}}},
-    /*E4*/ {5, {{FEAT_LINE4_1, POW3_4}, {FEAT_LINE4_2, POW3_3}, {FEAT_DIAG7_2, POW3_3}, {FEAT_DIAG8_1, POW3_3}}},
-    /*F4*/ {5, {{FEAT_LINE4_1, POW3_5}, {FEAT_LINE3_2, POW3_3}, {FEAT_DIAG6_2, POW3_3}, {FEAT_DIAG7_3, POW3_2}}},
+    /*C4*/ {4, {{FEAT_LINE4_1, POW3_2}, {FEAT_LINE3_4, POW3_3}, {FEAT_DIAG6_1, POW3_3}, {FEAT_DIAG7_4, POW3_2}}},
+    /*D4*/ {4, {{FEAT_LINE4_1, POW3_3}, {FEAT_LINE4_4, POW3_3}, {FEAT_DIAG7_1, POW3_3}, {FEAT_DIAG8_2, POW3_3}}},
+    /*E4*/ {4, {{FEAT_LINE4_1, POW3_4}, {FEAT_LINE4_2, POW3_3}, {FEAT_DIAG7_2, POW3_3}, {FEAT_DIAG8_1, POW3_3}}},
+    /*F4*/ {4, {{FEAT_LINE4_1, POW3_5}, {FEAT_LINE3_2, POW3_3}, {FEAT_DIAG6_2, POW3_3}, {FEAT_DIAG7_3, POW3_2}}},
     /*G4*/ {6, {{FEAT_LINE4_1, POW3_6}, {FEAT_LINE2_2, POW3_3}, {FEAT_DIAG5_2, POW3_3}, {FEAT_DIAG6_3, POW3_1}, {FEAT_BOX10_3, POW3_8}, {FEAT_BOX10_4, POW3_9}}},
     /*H4*/ {6, {{FEAT_LINE4_1, POW3_7}, {FEAT_DIAG4_2, POW3_3}, {FEAT_DIAG5_3, POW3_0}, {FEAT_EDGEX_2, POW3_4}, {FEAT_BOX10_3, POW3_3}, {FEAT_BOX10_4, POW3_4}}},
     //
     /*A5*/ {6, {{FEAT_LINE4_3, POW3_0}, {FEAT_DIAG4_4, POW3_0}, {FEAT_DIAG5_1, POW3_4}, {FEAT_EDGEX_4, POW3_4}, {FEAT_BOX10_7, POW3_3}, {FEAT_BOX10_8, POW3_4}}},
     /*B5*/ {6, {{FEAT_LINE4_3, POW3_1}, {FEAT_LINE2_4, POW3_4}, {FEAT_DIAG5_4, POW3_1}, {FEAT_DIAG6_1, POW3_4}, {FEAT_BOX10_7, POW3_8}, {FEAT_BOX10_8, POW3_9}}},
-    /*C5*/ {5, {{FEAT_LINE4_3, POW3_2}, {FEAT_LINE3_4, POW3_4}, {FEAT_DIAG6_4, POW3_2}, {FEAT_DIAG7_1, POW3_4}}},
-    /*D5*/ {5, {{FEAT_LINE4_3, POW3_3}, {FEAT_LINE4_4, POW3_4}, {FEAT_DIAG7_4, POW3_3}, {FEAT_DIAG8_1, POW3_4}}},
-    /*E5*/ {5, {{FEAT_LINE4_3, POW3_4}, {FEAT_LINE4_2, POW3_4}, {FEAT_DIAG7_3, POW3_3}, {FEAT_DIAG8_2, POW3_4}}},
-    /*F5*/ {5, {{FEAT_LINE4_3, POW3_5}, {FEAT_LINE3_2, POW3_4}, {FEAT_DIAG6_3, POW3_2}, {FEAT_DIAG7_2, POW3_4}}},
+    /*C5*/ {4, {{FEAT_LINE4_3, POW3_2}, {FEAT_LINE3_4, POW3_4}, {FEAT_DIAG6_4, POW3_2}, {FEAT_DIAG7_1, POW3_4}}},
+    /*D5*/ {4, {{FEAT_LINE4_3, POW3_3}, {FEAT_LINE4_4, POW3_4}, {FEAT_DIAG7_4, POW3_3}, {FEAT_DIAG8_1, POW3_4}}},
+    /*E5*/ {4, {{FEAT_LINE4_3, POW3_4}, {FEAT_LINE4_2, POW3_4}, {FEAT_DIAG7_3, POW3_3}, {FEAT_DIAG8_2, POW3_4}}},
+    /*F5*/ {4, {{FEAT_LINE4_3, POW3_5}, {FEAT_LINE3_2, POW3_4}, {FEAT_DIAG6_3, POW3_2}, {FEAT_DIAG7_2, POW3_4}}},
     /*G5*/ {6, {{FEAT_LINE4_3, POW3_6}, {FEAT_LINE2_2, POW3_4}, {FEAT_DIAG5_3, POW3_1}, {FEAT_DIAG6_2, POW3_4}, {FEAT_BOX10_3, POW3_9}, {FEAT_BOX10_4, POW3_8}}},
     /*H5*/ {6, {{FEAT_LINE4_3, POW3_7}, {FEAT_DIAG4_3, POW3_0}, {FEAT_DIAG5_2, POW3_4}, {FEAT_EDGEX_2, POW3_5}, {FEAT_BOX10_3, POW3_4}, {FEAT_BOX10_4, POW3_3}}},
     //
@@ -215,7 +215,7 @@ extern const uint32_t FTYPE_DIGIT[FEAT_TYPE_NUM] = {
 static const char modelFolder[] = "resources/model/model_2003-epoch1/";
 //static const char regrFolder[] = "resources/regressor/best/"; //"resources/regressor/regr_1981_Loss1473/";
 //static const char regrFolder[] = "resources/regressor/regrV3_393_Loss1528/";弱かった・・・
-static const char regrFolder[] = "resources/regressor/regrV3_Ascii26_Loss1538_Last/";
+static const char regrFolder[] = "resources/regressor/regrV3_Ascii26_Loss1557_Last/";
 
 void EvalInit(Evaluator *eval)
 {

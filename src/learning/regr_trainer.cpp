@@ -101,13 +101,13 @@ void UpdateRegrWeights(Regressor *regr)
 
     // タイプごとの対象型インデックスへの参照を配列として持っておく
     uint16_t *FeatTypeSames[FEAT_TYPE_NUM - 1] = {
-        SAME_INDEX_8,    //LINE2
-        SAME_INDEX_8,    //LINE3
-        SAME_INDEX_8,    //LINE4
-        SAME_INDEX_4,    //DIAG4
-        SAME_INDEX_5,    //DIAG5
-        SAME_INDEX_6,    //DIAG6
-        SAME_INDEX_7,    //DIAG7
+        SAME_INDEX_8,    // LINE2
+        SAME_INDEX_8,    // LINE3
+        SAME_INDEX_8,    // LINE4
+        SAME_INDEX_4,    // DIAG4
+        SAME_INDEX_5,    // DIAG5
+        SAME_INDEX_6,    // DIAG6
+        SAME_INDEX_7,    // DIAG7
         SAME_INDEX_8,    // DIAG8
         SAME_INDEX_EDGE, //
         SAME_INDEX_CORNR //
