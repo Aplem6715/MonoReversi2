@@ -30,7 +30,7 @@ extern "C"
 
 #ifdef LEARN_MODE
 
-#define BATCH_SIZE 128
+#define BATCH_SIZE 512
 static const float BETA_INIT = 0.001f;
 
 static const uint32_t FeatTypeMaxIndex[] = {
@@ -200,6 +200,7 @@ void TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inpu
         output = RegrPred(regr, inputs[i]->featStats[OWN], OWN);
         CalcWeightDelta(regr, inputs[i]->featStats[OWN], teacher - output);
 
+        
         // 反転パターンも学習
         output = RegrPred(regr, inputs[i]->featStats[OPP], OWN); // ※featの方を反転しているのでplayerは0に
         CalcWeightDelta(regr, inputs[i]->featStats[OPP], (-teacher) - output);

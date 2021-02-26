@@ -35,6 +35,9 @@ LEARN_OBJS=\
 	$(LEARN_OUTDIR)\game_record.obj\
 	$(LEARN_OUTDIR)\nnet_trainer.obj\
 	$(LEARN_OUTDIR)\regr_trainer.obj\
+	$(LEARN_OUTDIR)\ascii_loader.obj\
+	$(LEARN_OUTDIR)\learn_const.obj\
+	$(LEARN_OUTDIR)\selfplay.obj\
 	$(LEARN_OUTDIR)\learner.obj
 
 	

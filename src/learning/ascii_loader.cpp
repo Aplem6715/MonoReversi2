@@ -6,9 +6,12 @@
 #include <string>
 #include <assert.h>
 
+extern "C"
+{
 #include "../board.h"
 #include "../ai/eval.h"
 #include "../bit_operation.h"
+}
 
 using namespace std;
 
@@ -23,7 +26,7 @@ void ConvertAsciiOnegame(vector<FeatureRecord> &featRecords, char predMoves[60],
     Board board[1];
     Evaluator eval[2];
     FeatureRecord record;
-    int readingIndex;
+    int readingIndex = 0;
 
     BoardReset(board);
     EvalReload(&eval[0], BoardGetBlack(board), BoardGetWhite(board), OWN);
@@ -111,14 +114,19 @@ void ConvertAscii2Feat(vector<FeatureRecord> &featRecords, string asciiFileName)
 
     int index;
     int result;
-    char predMoves[60];
-    char bestMoves[60];
+    char predMoves[60 * 2];
+    char bestMoves[60 * 2];
 
     ifstream asciiFile(asciiFileName);
 
     while (getline(asciiFile, str))
     {
-        sscanf_s(str.c_str(), "%d %s %s %d", &index, predMoves, bestMoves, &result);
+        sscanf_s(str.c_str(),
+                 "%d %s %s %d",
+                 &index,
+                 predMoves, (unsigned)sizeof(predMoves),
+                 bestMoves, (unsigned)sizeof(bestMoves),
+                 &result);
         ConvertAsciiOnegame(featRecords, predMoves, bestMoves, result);
     }
 }
