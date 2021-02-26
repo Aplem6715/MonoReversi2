@@ -9,7 +9,7 @@
 #define PHASE(nbEmpty) (nbEmpty / NB_PUT_1PHASE)
 
 #define NB_FEAT_COMB 892134
-#define TYPE_NB_MAX 173826
+#define TYPE_NB_MAX 167265
 
 // 3累乗
 #define POW0_0 0
