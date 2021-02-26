@@ -362,7 +362,7 @@ void EvalUpdatePass(Evaluator *eval)
 
 score_t Evaluate(Evaluator *eval, uint8 nbEmpty)
 {
-    float scoref;
+    double scoref;
     score_t score;
 #ifdef USE_NN
     if (eval->player)
@@ -375,7 +375,7 @@ score_t Evaluate(Evaluator *eval, uint8 nbEmpty)
     }
 #elif USE_REGRESSION
     scoref = RegrPred(&eval->regr[PHASE(nbEmpty)], eval->FeatureStates, eval->player);
-    score = (score_t)roundf(scoref * STONE_VALUE);
+    score = (score_t)roundl(scoref * STONE_VALUE);
 #endif
 
     // 最小値以上，最大値以下に

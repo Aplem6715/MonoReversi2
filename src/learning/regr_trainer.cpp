@@ -31,7 +31,7 @@ extern "C"
 #ifdef LEARN_MODE
 
 #define BATCH_SIZE 512
-static const float BETA_INIT = 0.001f;
+static const double BETA_INIT = 0.001f;
 
 static const uint32_t FeatTypeMaxIndex[] = {
     POW3_8,  // LINE2  26244
@@ -79,7 +79,7 @@ void RegrInitBeta(Regressor regr[NB_PHASE])
     }
 }
 
-void RegrDecreaseBeta(Regressor regr[NB_PHASE], float mul)
+void RegrDecreaseBeta(Regressor regr[NB_PHASE], double mul)
 {
     int phase;
     for (phase = 0; phase < NB_PHASE; phase++)
@@ -92,12 +92,12 @@ void RegrDecreaseBeta(Regressor regr[NB_PHASE], float mul)
 void UpdateRegrWeights(Regressor *regr)
 {
     int featType, feat, rot;
-    float alpha;
+    double alpha;
     uint16_t idx, featIdx;
     int32_t sameIdx;
 
     uint32_t appearSum;
-    float delSum;
+    double delSum;
 
     // タイプごとの対象型インデックスへの参照を配列として持っておく
     uint16_t *FeatTypeSames[NB_FEATURE_TYPES - 1] = {
@@ -149,7 +149,7 @@ void UpdateRegrWeights(Regressor *regr)
             // 同タイプ，同インデックス，対象型のウェイトを更新
             for (rot = 0; rot < FeatTypeNbRots[featType]; rot++)
             {
-                alpha = fminf(regr->beta / 50.0f, regr->beta / (float)appearSum);
+                alpha = fmin(regr->beta / 50.0f, regr->beta / (double)appearSum);
                 // ウェイト調整
                 regr->weight[0][feat + rot][idx] += alpha * delSum;
                 // 対象型があれば調整
@@ -176,7 +176,7 @@ void ResetRegrState(Regressor *regr)
     }
 }
 
-void CalcWeightDelta(Regressor *regr, const uint16_t features[FEAT_NUM], float error)
+void CalcWeightDelta(Regressor *regr, const uint16_t features[FEAT_NUM], double error)
 {
     int featType;
 
@@ -184,6 +184,7 @@ void CalcWeightDelta(Regressor *regr, const uint16_t features[FEAT_NUM], float e
     {
         regr->nbAppears[featType][features[featType]]++;
         regr->del[featType][features[featType]] += error;
+        assert(regr->nbAppears[featType][features[featType]] < 4294967296);
     }
 }
 
@@ -191,12 +192,12 @@ void TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inpu
 {
     int i;
     static bool debug = false;
-    float teacher, output, loss = 0;
+    double teacher, output, loss = 0;
 
     ResetRegrState(regr);
     for (i = 0; i < inputSize; i++)
     {
-        teacher = (float)inputs[i]->stoneDiff;
+        teacher = (double)inputs[i]->stoneDiff;
         output = RegrPred(regr, inputs[i]->featStats[OWN], OWN);
         CalcWeightDelta(regr, inputs[i]->featStats[OWN], teacher - output);
 
@@ -234,7 +235,7 @@ void RegrTrainInit(Regressor regr[NB_PHASE])
         for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
         {
             regr[phase].nbAppears[featIdx] = (uint32_t *)malloc(sizeof(uint32_t) * FeatMaxIndex[featIdx]);
-            regr[phase].del[featIdx] = (float *)malloc(sizeof(float) * FeatMaxIndex[featIdx]);
+            regr[phase].del[featIdx] = (double *)malloc(sizeof(double) * FeatMaxIndex[featIdx]);
         }
     }
 
@@ -302,7 +303,7 @@ void RegrTrainInit(Regressor regr[NB_PHASE])
     }
 }
 
-float RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, FeatureRecord *testRecords, size_t nbTests)
+double RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, FeatureRecord *testRecords, size_t nbTests)
 {
     double loss, totalLoss;
     int i, startIdx, endIdx;
@@ -374,12 +375,12 @@ float RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, Fe
         for (i = 0; i < testSize[phase]; i++)
         {
 
-            loss += fabsf(tests[phase][i]->stoneDiff - RegrPred(&regr[phase], tests[phase][i]->featStats[0], 0));
+            loss += fabs(tests[phase][i]->stoneDiff - RegrPred(&regr[phase], tests[phase][i]->featStats[0], 0));
             testCnt++;
             totalCnt++;
         }
         totalLoss += loss;
-        printf("Regressor phase%d  MAE Loss: %.3f          \n", phase, loss / (float)testCnt);
+        printf("Regressor phase%d  MAE Loss: %.3f          \n", phase, loss / (double)testCnt);
     }
 
     for (phase = 0; phase < NB_PHASE; phase++)
@@ -391,6 +392,6 @@ float RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, Fe
         inputs[i].clear();
     }
     phaseInputs.clear();
-    return (float)totalLoss / totalCnt;
+    return (double)totalLoss / totalCnt;
 }
 #endif

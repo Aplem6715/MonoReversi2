@@ -196,7 +196,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight, vector<FeatureRe
     vector<FeatureRecord> dummyRecords;
     int winCount;
     double winRatio;
-    float loss;
+    double loss;
     int nbCycles = 0;
     ofstream logFile;
     logFile.open(selfPlayLogFileName, ios::app);

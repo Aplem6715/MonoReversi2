@@ -167,7 +167,7 @@ void LearnFromRecords(Evaluator *eval, string recordFileName, vector<FeatureReco
     uint32_t loaded = 0;
     int cycles = 0;
     int converted;
-    float loss;
+    double loss;
     size_t readSuccsess;
     FILE *fp = fopen(recordFileName.c_str(), "rb");
     ofstream logFile;
@@ -217,7 +217,7 @@ double LearnFromAscii(SearchTree trees[2], string recordFileName, vector<Feature
 
     const int epochMax = 1;
     uint64_t gamesCnt = 0;
-    float loss;
+    double loss;
     ofstream logFile;
     logFile.open(recordLearnLogFileName, ios::app);
     logFile.seekp(ios::beg);

@@ -32,8 +32,8 @@ void InitRegr(Regressor regr[NB_PHASE])
     {
         for (feat = 0; feat < FEAT_NUM; feat++)
         {
-            regr[phase].weight[0][feat] = (float *)calloc(FeatMaxIndex[feat], sizeof(float));
-            regr[phase].weight[1][feat] = (float *)calloc(FeatMaxIndex[feat], sizeof(float));
+            regr[phase].weight[0][feat] = (double *)calloc(FeatMaxIndex[feat], sizeof(double));
+            regr[phase].weight[1][feat] = (double *)calloc(FeatMaxIndex[feat], sizeof(double));
         }
     }
 }
@@ -82,10 +82,10 @@ void RegrApplyWeightToOpp(Regressor *regr)
     }
 }
 
-float RegrPred(Regressor *regr, const uint16_t features[FEAT_NUM], uint8 player)
+double RegrPred(Regressor *regr, const uint16_t features[FEAT_NUM], uint8 player)
 {
     int feat;
-    float score = 0;
+    double score = 0;
 
     for (feat = 0; feat < FEAT_NUM; feat++)
     {
@@ -119,7 +119,7 @@ void RegrSave(Regressor regr[NB_PHASE], const char *file)
         writed = 0;
         for (feat = 0; feat < FEAT_NUM; feat++)
         {
-            writed += fwrite(regr[phase].weight[0][feat], sizeof(float), FeatMaxIndex[feat], fp);
+            writed += fwrite(regr[phase].weight[0][feat], sizeof(double), FeatMaxIndex[feat], fp);
         }
         if (writed < NB_FEAT_COMB)
         {
@@ -154,7 +154,7 @@ void RegrLoad(Regressor regr[NB_PHASE], const char *file)
         readed = 0;
         for (feat = 0; feat < FEAT_NUM; feat++)
         {
-            readed += fread(regr[phase].weight[0][feat], sizeof(float), FeatMaxIndex[feat], fp);
+            readed += fread(regr[phase].weight[0][feat], sizeof(double), FeatMaxIndex[feat], fp);
         }
 
         RegrApplyWeightToOpp(&regr[phase]);
