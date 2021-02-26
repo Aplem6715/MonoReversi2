@@ -140,7 +140,7 @@ void RegrSave(Regressor regr[NB_PHASE], const char *file)
         {
             writed += fwrite(regr[phase].weight[0][ftype], sizeof(double), FTYPE_INDEX_MAX[ftype], fp);
         }
-        if (writed < NB_FEAT_COMB)
+        if (writed < TYPE_NB_MAX)
         {
             fputs("モデルファイルへの書き込みに失敗しました。\n", stderr);
             exit(EXIT_FAILURE);
@@ -177,7 +177,7 @@ void RegrLoad(Regressor regr[NB_PHASE], const char *file)
         }
 
         RegrApplyWeightToOpp(&regr[phase]);
-        if (readed < NB_FEAT_COMB)
+        if (readed < TYPE_NB_MAX)
         {
             fputs("モデルファイルの読み込みに失敗しました。\n", stderr);
             return;
