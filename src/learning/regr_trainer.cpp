@@ -200,10 +200,11 @@ void TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inpu
         output = RegrPred(regr, inputs[i]->featStats[OWN], OWN);
         CalcWeightDelta(regr, inputs[i]->featStats[OWN], teacher - output);
 
-        
+        /*
         // 反転パターンも学習
         output = RegrPred(regr, inputs[i]->featStats[OPP], OWN); // ※featの方を反転しているのでplayerは0に
         CalcWeightDelta(regr, inputs[i]->featStats[OPP], (-teacher) - output);
+        */
         if (debug)
         {
             //Board::Draw(inputs[i]->own, inputs[i]->opp, 0);
@@ -211,7 +212,7 @@ void TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inpu
         }
     }
     UpdateRegrWeights(regr);
-    RegrApplyWeightToOpp(regr);
+    //RegrApplyWeightToOpp(regr);
 }
 
 void RegrTrainInit(Regressor regr[NB_PHASE])
