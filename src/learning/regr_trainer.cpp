@@ -131,6 +131,14 @@ void UpdateRegrWeights(Regressor *regr)
                 sameIdx = FeatTypeSames[featType][idx];
             }
 
+            appearSum += regr->nbAppears[feat][idx];
+            delSum += regr->del[feat][idx];
+
+            alpha = fmin(regr->beta / 50.0f, regr->beta / (double)appearSum);
+            // ウェイト調整
+            regr->weight[0][feat][idx] += alpha * delSum;
+
+            /*
             // 同タイプ，同インデックス，対象型の出現回数と誤差の合計を求める
             for (rot = 0; rot < FeatTypeNbRots[featType]; rot++)
             {
@@ -144,6 +152,7 @@ void UpdateRegrWeights(Regressor *regr)
                     appearSum += regr->nbAppears[featIdx][sameIdx];
                     delSum += regr->del[featIdx][sameIdx];
                 }
+                assert(appearSum < 4294967296);
             }
 
             // 同タイプ，同インデックス，対象型のウェイトを更新
@@ -159,122 +168,123 @@ void UpdateRegrWeights(Regressor *regr)
                 }
             }
         }
-        feat += FeatTypeNbRots[featType];
-    }
-}
-
-void ResetRegrState(Regressor *regr)
-{
-    uint16_t featIdx, i;
-    for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
-    {
-        for (i = 0; i < FeatMaxIndex[featIdx]; i++)
-        {
-            regr->nbAppears[featIdx][i] = 0;
-            regr->del[featIdx][i] = 0;
+        */
+            feat += FeatTypeNbRots[featType];
         }
     }
-}
 
-void CalcWeightDelta(Regressor *regr, const uint16_t features[FEAT_NUM], double error)
-{
-    int featType;
-
-    for (featType = 0; featType < FEAT_NUM; featType++)
+    void ResetRegrState(Regressor * regr)
     {
-        regr->nbAppears[featType][features[featType]]++;
-        regr->del[featType][features[featType]] += error;
-        assert(regr->nbAppears[featType][features[featType]] < 4294967296);
+        uint16_t featIdx, i;
+        for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
+        {
+            for (i = 0; i < FeatMaxIndex[featIdx]; i++)
+            {
+                regr->nbAppears[featIdx][i] = 0;
+                regr->del[featIdx][i] = 0;
+            }
+        }
     }
-}
 
-void TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inputSize)
-{
-    int i;
-    static bool debug = false;
-    double teacher, output, loss = 0;
-
-    ResetRegrState(regr);
-    for (i = 0; i < inputSize; i++)
+    void CalcWeightDelta(Regressor * regr, const uint16_t features[FEAT_NUM], double error)
     {
-        teacher = (double)inputs[i]->stoneDiff;
-        output = RegrPred(regr, inputs[i]->featStats[OWN], OWN);
-        CalcWeightDelta(regr, inputs[i]->featStats[OWN], teacher - output);
+        int featType;
 
-        /*
+        for (featType = 0; featType < FEAT_NUM; featType++)
+        {
+            regr->nbAppears[featType][features[featType]]++;
+            regr->del[featType][features[featType]] += error;
+            assert(regr->nbAppears[featType][features[featType]] < 4294967296);
+        }
+    }
+
+    void TreinRegrBatch(Regressor * regr, FeatureRecord * inputs[BATCH_SIZE], int inputSize)
+    {
+        int i;
+        static bool debug = false;
+        double teacher, output, loss = 0;
+
+        ResetRegrState(regr);
+        for (i = 0; i < inputSize; i++)
+        {
+            teacher = (double)inputs[i]->stoneDiff;
+            output = RegrPred(regr, inputs[i]->featStats[OWN], OWN);
+            CalcWeightDelta(regr, inputs[i]->featStats[OWN], teacher - output);
+
+            /*
         // 反転パターンも学習
         output = RegrPred(regr, inputs[i]->featStats[OPP], OWN); // ※featの方を反転しているのでplayerは0に
         CalcWeightDelta(regr, inputs[i]->featStats[OPP], (-teacher) - output);
         */
-        if (debug)
-        {
-            //Board::Draw(inputs[i]->own, inputs[i]->opp, 0);
-            printf("Color: %d,  Score: %f, Pred: %f\n", inputs[i]->color, teacher, output);
-        }
-    }
-    UpdateRegrWeights(regr);
-    //RegrApplyWeightToOpp(regr);
-}
-
-void RegrTrainInit(Regressor regr[NB_PHASE])
-{
-    int phase, i;
-
-    static uint16_t *SIMPLE_SAMES[] = {
-        SAME_INDEX_4,
-        SAME_INDEX_5,
-        SAME_INDEX_6,
-        SAME_INDEX_7,
-        SAME_INDEX_8,
-    };
-
-    for (phase = 0; phase < NB_PHASE; phase++)
-    {
-        int featIdx;
-        regr[phase].beta = BETA_INIT;
-        for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
-        {
-            regr[phase].nbAppears[featIdx] = (uint32_t *)malloc(sizeof(uint32_t) * FeatMaxIndex[featIdx]);
-            regr[phase].del[featIdx] = (double *)malloc(sizeof(double) * FeatMaxIndex[featIdx]);
-        }
-    }
-
-    uint16_t same, idx;
-    int j, digit, digitStart = 4;
-    // 単純反転インデックスを計算
-    for (digit = digitStart; digit <= 8; digit++)
-    {
-        for (i = 0; i < POW3_LIST[digit]; i++)
-        {
-            idx = i;
-            same = 0;
-            for (j = 0; j < digit; j++)
+            if (debug)
             {
-                // 3進1桁目を取り出してj桁左シフト
-                same += idx % 3 * POW3_LIST[digit - j - 1];
-                // idx右シフト
+                //Board::Draw(inputs[i]->own, inputs[i]->opp, 0);
+                printf("Color: %d,  Score: %f, Pred: %f\n", inputs[i]->color, teacher, output);
+            }
+        }
+        UpdateRegrWeights(regr);
+        //RegrApplyWeightToOpp(regr);
+    }
+
+    void RegrTrainInit(Regressor regr[NB_PHASE])
+    {
+        int phase, i;
+
+        static uint16_t *SIMPLE_SAMES[] = {
+            SAME_INDEX_4,
+            SAME_INDEX_5,
+            SAME_INDEX_6,
+            SAME_INDEX_7,
+            SAME_INDEX_8,
+        };
+
+        for (phase = 0; phase < NB_PHASE; phase++)
+        {
+            int featIdx;
+            regr[phase].beta = BETA_INIT;
+            for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
+            {
+                regr[phase].nbAppears[featIdx] = (uint32_t *)malloc(sizeof(uint32_t) * FeatMaxIndex[featIdx]);
+                regr[phase].del[featIdx] = (double *)malloc(sizeof(double) * FeatMaxIndex[featIdx]);
+            }
+        }
+
+        uint16_t same, idx;
+        int j, digit, digitStart = 4;
+        // 単純反転インデックスを計算
+        for (digit = digitStart; digit <= 8; digit++)
+        {
+            for (i = 0; i < POW3_LIST[digit]; i++)
+            {
+                idx = i;
+                same = 0;
+                for (j = 0; j < digit; j++)
+                {
+                    // 3進1桁目を取り出してj桁左シフト
+                    same += idx % 3 * POW3_LIST[digit - j - 1];
+                    // idx右シフト
+                    idx /= 3;
+                }
+                SIMPLE_SAMES[digit - digitStart][i] = same;
+            }
+        }
+
+        // CORNRの対称インデックスを計算
+        static uint16_t corn_revs[9] = {POW3_0, POW3_3, POW3_6, POW3_1, POW3_4, POW3_7, POW3_2, POW3_5, POW3_8};
+        for (i = 0; i < POW3_9; i++)
+        {
+            same = 0;
+            idx = i;
+            for (j = 0; j < 9; j++)
+            {
+                same += idx % 3 * corn_revs[j];
                 idx /= 3;
             }
-            SIMPLE_SAMES[digit - digitStart][i] = same;
+            SAME_INDEX_CORNR[i] = same;
         }
-    }
 
-    // CORNRの対称インデックスを計算
-    static uint16_t corn_revs[9] = {POW3_0, POW3_3, POW3_6, POW3_1, POW3_4, POW3_7, POW3_2, POW3_5, POW3_8};
-    for (i = 0; i < POW3_9; i++)
-    {
-        same = 0;
-        idx = i;
-        for (j = 0; j < 9; j++)
-        {
-            same += idx % 3 * corn_revs[j];
-            idx /= 3;
-        }
-        SAME_INDEX_CORNR[i] = same;
-    }
-
-    // BOX10の対称インデックスを計算
-    /*
+        // BOX10の対称インデックスを計算
+        /*
     static uint16_t bmran_revs[8] = {POW3_0, POW3_4, POW3_6, POW3_7, POW3_1, POW3_5, POW3_2, POW3_3};
     for (i = 0; i < POW3_10; i++)
     {
@@ -288,110 +298,110 @@ void RegrTrainInit(Regressor regr[NB_PHASE])
         SAME_INDEX_BOX10[i] = same;
     }*/
 
-    // EDGEの対称インデックスを計算
-    for (i = 0; i < POW3_10; i++)
-    {
-        // 0120120120 -> 0210210210
-        same = 0;
-        idx = i;
-        for (j = 0; j < 10; j++)
+        // EDGEの対称インデックスを計算
+        for (i = 0; i < POW3_10; i++)
         {
-            same += idx % 3 * POW3_LIST[9 - j];
-            idx /= 3;
-        }
-        SAME_INDEX_EDGE[i] = same;
-    }
-}
-
-double RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, FeatureRecord *testRecords, size_t nbTests)
-{
-    double loss, totalLoss;
-    int i, startIdx, endIdx;
-    int phase, batchIdx, testCnt, totalCnt, nbEmpty;
-    int testSize[NB_PHASE] = {0};
-    int testTmpSize[NB_PHASE] = {0};
-    vector<FeatureRecord *> inputs[60];
-    vector<FeatureRecord *> phaseInputs;
-    FeatureRecord **tests[NB_PHASE];
-    FeatureRecord *batchInput[BATCH_SIZE];
-
-    for (i = 0; i < nbTests; i++)
-    {
-        testSize[PHASE(testRecords[i].nbEmpty)]++;
-    }
-
-    for (phase = 0; phase < NB_PHASE; phase++)
-    {
-        tests[phase] = (FeatureRecord **)malloc(sizeof(FeatureRecord *) * testSize[phase]);
-    }
-
-    // レコードをフェーズごとに振り分け
-    for (i = 0; i < featRecords.size(); i++)
-    {
-        inputs[featRecords[i].nbEmpty].push_back(&featRecords[i]);
-    }
-    for (i = 0; i < nbTests; i++)
-    {
-        phase = PHASE(testRecords[i].nbEmpty);
-        tests[phase][testTmpSize[phase]] = &testRecords[i];
-        testTmpSize[phase]++;
-    }
-
-    totalLoss = 0;
-    totalCnt = 0;
-    // すべてのフェーズに対して学習
-    for (phase = 0; phase < NB_PHASE; phase++)
-    {
-        // フェーズ内の対戦記録を取得
-        phaseInputs.clear();
-        // フェーズ前後の局面も学習（スムージング）
-        startIdx = phase * NB_PUT_1PHASE - (NB_PUT_1PHASE / 2);
-        endIdx = (phase + 1) * NB_PUT_1PHASE + (NB_PUT_1PHASE / 2);
-        if (startIdx < 0)
-            startIdx = 0;
-        if (endIdx > 60)
-            endIdx = 60;
-        for (nbEmpty = startIdx; nbEmpty < endIdx; nbEmpty++)
-        {
-            for (i = 0; i < inputs[nbEmpty].size(); i++)
+            // 0120120120 -> 0210210210
+            same = 0;
+            idx = i;
+            for (j = 0; j < 10; j++)
             {
-                phaseInputs.push_back(inputs[nbEmpty][i]);
+                same += idx % 3 * POW3_LIST[9 - j];
+                idx /= 3;
             }
-            //phaseInputs.reserve(phaseInputs.size() + inputs[nbEmpty].size());
-            //copy(inputs[nbEmpty].begin(), inputs[nbEmpty].end(), back_inserter(phaseInputs));
+            SAME_INDEX_EDGE[i] = same;
         }
-
-        // ミニバッチ学習
-        for (batchIdx = 0; batchIdx < phaseInputs.size(); batchIdx += BATCH_SIZE)
-        {
-            printf("Regressor train phase:%d batch:%d      \r", phase, batchIdx / BATCH_SIZE);
-            // バッチサイズ分ランダムサンプリング
-            sampling(phaseInputs, batchInput, BATCH_SIZE);
-            TreinRegrBatch(&regr[phase], batchInput, BATCH_SIZE);
-        }
-
-        loss = 0;
-        testCnt = 0;
-        for (i = 0; i < testSize[phase]; i++)
-        {
-
-            loss += fabs(tests[phase][i]->stoneDiff - RegrPred(&regr[phase], tests[phase][i]->featStats[0], 0));
-            testCnt++;
-            totalCnt++;
-        }
-        totalLoss += loss;
-        printf("Regressor phase%d  MAE Loss: %.3f          \n", phase, loss / (double)testCnt);
     }
 
-    for (phase = 0; phase < NB_PHASE; phase++)
+    double RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> & featRecords, FeatureRecord * testRecords, size_t nbTests)
     {
-        free(tests[phase]);
+        double loss, totalLoss;
+        int i, startIdx, endIdx;
+        int phase, batchIdx, testCnt, totalCnt, nbEmpty;
+        int testSize[NB_PHASE] = {0};
+        int testTmpSize[NB_PHASE] = {0};
+        vector<FeatureRecord *> inputs[60];
+        vector<FeatureRecord *> phaseInputs;
+        FeatureRecord **tests[NB_PHASE];
+        FeatureRecord *batchInput[BATCH_SIZE];
+
+        for (i = 0; i < nbTests; i++)
+        {
+            testSize[PHASE(testRecords[i].nbEmpty)]++;
+        }
+
+        for (phase = 0; phase < NB_PHASE; phase++)
+        {
+            tests[phase] = (FeatureRecord **)malloc(sizeof(FeatureRecord *) * testSize[phase]);
+        }
+
+        // レコードをフェーズごとに振り分け
+        for (i = 0; i < featRecords.size(); i++)
+        {
+            inputs[featRecords[i].nbEmpty].push_back(&featRecords[i]);
+        }
+        for (i = 0; i < nbTests; i++)
+        {
+            phase = PHASE(testRecords[i].nbEmpty);
+            tests[phase][testTmpSize[phase]] = &testRecords[i];
+            testTmpSize[phase]++;
+        }
+
+        totalLoss = 0;
+        totalCnt = 0;
+        // すべてのフェーズに対して学習
+        for (phase = 0; phase < NB_PHASE; phase++)
+        {
+            // フェーズ内の対戦記録を取得
+            phaseInputs.clear();
+            // フェーズ前後の局面も学習（スムージング）
+            startIdx = phase * NB_PUT_1PHASE - (NB_PUT_1PHASE / 2);
+            endIdx = (phase + 1) * NB_PUT_1PHASE + (NB_PUT_1PHASE / 2);
+            if (startIdx < 0)
+                startIdx = 0;
+            if (endIdx > 60)
+                endIdx = 60;
+            for (nbEmpty = startIdx; nbEmpty < endIdx; nbEmpty++)
+            {
+                for (i = 0; i < inputs[nbEmpty].size(); i++)
+                {
+                    phaseInputs.push_back(inputs[nbEmpty][i]);
+                }
+                //phaseInputs.reserve(phaseInputs.size() + inputs[nbEmpty].size());
+                //copy(inputs[nbEmpty].begin(), inputs[nbEmpty].end(), back_inserter(phaseInputs));
+            }
+
+            // ミニバッチ学習
+            for (batchIdx = 0; batchIdx < phaseInputs.size(); batchIdx += BATCH_SIZE)
+            {
+                printf("Regressor train phase:%d batch:%d      \r", phase, batchIdx / BATCH_SIZE);
+                // バッチサイズ分ランダムサンプリング
+                sampling(phaseInputs, batchInput, BATCH_SIZE);
+                TreinRegrBatch(&regr[phase], batchInput, BATCH_SIZE);
+            }
+
+            loss = 0;
+            testCnt = 0;
+            for (i = 0; i < testSize[phase]; i++)
+            {
+
+                loss += fabs(tests[phase][i]->stoneDiff - RegrPred(&regr[phase], tests[phase][i]->featStats[0], 0));
+                testCnt++;
+                totalCnt++;
+            }
+            totalLoss += loss;
+            printf("Regressor phase%d  MAE Loss: %.3f          \n", phase, loss / (double)testCnt);
+        }
+
+        for (phase = 0; phase < NB_PHASE; phase++)
+        {
+            free(tests[phase]);
+        }
+        for (i = 0; i < 60; i++)
+        {
+            inputs[i].clear();
+        }
+        phaseInputs.clear();
+        return (double)totalLoss / totalCnt;
     }
-    for (i = 0; i < 60; i++)
-    {
-        inputs[i].clear();
-    }
-    phaseInputs.clear();
-    return (double)totalLoss / totalCnt;
-}
 #endif
