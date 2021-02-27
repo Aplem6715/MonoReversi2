@@ -93,19 +93,19 @@ static const PosToFeature Pos2Feat[] = {
     //
     /*A4*/ {6, {{FEAT_LINE4_1, POW3_0}, {FEAT_DIAG4_1, POW3_3}, {FEAT_DIAG5_4, POW3_0}, {FEAT_EDGEX_4, POW3_5}, {FEAT_BOX10_7, POW3_4}, {FEAT_BOX10_8, POW3_3}}},
     /*B4*/ {6, {{FEAT_LINE4_1, POW3_1}, {FEAT_LINE2_4, POW3_3}, {FEAT_DIAG5_1, POW3_3}, {FEAT_DIAG6_4, POW3_1}, {FEAT_BOX10_7, POW3_9}, {FEAT_BOX10_8, POW3_8}}},
-    /*C4*/ {5, {{FEAT_LINE4_1, POW3_2}, {FEAT_LINE3_4, POW3_3}, {FEAT_DIAG6_1, POW3_3}, {FEAT_DIAG7_4, POW3_2}}},
-    /*D4*/ {5, {{FEAT_LINE4_1, POW3_3}, {FEAT_LINE4_4, POW3_3}, {FEAT_DIAG7_1, POW3_3}, {FEAT_DIAG8_2, POW3_3}}},
-    /*E4*/ {5, {{FEAT_LINE4_1, POW3_4}, {FEAT_LINE4_2, POW3_3}, {FEAT_DIAG7_2, POW3_3}, {FEAT_DIAG8_1, POW3_3}}},
-    /*F4*/ {5, {{FEAT_LINE4_1, POW3_5}, {FEAT_LINE3_2, POW3_3}, {FEAT_DIAG6_2, POW3_3}, {FEAT_DIAG7_3, POW3_2}}},
+    /*C4*/ {4, {{FEAT_LINE4_1, POW3_2}, {FEAT_LINE3_4, POW3_3}, {FEAT_DIAG6_1, POW3_3}, {FEAT_DIAG7_4, POW3_2}}},
+    /*D4*/ {4, {{FEAT_LINE4_1, POW3_3}, {FEAT_LINE4_4, POW3_3}, {FEAT_DIAG7_1, POW3_3}, {FEAT_DIAG8_2, POW3_3}}},
+    /*E4*/ {4, {{FEAT_LINE4_1, POW3_4}, {FEAT_LINE4_2, POW3_3}, {FEAT_DIAG7_2, POW3_3}, {FEAT_DIAG8_1, POW3_3}}},
+    /*F4*/ {4, {{FEAT_LINE4_1, POW3_5}, {FEAT_LINE3_2, POW3_3}, {FEAT_DIAG6_2, POW3_3}, {FEAT_DIAG7_3, POW3_2}}},
     /*G4*/ {6, {{FEAT_LINE4_1, POW3_6}, {FEAT_LINE2_2, POW3_3}, {FEAT_DIAG5_2, POW3_3}, {FEAT_DIAG6_3, POW3_1}, {FEAT_BOX10_3, POW3_8}, {FEAT_BOX10_4, POW3_9}}},
     /*H4*/ {6, {{FEAT_LINE4_1, POW3_7}, {FEAT_DIAG4_2, POW3_3}, {FEAT_DIAG5_3, POW3_0}, {FEAT_EDGEX_2, POW3_4}, {FEAT_BOX10_3, POW3_3}, {FEAT_BOX10_4, POW3_4}}},
     //
     /*A5*/ {6, {{FEAT_LINE4_3, POW3_0}, {FEAT_DIAG4_4, POW3_0}, {FEAT_DIAG5_1, POW3_4}, {FEAT_EDGEX_4, POW3_4}, {FEAT_BOX10_7, POW3_3}, {FEAT_BOX10_8, POW3_4}}},
     /*B5*/ {6, {{FEAT_LINE4_3, POW3_1}, {FEAT_LINE2_4, POW3_4}, {FEAT_DIAG5_4, POW3_1}, {FEAT_DIAG6_1, POW3_4}, {FEAT_BOX10_7, POW3_8}, {FEAT_BOX10_8, POW3_9}}},
-    /*C5*/ {5, {{FEAT_LINE4_3, POW3_2}, {FEAT_LINE3_4, POW3_4}, {FEAT_DIAG6_4, POW3_2}, {FEAT_DIAG7_1, POW3_4}}},
-    /*D5*/ {5, {{FEAT_LINE4_3, POW3_3}, {FEAT_LINE4_4, POW3_4}, {FEAT_DIAG7_4, POW3_3}, {FEAT_DIAG8_1, POW3_4}}},
-    /*E5*/ {5, {{FEAT_LINE4_3, POW3_4}, {FEAT_LINE4_2, POW3_4}, {FEAT_DIAG7_3, POW3_3}, {FEAT_DIAG8_2, POW3_4}}},
-    /*F5*/ {5, {{FEAT_LINE4_3, POW3_5}, {FEAT_LINE3_2, POW3_4}, {FEAT_DIAG6_3, POW3_2}, {FEAT_DIAG7_2, POW3_4}}},
+    /*C5*/ {4, {{FEAT_LINE4_3, POW3_2}, {FEAT_LINE3_4, POW3_4}, {FEAT_DIAG6_4, POW3_2}, {FEAT_DIAG7_1, POW3_4}}},
+    /*D5*/ {4, {{FEAT_LINE4_3, POW3_3}, {FEAT_LINE4_4, POW3_4}, {FEAT_DIAG7_4, POW3_3}, {FEAT_DIAG8_1, POW3_4}}},
+    /*E5*/ {4, {{FEAT_LINE4_3, POW3_4}, {FEAT_LINE4_2, POW3_4}, {FEAT_DIAG7_3, POW3_3}, {FEAT_DIAG8_2, POW3_4}}},
+    /*F5*/ {4, {{FEAT_LINE4_3, POW3_5}, {FEAT_LINE3_2, POW3_4}, {FEAT_DIAG6_3, POW3_2}, {FEAT_DIAG7_2, POW3_4}}},
     /*G5*/ {6, {{FEAT_LINE4_3, POW3_6}, {FEAT_LINE2_2, POW3_4}, {FEAT_DIAG5_3, POW3_1}, {FEAT_DIAG6_2, POW3_4}, {FEAT_BOX10_3, POW3_9}, {FEAT_BOX10_4, POW3_8}}},
     /*H5*/ {6, {{FEAT_LINE4_3, POW3_7}, {FEAT_DIAG4_3, POW3_0}, {FEAT_DIAG5_2, POW3_4}, {FEAT_EDGEX_2, POW3_5}, {FEAT_BOX10_3, POW3_4}, {FEAT_BOX10_4, POW3_3}}},
     //
@@ -138,6 +138,7 @@ static const PosToFeature Pos2Feat[] = {
 };
 
 // ALL 211,734
+/*
 extern const uint32_t FeatMaxIndex[46] = {
     POW3_8, POW3_8, POW3_8, POW3_8,     // LINE2  26244
     POW3_8, POW3_8, POW3_8, POW3_8,     // LINE3  26244
@@ -166,12 +167,55 @@ extern const uint8 FeatDigits[46] = {
     9, 9, 9, 9,     // CORNR
     10, 10, 10, 10, // BOX10
     10, 10, 10, 10  // BOX10
+};*/
+
+extern const uint32_t FTYPE_INDEX_MAX[FEAT_TYPE_NUM] = {
+    POW3_8,  // LINE2  26244
+    POW3_8,  // LINE3  26244
+    POW3_8,  // LINE4  26244
+    POW3_4,  // DIAG4    324
+    POW3_5,  // DIAG5    972
+    POW3_6,  // DIAG6   2916
+    POW3_7,  // DIAG7   8748
+    POW3_8,  // DIAG8  13122
+    POW3_10, // EDGEX 236196
+    POW3_9,  // CORNR  78732
+    POW3_10, // BOX10 236196
+};
+/*
+extern const uint8 FeatDigits[46] = {
+    8,  // LINE2
+    8,  // LINE3
+    8,  // LINE4
+    4,  // DIAG4
+    5,  // DIAG5
+    6,  // DIAG6
+    7,  // DIAG7
+    8,  // DIAG8
+    10, // EDGEX
+    9,  // CORNR
+    10, // BOX10
+};*/
+
+extern const uint32_t FTYPE_DIGIT[FEAT_TYPE_NUM] = {
+    8,  // LINE2
+    8,  // LINE3
+    8,  // LINE4
+    4,  // DIAG4
+    5,  // DIAG5
+    6,  // DIAG6
+    7,  // DIAG7
+    8,  // DIAG8
+    10, // EDGEX
+    9,  // CORNR
+    10, // BOX10
 };
 
 //static const uint16 DEBUG_TARGET_FEAT = 3;
 static const char modelFolder[] = "resources/model/model_2003-epoch1/";
 static const char regrFolder[] = "resources/regressor/best/"; //"resources/regressor/regr_1981_Loss1473/";
 //static const char regrFolder[] = "resources/regressor/regrV3_393_Loss1528/";弱かった・・・
+//static const char regrFolder[] = "resources/regressor/regrAdAsc_115_Loss1471/";つよい！↑bestに導入！
 
 void EvalInit(Evaluator *eval)
 {
@@ -197,36 +241,34 @@ void EvalDelete(Evaluator *eval)
 void EvalReload(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player)
 {
     const PosToFeature *pos2f;
-    uint8 pos;
     int nbFeat;
-    int i;
 
     // 自分の手番
     eval->player = player;
-    for (i = 0; i < FEAT_NUM; i++)
+    for (int ftype = 0; ftype < FEAT_NUM; ftype++)
     {
-        eval->FeatureStates[i] = 0;
+        eval->FeatureStates[ftype] = 0;
     }
 
     // 自分の石がある位置について
-    for (pos = PosIndexFromBit(own); own; pos = NextIndex(&own))
+    for (uint8 pos = PosIndexFromBit(own); own; pos = NextIndex(&own))
     {
         pos2f = &(Pos2Feat[pos]);
         nbFeat = pos2f->nbFeature;
         // 関連するすべての特徴のインデックスを更新
-        for (i = 0; i < nbFeat; i++)
+        for (int i = 0; i < nbFeat; i++)
         {
             // 0(empty) -> 1(own)
             eval->FeatureStates[pos2f->feature[i].feat] += pos2f->feature[i].idx;
         }
     }
     // 相手の石がある位置について
-    for (pos = PosIndexFromBit(opp); opp; pos = NextIndex(&opp))
+    for (uint8 pos = PosIndexFromBit(opp); opp; pos = NextIndex(&opp))
     {
         pos2f = &(Pos2Feat[pos]);
         nbFeat = pos2f->nbFeature;
         // 関連するすべての特徴のインデックスを更新
-        for (i = 0; i < nbFeat; i++)
+        for (int i = 0; i < nbFeat; i++)
         {
             // 0(empty) -> 2(opp)
             eval->FeatureStates[pos2f->feature[i].feat] += 2 * pos2f->feature[i].idx;
@@ -239,17 +281,16 @@ void EvalUpdate(Evaluator *eval, uint8 pos, uint64_t flip)
 {
     const PosToFeature *pos2f = &(Pos2Feat[pos]);
     int nbFeat = pos2f->nbFeature;
-    int i;
     uint8 flipIdx;
     if (eval->player == OWN)
     {
         // 着手箇所について
         // 関連するすべての特徴のインデックスを更新
-        for (i = 0; i < nbFeat; i++)
+        for (int i = 0; i < nbFeat; i++)
         {
             // 0(empty) -> 1(own)
             eval->FeatureStates[pos2f->feature[i].feat] += pos2f->feature[i].idx;
-            assert(eval->FeatureStates[pos2f->feature[i].feat] < FeatMaxIndex[pos2f->feature[i].feat]);
+            assert(eval->FeatureStates[pos2f->feature[i].feat] < FTYPE_INDEX_MAX[FeatID2Type[pos2f->feature[i].feat]]);
         }
 
         // 反転箇所について
@@ -258,11 +299,11 @@ void EvalUpdate(Evaluator *eval, uint8 pos, uint64_t flip)
             pos2f = &(Pos2Feat[flipIdx]);
             nbFeat = pos2f->nbFeature;
             // 関連するすべての特徴のインデックスを更新
-            for (i = 0; i < nbFeat; i++)
+            for (int i = 0; i < nbFeat; i++)
             {
                 // 2(opp) -> 1(own)
                 eval->FeatureStates[pos2f->feature[i].feat] -= pos2f->feature[i].idx;
-                assert(eval->FeatureStates[pos2f->feature[i].feat] < FeatMaxIndex[pos2f->feature[i].feat]);
+                assert(eval->FeatureStates[pos2f->feature[i].feat] < FTYPE_INDEX_MAX[FeatID2Type[pos2f->feature[i].feat]]);
             }
         }
     }
@@ -270,11 +311,11 @@ void EvalUpdate(Evaluator *eval, uint8 pos, uint64_t flip)
     {
         // 着手箇所について
         // 関連するすべての特徴のインデックスを戻す
-        for (i = 0; i < nbFeat; i++)
+        for (int i = 0; i < nbFeat; i++)
         {
             // 0(empty) -> 2(opp)
             eval->FeatureStates[pos2f->feature[i].feat] += 2 * pos2f->feature[i].idx;
-            assert(eval->FeatureStates[pos2f->feature[i].feat] < FeatMaxIndex[pos2f->feature[i].feat]);
+            assert(eval->FeatureStates[pos2f->feature[i].feat] < FTYPE_INDEX_MAX[FeatID2Type[pos2f->feature[i].feat]]);
         }
 
         // 反転箇所について
@@ -283,11 +324,11 @@ void EvalUpdate(Evaluator *eval, uint8 pos, uint64_t flip)
             pos2f = &(Pos2Feat[flipIdx]);
             nbFeat = pos2f->nbFeature;
             // 関連するすべての特徴のインデックスを戻す
-            for (i = 0; i < nbFeat; i++)
+            for (int i = 0; i < nbFeat; i++)
             {
                 // 1(own) -> 2(opp)
                 eval->FeatureStates[pos2f->feature[i].feat] += pos2f->feature[i].idx;
-                assert(eval->FeatureStates[pos2f->feature[i].feat] < FeatMaxIndex[pos2f->feature[i].feat]);
+                assert(eval->FeatureStates[pos2f->feature[i].feat] < FTYPE_INDEX_MAX[FeatID2Type[pos2f->feature[i].feat]]);
             }
         }
     }
@@ -361,7 +402,7 @@ void EvalUpdatePass(Evaluator *eval)
 
 score_t Evaluate(Evaluator *eval, uint8 nbEmpty)
 {
-    float scoref;
+    double scoref;
     score_t score;
 #ifdef USE_NN
     if (eval->player)
@@ -374,7 +415,7 @@ score_t Evaluate(Evaluator *eval, uint8 nbEmpty)
     }
 #elif USE_REGRESSION
     scoref = RegrPred(&eval->regr[PHASE(nbEmpty)], eval->FeatureStates, eval->player);
-    score = (score_t)roundf(scoref * STONE_VALUE);
+    score = (score_t)roundl(scoref * STONE_VALUE);
 #endif
 
     // 最小値以上，最大値以下に

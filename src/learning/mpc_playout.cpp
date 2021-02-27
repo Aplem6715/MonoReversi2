@@ -30,7 +30,7 @@ extern "C"
 using namespace std;
 static random_device rnd;
 static mt19937 mt(rnd());
-static uniform_real_distribution<double> rnd_prob(0.0, 1.0);
+static uniform_real_distribution<double> rnd_prob01(0.0, 1.0);
 
 void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, bool enableLog, int matchIdxShift, uint8 shallow, uint8 deep, uint8 minimum)
 {
@@ -71,7 +71,7 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, bool enableL
             }
 
             // 着手
-            if (nbEmpty > deepTree->endDepth && ((nbEmpty >= 60 - randomTurns) || rnd_prob(mt) < randMoveRatio))
+            if (nbEmpty > deepTree->endDepth && ((nbEmpty >= 60 - randomTurns) || rnd_prob01(mt) < randMoveRatio))
             {
                 // ランダム着手位置
                 pos = BoardGetRandomPosMoveable(board);

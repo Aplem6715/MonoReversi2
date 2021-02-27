@@ -172,7 +172,7 @@ void backward(NNet *net, const uint16_t features[FEAT_NUM], float y, float t)
         for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
         {
             i = shift + features[featIdx];
-            shift += FeatMaxIndex[featIdx];
+            shift += FTYPE_INDEX_MAX[FeatID2Type[featIdx]];
 
             net->dw1[i][j] += targetStat->delta * 1;
         }
