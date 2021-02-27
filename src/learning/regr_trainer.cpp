@@ -117,10 +117,10 @@ void UpdateRegrWeights(Regressor *regr)
         // 0~そのパターンタイプが取りうるインデックスの最大値までループ
         for (idx = 0; idx < FTYPE_INDEX_MAX[ftype]; idx++)
         {
-            double nbAppear = regr->nbAppears[ftype][idx];
-            double delta = regr->delta[ftype][idx];
+            double nbAppearSum = regr->nbAppears[ftype][idx];
+            double deltaSum = regr->delta[ftype][idx];
 
-            if (nbAppear < 1)
+            if (nbAppearSum < 1)
                 continue;
 
             if (ftype == FEAT_TYPE_BOX10)
@@ -130,16 +130,22 @@ void UpdateRegrWeights(Regressor *regr)
             else
             {
                 sameIdx = FeatTypeSames[ftype][idx];
+                nbAppearSum += regr->nbAppears[ftype][sameIdx];
+                deltaSum += regr->delta[ftype][sameIdx];
             }
 
-            alpha = fmin(regr->beta / 10.0f, regr->beta / nbAppear);
+            alpha = fmin(regr->beta / 10.0f, regr->beta / nbAppearSum);
             // ウェイト調整
-            regr->weight[0][ftype][idx] += alpha * delta;
+            regr->weight[0][ftype][idx] += alpha * deltaSum;
+            // 多重調整防止
+            regr->nbAppears[ftype][idx] = 0;
 
             // 対象型があれば調整
             if (sameIdx >= 0)
             {
-                regr->weight[0][ftype][sameIdx] += alpha * delta;
+                regr->weight[0][ftype][sameIdx] += alpha * deltaSum;
+                // 多重調整防止
+                regr->nbAppears[ftype][sameIdx] = 0;
             }
         }
     }

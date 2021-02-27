@@ -368,12 +368,13 @@ int main(int argc, char **argv)
     HashInit();
     srand(GLOBAL_SEED);
 
-    //LearnFromAsciiAllFileInDir(true, "./resources/record/correctbk/");
+    LearnFromAsciiAllFileInDir(true, "./resources/record/correctbk/");
 
+    /*
     vector<FeatureRecord> testRecord;
     GetTestData(testRecord);
     SelfPlay(4, 16, true, testRecord);
-
+*/
     //MPCSampling(nbPlay, 6, 4.0 / 60.0, 1, idxShift);
     /*
     string recordDir = "./resources/record/";
