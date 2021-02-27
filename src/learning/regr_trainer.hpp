@@ -7,7 +7,7 @@ struct Regressor;
 
 void RegrTrainInit(Regressor regr[NB_PHASE]);
 void RegrInitBeta(Regressor regr[NB_PHASE]);
-float RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, FeatureRecord *testRecords, size_t nbTests);
-void RegrDecreaseBeta(Regressor regr[NB_PHASE], float mul);
+double RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, FeatureRecord *testRecords, size_t nbTests);
+void RegrDecreaseBeta(Regressor regr[NB_PHASE], double mul);
 
 #endif // _REGR_TRAINER_H_

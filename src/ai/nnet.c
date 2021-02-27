@@ -64,7 +64,7 @@ float forward(NNet *net, const uint16_t features[FEAT_NUM], uint8 isTrain)
         {
             sum += net->c1[shift + features[featIdx]][unitIdx] * 1;
             sum += bias;
-            shift += FeatMaxIndex[featIdx];
+            shift += FTYPE_INDEX_MAX[FeatID2Type[featIdx]];
         }
 #ifdef LEARN_MODE
         if (isTrain)

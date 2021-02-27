@@ -78,16 +78,31 @@ void EvaluateMove(SearchTree *tree, Move *move, Stones *stones, score_t alpha, c
     {
         // 完全勝利で最高得点
         move->score = (1 << 31);
+        return;
     }
-    else if (hashData && move->posIdx == hashData->bestMove)
+    
+    if (hashData && move->posIdx == hashData->bestMoves[0])
     {
-        // ハッシュで最善手記録があれば高得点
         move->score = (1 << 30);
+        return;
     }
-    else if (hashData && move->posIdx == hashData->secondMove)
+
+    if (hashData && move->posIdx == hashData->bestMoves[1])
     {
-        // ハッシュで次善手記録があれば高得点
         move->score = (1 << 29);
+        return;
+    }
+
+    if (hashData && move->posIdx == hashData->bestMoves[2])
+    {
+        move->score = (1 << 28);
+        return;
+    }
+
+    if (hashData && move->posIdx == hashData->bestMoves[3])
+    {
+        move->score = (1 << 27);
+        return;
     }
     else
     {

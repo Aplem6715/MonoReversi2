@@ -8,21 +8,23 @@
 #define PV_TABLE_SIZE (1 << 12)
 
 // ハッシュテーブルに格納されるデータ
-// 8x2 + 3 + 1*2 + 2x2 = 25[byte]
+// 8x2 + 3 + 1*4 + 2x2 = 27[byte]
 typedef struct HashData
 {
-    // 石情報
+    // 石情報(8x2[byte])
     uint64_t own, opp;
     // 最終使用時のハッシュ表バージョン(過去の盤面が消えていくように)
+    // 1byte
     uint8 latestUsedVersion;
     // 探索コスト(depthと統合したい・・・)depthは0~64, costを0~64としても127余る
     // 25->24[byte]になればパディング含めメモリ最適化が期待できる(はず？)
+    // 1byte
     uint8 cost;
-    // 探索深度
+    // 探索深度(1byte)
     uint8 depth;
-    // 最善手，更新前の最善手
-    uint8 bestMove, secondMove;
-    // スコアwindow(下限値，上限値)
+    // 予想最善手履歴(4byte)
+    uint8 bestMoves[4];
+    // スコアwindow(下限値，上限値)(2x2byte)
     score_strict_t lower, upper;
 } HashData;
 

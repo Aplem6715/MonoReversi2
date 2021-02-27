@@ -1,7 +1,7 @@
 /**
  * @file regr_trainer.cpp
  * @author Daichi Sato
- * @brief 重線形回帰を用いたパターンの重み付け
+ * @brief 重線形回帰を用いたパターンの重み付け(学習時のみのコード)
  * @version 1.0
  * @date 2021-02-12
  * 
@@ -31,8 +31,9 @@ extern "C"
 #ifdef LEARN_MODE
 
 #define BATCH_SIZE 128
-static const float BETA_INIT = 0.001f;
+static const double BETA_INIT = 0.0025f;
 
+/*
 static const uint32_t FeatTypeMaxIndex[] = {
     POW3_8,  // LINE2  26244
     POW3_8,  // LINE3  26244
@@ -45,7 +46,7 @@ static const uint32_t FeatTypeMaxIndex[] = {
     POW3_10, // EDGEX 236196
     POW3_9,  // CORNR  78732
     POW3_10, // BOX10  26244
-};
+};*/
 
 static const uint16_t FeatTypeNbRots[] = {
     4, // LINE2
@@ -79,7 +80,7 @@ void RegrInitBeta(Regressor regr[NB_PHASE])
     }
 }
 
-void RegrDecreaseBeta(Regressor regr[NB_PHASE], float mul)
+void RegrDecreaseBeta(Regressor regr[NB_PHASE], double mul)
 {
     int phase;
     for (phase = 0; phase < NB_PHASE; phase++)
@@ -91,99 +92,88 @@ void RegrDecreaseBeta(Regressor regr[NB_PHASE], float mul)
 // 対象型，同種類も含めたウェイトを更新する
 void UpdateRegrWeights(Regressor *regr)
 {
-    int featType, feat, rot;
-    float alpha;
-    uint16_t idx, featIdx;
+    int ftype;
+    double alpha;
+    uint16_t idx;
     int32_t sameIdx;
 
-    uint32_t appearSum;
-    float delSum;
-
     // タイプごとの対象型インデックスへの参照を配列として持っておく
-    uint16_t *FeatTypeSames[NB_FEATURE_TYPES - 1] = {
-        SAME_INDEX_8,    //LINE2
-        SAME_INDEX_8,    //LINE3
-        SAME_INDEX_8,    //LINE4
-        SAME_INDEX_4,    //DIAG4
-        SAME_INDEX_5,    //DIAG5
-        SAME_INDEX_6,    //DIAG6
-        SAME_INDEX_7,    //DIAG7
+    uint16_t *FeatTypeSames[FEAT_TYPE_NUM - 1] = {
+        SAME_INDEX_8,    // LINE2
+        SAME_INDEX_8,    // LINE3
+        SAME_INDEX_8,    // LINE4
+        SAME_INDEX_4,    // DIAG4
+        SAME_INDEX_5,    // DIAG5
+        SAME_INDEX_6,    // DIAG6
+        SAME_INDEX_7,    // DIAG7
         SAME_INDEX_8,    // DIAG8
         SAME_INDEX_EDGE, //
         SAME_INDEX_CORNR //
     };
 
-    feat = 0;
     // 各パターンタイプについてループ
-    for (featType = 0; featType < NB_FEATURE_TYPES; featType++)
+    for (ftype = 0; ftype < FEAT_TYPE_NUM; ftype++)
     {
         // 0~そのパターンタイプが取りうるインデックスの最大値までループ
-        for (idx = 0; idx < FeatTypeMaxIndex[featType]; idx++)
+        for (idx = 0; idx < FTYPE_INDEX_MAX[ftype]; idx++)
         {
-            appearSum = 0;
-            delSum = 0;
-            if (featType == FEAT_TYPE_BOX10)
+            double nbAppearSum = regr->nbAppears[ftype][idx];
+            double deltaSum = regr->delta[ftype][idx];
+
+            if (nbAppearSum < 1)
+                continue;
+
+            if (ftype == FEAT_TYPE_BOX10)
             {
                 sameIdx = -1;
             }
             else
             {
-                sameIdx = FeatTypeSames[featType][idx];
+                sameIdx = FeatTypeSames[ftype][idx];
+                nbAppearSum += regr->nbAppears[ftype][sameIdx];
+                deltaSum += regr->delta[ftype][sameIdx];
             }
 
-            // 同タイプ，同インデックス，対象型の出現回数と誤差の合計を求める
-            for (rot = 0; rot < FeatTypeNbRots[featType]; rot++)
-            {
-                featIdx = feat + rot;
+            alpha = fmin(regr->beta / 10.0f, regr->beta / nbAppearSum);
+            // ウェイト調整
+            regr->weight[0][ftype][idx] += alpha * deltaSum;
+            // 多重調整防止
+            regr->nbAppears[ftype][idx] = 0;
 
-                appearSum += regr->nbAppears[featIdx][idx];
-                delSum += regr->del[featIdx][idx];
-                // 対象型があればその分も加算
-                if (sameIdx >= 0)
-                {
-                    appearSum += regr->nbAppears[featIdx][sameIdx];
-                    delSum += regr->del[featIdx][sameIdx];
-                }
-            }
-
-            // 同タイプ，同インデックス，対象型のウェイトを更新
-            for (rot = 0; rot < FeatTypeNbRots[featType]; rot++)
+            // 対象型があれば調整
+            if (sameIdx >= 0 && sameIdx != idx)
             {
-                alpha = fminf(regr->beta / 50.0f, regr->beta / (float)appearSum);
-                // ウェイト調整
-                regr->weight[0][feat + rot][idx] += alpha * delSum;
-                // 対象型があれば調整
-                if (sameIdx >= 0)
-                {
-                    regr->weight[0][feat + rot][sameIdx] += alpha * delSum;
-                }
+                regr->weight[0][ftype][sameIdx] += alpha * deltaSum;
+                // 多重調整防止
+                regr->nbAppears[ftype][sameIdx] = 0;
             }
         }
-        feat += FeatTypeNbRots[featType];
     }
 }
 
 void ResetRegrState(Regressor *regr)
 {
-    uint16_t featIdx, i;
-    for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
+    uint16_t ftype, i;
+    for (ftype = 0; ftype < FEAT_TYPE_NUM; ftype++)
     {
-        for (i = 0; i < FeatMaxIndex[featIdx]; i++)
+        for (i = 0; i < FTYPE_INDEX_MAX[ftype]; i++)
         {
-            regr->nbAppears[featIdx][i] = 0;
-            regr->del[featIdx][i] = 0;
+            regr->nbAppears[ftype][i] = 0;
+            regr->delta[ftype][i] = 0;
         }
     }
 }
 
-void CalcWeightDelta(Regressor *regr, const uint16_t features[FEAT_NUM], float error)
+void CalcWeightDelta(Regressor *regr, const uint16_t features[FEAT_NUM], double error)
 {
-    int featType;
+    int feat;
 
-    for (featType = 0; featType < FEAT_NUM; featType++)
+    for (feat = 0; feat < FEAT_NUM; feat++)
     {
-        regr->nbAppears[featType][features[featType]]++;
-        regr->del[featType][features[featType]] += error;
+        uint8 ftype = FeatID2Type[feat];
+        regr->nbAppears[ftype][features[feat]]++;
+        regr->delta[ftype][features[feat]] += error;
+        assert(regr->nbAppears[ftype][features[feat]] < 4294967296);
     }
 }
 
@@ -191,18 +181,20 @@ void TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inpu
 {
     int i;
     static bool debug = false;
-    float teacher, output, loss = 0;
+    double teacher, output, loss = 0;
 
     ResetRegrState(regr);
     for (i = 0; i < inputSize; i++)
     {
-        teacher = inputs[i]->stoneDiff;
+        teacher = (double)inputs[i]->stoneDiff;
         output = RegrPred(regr, inputs[i]->featStats[OWN], OWN);
         CalcWeightDelta(regr, inputs[i]->featStats[OWN], teacher - output);
 
+        /*
         // 反転パターンも学習
         output = RegrPred(regr, inputs[i]->featStats[OPP], OWN); // ※featの方を反転しているのでplayerは0に
         CalcWeightDelta(regr, inputs[i]->featStats[OPP], (-teacher) - output);
+        */
         if (debug)
         {
             //Board::Draw(inputs[i]->own, inputs[i]->opp, 0);
@@ -215,8 +207,6 @@ void TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inpu
 
 void RegrTrainInit(Regressor regr[NB_PHASE])
 {
-    int phase, i;
-
     static uint16_t *SIMPLE_SAMES[] = {
         SAME_INDEX_4,
         SAME_INDEX_5,
@@ -225,27 +215,26 @@ void RegrTrainInit(Regressor regr[NB_PHASE])
         SAME_INDEX_8,
     };
 
-    for (phase = 0; phase < NB_PHASE; phase++)
+    for (int phase = 0; phase < NB_PHASE; phase++)
     {
-        int featIdx;
+        int ftype;
         regr[phase].beta = BETA_INIT;
-        for (featIdx = 0; featIdx < FEAT_NUM; featIdx++)
+        for (ftype = 0; ftype < FEAT_TYPE_NUM; ftype++)
         {
-            regr[phase].nbAppears[featIdx] = (uint32_t *)malloc(sizeof(uint32_t) * FeatMaxIndex[featIdx]);
-            regr[phase].del[featIdx] = (float *)malloc(sizeof(float) * FeatMaxIndex[featIdx]);
+            regr[phase].nbAppears[ftype] = (uint32_t *)malloc(sizeof(uint32_t) * FTYPE_INDEX_MAX[ftype]);
+            regr[phase].delta[ftype] = (double *)malloc(sizeof(double) * FTYPE_INDEX_MAX[ftype]);
         }
     }
 
-    uint16_t same, idx;
-    int j, digit, digitStart = 4;
+    int digitStart = 4;
     // 単純反転インデックスを計算
-    for (digit = digitStart; digit <= 8; digit++)
+    for (int digit = digitStart; digit <= 8; digit++)
     {
-        for (i = 0; i < POW3_LIST[digit]; i++)
+        for (int i = 0; i < POW3_LIST[digit]; i++)
         {
-            idx = i;
-            same = 0;
-            for (j = 0; j < digit; j++)
+            int idx = i;
+            uint16_t same = 0;
+            for (int j = 0; j < digit; j++)
             {
                 // 3進1桁目を取り出してj桁左シフト
                 same += idx % 3 * POW3_LIST[digit - j - 1];
@@ -258,11 +247,11 @@ void RegrTrainInit(Regressor regr[NB_PHASE])
 
     // CORNRの対称インデックスを計算
     static uint16_t corn_revs[9] = {POW3_0, POW3_3, POW3_6, POW3_1, POW3_4, POW3_7, POW3_2, POW3_5, POW3_8};
-    for (i = 0; i < POW3_9; i++)
+    for (int i = 0; i < POW3_9; i++)
     {
-        same = 0;
-        idx = i;
-        for (j = 0; j < 9; j++)
+        int idx = i;
+        uint16_t same = 0;
+        for (int j = 0; j < 9; j++)
         {
             same += idx % 3 * corn_revs[j];
             idx /= 3;
@@ -286,12 +275,12 @@ void RegrTrainInit(Regressor regr[NB_PHASE])
     }*/
 
     // EDGEの対称インデックスを計算
-    for (i = 0; i < POW3_10; i++)
+    for (int i = 0; i < POW3_10; i++)
     {
         // 0120120120 -> 0210210210
-        same = 0;
-        idx = i;
-        for (j = 0; j < 10; j++)
+        uint16_t same = 0;
+        int idx = i;
+        for (int j = 0; j < 10; j++)
         {
             same += idx % 3 * POW3_LIST[9 - j];
             idx /= 3;
@@ -300,7 +289,7 @@ void RegrTrainInit(Regressor regr[NB_PHASE])
     }
 }
 
-float RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, FeatureRecord *testRecords, size_t nbTests)
+double RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, FeatureRecord *testRecords, size_t nbTests)
 {
     double loss, totalLoss;
     int i, startIdx, endIdx;
@@ -371,12 +360,13 @@ float RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, Fe
         testCnt = 0;
         for (i = 0; i < testSize[phase]; i++)
         {
-            loss += fabsf(tests[phase][i]->stoneDiff - RegrPred(&regr[phase], tests[phase][i]->featStats[0], 0));
+
+            loss += fabs(tests[phase][i]->stoneDiff - RegrPred(&regr[phase], tests[phase][i]->featStats[0], 0));
             testCnt++;
             totalCnt++;
         }
         totalLoss += loss;
-        printf("Regressor phase%d  MAE Loss: %.3f          \n", phase, loss / (float)testCnt);
+        printf("Regressor phase%d  MAE Loss: %.3f          \n", phase, loss / (double)testCnt);
     }
 
     for (phase = 0; phase < NB_PHASE; phase++)
@@ -388,6 +378,6 @@ float RegrTrain(Regressor regr[NB_PHASE], vector<FeatureRecord> &featRecords, Fe
         inputs[i].clear();
     }
     phaseInputs.clear();
-    return (float)totalLoss / totalCnt;
+    return (double)totalLoss / totalCnt;
 }
 #endif
