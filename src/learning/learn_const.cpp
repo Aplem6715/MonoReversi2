@@ -7,7 +7,7 @@ using namespace std;
 // 初期ランダム手数
 const uint8 TRAIN_RANDOM_TURNS = 6;
 // ランダム行動割合（１試合に1回くらい）
-const double TRAIN_RANDOM_RATIO = 0.0 / 60.0;
+const double TRAIN_RANDOM_RATIO = 0.2 / 60.0;
 // 次善手割合(PVS探索-orderingで次善手が探索されない事が多々ある→かなり高めの設定)
 const double TRAIN_SECOND_RATIO = 4.0 / 60.0;
 
@@ -22,10 +22,10 @@ const string modelName = "model_";
 const int nbGameOneCycle = 512; //1024;
 #elif USE_REGRESSION
 const string modelFolder = "resources/regressor/";
-const string modelName = "regrV3_";
-const int nbGameOneCycle = 256;
+const string modelName = "regrAdAsc_";
+const int nbGameOneCycle = 512;
 #endif
-const string selfPlayLogFileName = "log/self_play_bonus2.log";
+const string selfPlayLogFileName = "log/self_play_AddAscii.log";
 const string recordLearnLogFileName = "log/ascii_learn.log";
 const string testRecordDir = "./resources/record/WTH_7789/WTH_1982.wtb";
 const unsigned int nbTest = 100;

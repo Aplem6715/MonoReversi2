@@ -8,10 +8,10 @@ typedef struct Regressor
     // 重み（EDGEペア統合分のサイズを減らす)
     //float weights[NB_FEAT_COMB];
     // weight[player][feat_index][pattern_pow3-shape]
-    double *weight[2][FEAT_NUM];
+    double *weight[2][FEAT_TYPE_NUM];
 #ifdef LEARN_MODE
-    uint32_t *nbAppears[FEAT_NUM];
-    double *del[FEAT_NUM];
+    uint32_t *nbAppears[FEAT_TYPE_NUM];
+    double *delta[FEAT_TYPE_NUM];
     double beta;
 #endif
 } Regressor;

@@ -101,9 +101,9 @@ void ConvertAppendWthor2Feat(vector<FeatureRecord> &featRecords, WthorWTB &wthor
         for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
         {
             record.featStats[OWN][featIdx] = eval[0].FeatureStates[featIdx];
-            record.featStats[OPP][featIdx] = OpponentIndex(eval[0].FeatureStates[featIdx], FeatDigits[featIdx]);
-            assert(record.featStats[OWN][featIdx] < FeatMaxIndex[featIdx]);
-            assert(record.featStats[OPP][featIdx] < FeatMaxIndex[featIdx]);
+            record.featStats[OPP][featIdx] = OpponentIndex(eval[0].FeatureStates[featIdx], FTYPE_DIGIT[FeatID2Type[featIdx]]);
+            assert(record.featStats[OWN][featIdx] < FTYPE_INDEX_MAX[FeatID2Type[featIdx]]);
+            assert(record.featStats[OPP][featIdx] < FTYPE_INDEX_MAX[FeatID2Type[featIdx]]);
         }
         record.nbEmpty = nbEmpty;
         record.stoneDiff = 1;
@@ -368,8 +368,11 @@ int main(int argc, char **argv)
     HashInit();
     srand(GLOBAL_SEED);
 
-    LearnFromAsciiAllFileInDir(true, "./resources/record/correctbk/");
-    //SelfPlay(4, 16, false, testRecord);
+    //LearnFromAsciiAllFileInDir(true, "./resources/record/correctbk/");
+
+    vector<FeatureRecord> testRecord;
+    GetTestData(testRecord);
+    SelfPlay(4, 16, false, testRecord);
 
     //MPCSampling(nbPlay, 6, 4.0 / 60.0, 1, idxShift);
     /*
