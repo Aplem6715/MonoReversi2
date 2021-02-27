@@ -31,7 +31,7 @@ extern "C"
 #ifdef LEARN_MODE
 
 #define BATCH_SIZE 128
-static const double BETA_INIT = 0.01f;
+static const double BETA_INIT = 0.0025f;
 
 /*
 static const uint32_t FeatTypeMaxIndex[] = {
