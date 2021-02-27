@@ -322,6 +322,7 @@ void LearnFromAsciiAllFileInDir(bool resetWeight, string folder)
         "csc112-2.log",
         "csc113-1.log",
         "csc113-2.log",
+        /*
         "csc116-1.log",
         "csc116-2.log",
         "csc117-1.log",
@@ -343,7 +344,7 @@ void LearnFromAsciiAllFileInDir(bool resetWeight, string folder)
         "csc127-1.log",
         "csc127-2.log",
         "csc128-1.log",
-        "csc128-2.log",
+        "csc128-2.log",*/
     };
 
     int fileCnt = 0;

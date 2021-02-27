@@ -112,10 +112,6 @@ double RegrPred(Regressor *regr, const uint16_t features[FEAT_NUM], uint8 player
         assert(features[feat] < FTYPE_INDEX_MAX[ftype]);
     }
 
-#ifdef LEARN_MODE
-    //assert(player == OWN);
-#endif
-
     return score;
 }
 

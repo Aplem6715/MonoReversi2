@@ -141,7 +141,7 @@ void UpdateRegrWeights(Regressor *regr)
             regr->nbAppears[ftype][idx] = 0;
 
             // 対象型があれば調整
-            if (sameIdx >= 0)
+            if (sameIdx >= 0 && sameIdx != idx)
             {
                 regr->weight[0][ftype][sameIdx] += alpha * deltaSum;
                 // 多重調整防止

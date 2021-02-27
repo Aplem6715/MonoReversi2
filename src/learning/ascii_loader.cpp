@@ -74,9 +74,10 @@ void ConvertAsciiOnegame(vector<FeatureRecord> &featRecords, char predMoves[60],
         for (int featIdx = 0; featIdx < FEAT_NUM; featIdx++)
         {
             record.featStats[OWN][featIdx] = eval[0].FeatureStates[featIdx];
-            record.featStats[OPP][featIdx] = OpponentIndex(eval[0].FeatureStates[featIdx], FTYPE_DIGIT[FeatID2Type[featIdx]]);
+            record.featStats[OPP][featIdx] = eval[1].FeatureStates[featIdx];
             assert(record.featStats[OWN][featIdx] < FTYPE_INDEX_MAX[FeatID2Type[featIdx]]);
             assert(record.featStats[OPP][featIdx] < FTYPE_INDEX_MAX[FeatID2Type[featIdx]]);
+            assert(record.featStats[OPP][featIdx] == OpponentIndex(eval[0].FeatureStates[featIdx], FTYPE_DIGIT[FeatID2Type[featIdx]]));
         }
         record.nbEmpty = nbEmpty;
         record.stoneDiff = 1;

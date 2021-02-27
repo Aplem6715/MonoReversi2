@@ -215,7 +215,7 @@ extern const uint32_t FTYPE_DIGIT[FEAT_TYPE_NUM] = {
 static const char modelFolder[] = "resources/model/model_2003-epoch1/";
 //static const char regrFolder[] = "resources/regressor/best/"; //"resources/regressor/regr_1981_Loss1473/";
 //static const char regrFolder[] = "resources/regressor/regrV3_393_Loss1528/";弱かった・・・
-static const char regrFolder[] = "resources/regressor/regrV4_93_Loss1527/";
+static const char regrFolder[] = "resources/regressor/regrV4_Ascii0_Loss1577/";
 
 void EvalInit(Evaluator *eval)
 {
