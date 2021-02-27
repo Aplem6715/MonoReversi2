@@ -939,6 +939,8 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
     uint8 depths[10];
     // 深度リストの内容数
     uint8 nDepths;
+
+    uint8 completeDepth;
     // 探索中の予想最善スコアマップ
     score_t latestScoreMap[64];
     // 全着手位置探索済みのスコアマップ
@@ -964,7 +966,7 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
         // 深度リストを深い方から設定
         // 深い深度では間隔を開け，浅い深度では間隔を狭める
         // 例：14, 11, 8, 6, 4
-        for (tmpDepth = endDepth; tmpDepth >= startDepth; tmpDepth -= (int)sqrt(tmpDepth))
+        for (tmpDepth = endDepth; tmpDepth >= startDepth; tmpDepth -= 1 /*(int)sqrt(tmpDepth)*/)
         {
             depths[nDepths] = tmpDepth;
             nDepths++;
@@ -989,7 +991,14 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
 
         if (tree->isIntrrupted)
         {
-            printf("Search Interrupted!!!\n");
+            if (i <= 1)
+            {
+                printf("Search Interrupted!!! スペック不足・・・探索できませんでした\n");
+            }
+            else
+            {
+                printf("Search Interrupted!!! Complete Depth: %d\n", depths[i - 2]);
+            }
         }
         else
         {
