@@ -40,12 +40,18 @@ uint64_t RawHash[8 * 2][1 << 8];
 
 // 空ハッシュデータ
 static const HashData EMPTY_HASH_DATA = {
-    0, 0,                       // stones
-    0,                          // latestUsedTurn
-    0,                          // cost
-    0,                          // depth
-    NOMOVE_INDEX, NOMOVE_INDEX, // moves
-    -MAX_VALUE, MAX_VALUE       // scores
+    0, 0, // stones
+    0,    // latestUsedTurn
+    0,    // cost
+    0,    // depth
+    {
+        NOMOVE_INDEX, // 1st move
+        NOMOVE_INDEX, // 2nd move
+        NOMOVE_INDEX, // 3rd move
+        NOMOVE_INDEX  // 4th move
+    },
+    -MAX_VALUE,
+    MAX_VALUE // scores
 };
 
 /**
@@ -367,13 +373,15 @@ void HashDataSaveNew(HashData *data, const Stones *stones, const uint8 bestMove,
         data->lower = -MAX_VALUE;
 
     if (maxScore > alpha || maxScore == -MAX_VALUE)
-        data->bestMove = bestMove;
+        data->bestMoves[0] = bestMove;
     else
-        data->bestMove = NOMOVE_INDEX;
+        data->bestMoves[0] = NOMOVE_INDEX;
 
     data->own = stones->own;
     data->opp = stones->opp;
-    data->secondMove = NOMOVE_INDEX;
+    data->bestMoves[1] = NOMOVE_INDEX;
+    data->bestMoves[2] = NOMOVE_INDEX;
+    data->bestMoves[3] = NOMOVE_INDEX;
     data->latestUsedVersion = version;
     data->cost = cost;
     data->depth = depth;
@@ -400,10 +408,12 @@ void HashDataUpdate(HashData *data, const uint8 bestMove, const uint8 version, c
     if (maxScore > alpha && maxScore > data->lower)
         data->lower = maxScore;
 
-    if ((maxScore > alpha || maxScore == -MAX_VALUE) && data->bestMove != bestMove)
+    if ((maxScore > alpha || maxScore == -MAX_VALUE) && data->bestMoves[0] != bestMove)
     {
-        data->secondMove = data->bestMove;
-        data->bestMove = bestMove;
+        data->bestMoves[3] = data->bestMoves[2];
+        data->bestMoves[2] = data->bestMoves[1];
+        data->bestMoves[1] = data->bestMoves[0];
+        data->bestMoves[0] = bestMove;
     }
     data->latestUsedVersion = version;
     data->cost = cost;
@@ -435,12 +445,17 @@ void HashDataLevelUP(HashData *data, const uint8 bestMove, const uint8 version, 
 
     if (maxScore > alpha || maxScore == -MAX_VALUE)
     {
-        data->secondMove = data->bestMove;
-        data->bestMove = bestMove;
+        data->bestMoves[3] = data->bestMoves[2];
+        data->bestMoves[2] = data->bestMoves[1];
+        data->bestMoves[1] = data->bestMoves[0];
+        data->bestMoves[0] = bestMove;
     }
     else
     {
-        data->bestMove = NOMOVE_INDEX;
+        data->bestMoves[3] = NOMOVE_INDEX;
+        data->bestMoves[2] = NOMOVE_INDEX;
+        data->bestMoves[1] = NOMOVE_INDEX;
+        data->bestMoves[0] = NOMOVE_INDEX;
     }
 
     data->latestUsedVersion = version;
