@@ -30,9 +30,10 @@ extern "C"
 
 #ifdef LEARN_MODE
 
-#define BATCH_SIZE 512
-static const double BETA_INIT = 0.001f;
+#define BATCH_SIZE 128
+static const double BETA_INIT = 0.01f;
 
+/*
 static const uint32_t FeatTypeMaxIndex[] = {
     POW3_8,  // LINE2  26244
     POW3_8,  // LINE3  26244
@@ -45,7 +46,7 @@ static const uint32_t FeatTypeMaxIndex[] = {
     POW3_10, // EDGEX 236196
     POW3_9,  // CORNR  78732
     POW3_10, // BOX10  26244
-};
+};*/
 
 static const uint16_t FeatTypeNbRots[] = {
     4, // LINE2
@@ -96,9 +97,6 @@ void UpdateRegrWeights(Regressor *regr)
     uint16_t idx;
     int32_t sameIdx;
 
-    uint32_t appearSum;
-    double delSum;
-
     // タイプごとの対象型インデックスへの参照を配列として持っておく
     uint16_t *FeatTypeSames[FEAT_TYPE_NUM - 1] = {
         SAME_INDEX_8,    // LINE2
@@ -117,10 +115,14 @@ void UpdateRegrWeights(Regressor *regr)
     for (ftype = 0; ftype < FEAT_TYPE_NUM; ftype++)
     {
         // 0~そのパターンタイプが取りうるインデックスの最大値までループ
-        for (idx = 0; idx < FeatTypeMaxIndex[ftype]; idx++)
+        for (idx = 0; idx < FTYPE_INDEX_MAX[ftype]; idx++)
         {
-            appearSum = 0;
-            delSum = 0;
+            double nbAppear = regr->nbAppears[ftype][idx];
+            double delta = regr->delta[ftype][idx];
+
+            if (nbAppear < 1)
+                continue;
+
             if (ftype == FEAT_TYPE_BOX10)
             {
                 sameIdx = -1;
@@ -130,17 +132,14 @@ void UpdateRegrWeights(Regressor *regr)
                 sameIdx = FeatTypeSames[ftype][idx];
             }
 
-            appearSum += regr->nbAppears[ftype][idx];
-            delSum += regr->delta[ftype][idx];
-
-            alpha = fmin(regr->beta / 50.0f, regr->beta / (double)appearSum);
+            alpha = fmin(regr->beta / 10.0f, regr->beta / nbAppear);
             // ウェイト調整
-            regr->weight[0][ftype][idx] += alpha * delSum;
+            regr->weight[0][ftype][idx] += alpha * delta;
 
             // 対象型があれば調整
             if (sameIdx >= 0)
             {
-                regr->weight[0][ftype][sameIdx] += alpha * delSum;
+                regr->weight[0][ftype][sameIdx] += alpha * delta;
             }
         }
     }
@@ -165,7 +164,7 @@ void CalcWeightDelta(Regressor *regr, const uint16_t features[FEAT_NUM], double 
 
     for (feat = 0; feat < FEAT_NUM; feat++)
     {
-        int ftype = FeatID2Type[feat];
+        uint8 ftype = FeatID2Type[feat];
         regr->nbAppears[ftype][features[feat]]++;
         regr->delta[ftype][features[feat]] += error;
         assert(regr->nbAppears[ftype][features[feat]] < 4294967296);
@@ -197,7 +196,7 @@ void TreinRegrBatch(Regressor *regr, FeatureRecord *inputs[BATCH_SIZE], int inpu
         }
     }
     UpdateRegrWeights(regr);
-    //RegrApplyWeightToOpp(regr);
+    RegrApplyWeightToOpp(regr);
 }
 
 void RegrTrainInit(Regressor regr[NB_PHASE])
