@@ -4,6 +4,7 @@ build/*
 !/resources/regressor
 /resources/regressor/*
 !/resources/regressor/best/
+!/resources/regressor/ascii_best/
 !/resources/bench
 tool/GGFToWThor/
 
