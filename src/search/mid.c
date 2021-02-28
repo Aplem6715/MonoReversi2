@@ -919,7 +919,6 @@ void UpdateScoreMap(score_t latest[64], score_t complete[64])
  * @brief 中盤探索のルートノード
  * 
  * 反復深化法+PVS
- * 反復深化の深度増加量は探索深度の√に沿う（だいたい2～3ずつ深くなる）
  * 
  * @param tree 探索木
  * @param choiceSecond 次善手を選ぶかどうか
@@ -962,17 +961,14 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
         tree->isIntrrupted = false;
         tree->timeLimit = clock() + CLOCKS_PER_SEC * tree->oneMoveTime;
 
-        // 深度リストを深い方から設定
-        // 深い深度では間隔を開け，浅い深度では間隔を狭める
-        // 例：14, 11, 8, 6, 4
+        // sqrtのほうが早いが，探索中断ができなくなるので1ずつ増やす
         for (tmpDepth = endDepth; tmpDepth >= startDepth; tmpDepth -= 1 /*(int)sqrt(tmpDepth)*/)
         {
             depths[nDepths] = tmpDepth;
             nDepths++;
         }
-
         // 反転
-        // 例：4, 6, 8, 11, 14
+        // 例：1, 2, 3, ...
         int i = 0;
         for (i = 0; i < nDepths / 2; i++)
         {
