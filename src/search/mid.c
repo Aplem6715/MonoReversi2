@@ -762,6 +762,13 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
                     alpha = bestScore;
                 }
             }
+
+            // 時間切れ・探索の中断
+            if (depth >= TIME_LIMIT_CHECK_MIN_DEPTH && clock() > tree->timeLimit)
+            {
+                tree->isIntrrupted = true;
+                return bestScore;
+            }
         }
     }
     // 「現在のノード数」と「スタート時点でのノード数」の差分＝子ノード数
@@ -786,9 +793,10 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
  * @param depth 探索深度
  * @param scoreOut 探索スコアの出力参照
  * @param secondMoveOut 次善手の出力参照
+ * @param scoreMap 全位置の予想最善進行スコア
  * @return uint8 予想最善手の位置番号
  */
-uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *scoreOut, uint8 *secondMoveOut)
+uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *scoreOut, uint8 *secondMoveOut, score_t scoreMap[64])
 {
     // 次の探索関数
     SearchFunc_t NextSearch;
@@ -839,8 +847,8 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
     { // すべての着手についてループ
         SearchUpdateMid(tree, move);
         if (bestScore == -MAX_VALUE)
-        {                                                           // PVが見つかっていない
-            score = -NextSearch(tree, -beta, -alpha, depth, false); // 通常探索
+        {                                                                                    // PVが見つかっていない
+            scoreMap[move->posIdx] = score = -NextSearch(tree, -beta, -alpha, depth, false); // 通常探索
         }
         else
         {                                                       // PVが見つかっている
@@ -848,6 +856,11 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
             if (score > alpha && score < beta)                  // 予想が外れていたら
             {
                 score = -NextSearch(tree, -beta, -alpha, depth, false); // 通常のWindowで再探索
+                scoreMap[move->posIdx] = score;
+            }
+            else
+            {
+                scoreMap[move->posIdx] = score - 1;
             }
         }
         SearchRestoreMid(tree, move);
@@ -862,11 +875,20 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
                 alpha = bestScore;
             }
         }
+
+        // 時間切れ・探索の中断
+        if (depth >= TIME_LIMIT_CHECK_MIN_DEPTH && clock() > tree->timeLimit)
+        {
+            tree->isIntrrupted = true;
+            return bestMove;
+        }
     } // end of moves loop
 
     // 「現在のノード数」と「スタート時点でのノード数」の差分＝子ノード数
     nbChildNode = tree->nodeCount - nbChildNode;
     cost = CalcCost(nbChildNode);
+
+    *scoreOut = bestScore;
 
     // ハッシュ表に登録
     if (tree->usePvHash == 1)
@@ -874,8 +896,23 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
         HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, cost, depth, SCORE_MIN - 1, SCORE_MAX + 1, bestScore);
     }
 
-    *scoreOut = bestScore;
     return bestMove;
+}
+
+void ResetScoreMap(score_t scoreMap[64])
+{
+    for (int pos = 0; pos < 64; pos++)
+    {
+        scoreMap[pos] = MIN_VALUE;
+    }
+}
+
+void UpdateScoreMap(score_t latest[64], score_t complete[64])
+{
+    for (int pos = 0; pos < 64; pos++)
+    {
+        complete[pos] = latest[pos];
+    }
 }
 
 /**
@@ -903,6 +940,15 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
     // 深度リストの内容数
     uint8 nDepths;
 
+    uint8 completeDepth;
+    // 探索中の予想最善スコアマップ
+    score_t latestScoreMap[64];
+    // 全着手位置探索済みのスコアマップ
+    score_t completeScoreMap[64];
+
+    ResetScoreMap(latestScoreMap);
+    ResetScoreMap(completeScoreMap);
+
     CreateMoveList(&moveList, tree->stones);
     EvaluateMoveList(tree, &moveList, tree->stones, SCORE_MIN, NULL); // 着手の事前評価
     assert(moveList.nbMoves > 0);
@@ -913,10 +959,14 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
     // 反復深化
     if (tree->useIDDS)
     {
+        tree->useTimeLimit = true;
+        tree->isIntrrupted = false;
+        tree->timeLimit = clock() + CLOCKS_PER_SEC * SEARCH_TIME_SECONDS;
+
         // 深度リストを深い方から設定
         // 深い深度では間隔を開け，浅い深度では間隔を狭める
         // 例：14, 11, 8, 6, 4
-        for (tmpDepth = endDepth; tmpDepth >= startDepth; tmpDepth -= (int)sqrt(tmpDepth))
+        for (tmpDepth = endDepth; tmpDepth >= startDepth; tmpDepth -= 1 /*(int)sqrt(tmpDepth)*/)
         {
             depths[nDepths] = tmpDepth;
             nDepths++;
@@ -934,19 +984,57 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
 
         for (i = 0; i < nDepths; i++)
         {
-            bestMove = MidPVSRoot(tree, &moveList, depths[i], &tree->score, &secondMove);
+            printf("Searching Depth: %d  \n", depths[i]);
+            UpdateScoreMap(latestScoreMap, completeScoreMap);
+            bestMove = MidPVSRoot(tree, &moveList, depths[i], &tree->score, &secondMove, latestScoreMap);
+        }
+
+        if (tree->isIntrrupted)
+        {
+            if (i <= 1)
+            {
+                printf("Search Interrupted!!! スペック不足・・・探索できませんでした\n");
+            }
+            else
+            {
+                printf("Search Interrupted!!! Complete Depth: %d\n", depths[i - 2]);
+            }
+        }
+        else
+        {
+            UpdateScoreMap(latestScoreMap, completeScoreMap);
         }
     }
+    else
+    {
+        tree->useTimeLimit = false;
+        bestMove = MidPVSRoot(tree, &moveList, endDepth, &tree->score, &secondMove, completeScoreMap);
+    }
 
-    // 最終深度で探索
-    bestMove = MidPVSRoot(tree, &moveList, endDepth, &tree->score, &secondMove);
+    // 最終深度で探索????? 二回目！？！？
+    /*
+    printf("Searching Depth: %d  \n", endDepth);
+    bestMove = MidPVSRoot(tree, &moveList, endDepth, &tree->score, &secondMove, latestScoreMap);
+    */
+
+    score_t bestScore = MIN_VALUE;
+    uint8 bestPos;
+    for (int pos = 0; pos < 64; pos++)
+    {
+        if (completeScoreMap[pos] > bestScore)
+        {
+            bestScore = completeScoreMap[pos];
+            bestPos = pos;
+        }
+    }
+    tree->score = bestScore;
 
     if (choiceSecond && secondMove != NOMOVE_INDEX)
     {
         return secondMove;
     }
 
-    return bestMove;
+    return bestPos;
 }
 
 /**
@@ -968,6 +1056,8 @@ uint8 MidRootWithMpcLog(SearchTree *deepTree, SearchTree *shallowTree, FILE *log
 {
     MoveList moveList;
     uint8 bestMove, secondMove;
+    // 探索中の予想最善スコアマップ
+    score_t latestScoreMap[64] = {0};
 
     // 深い探索・浅い探索での着手リスト作成
     CreateMoveList(&moveList, deepTree->stones);
@@ -992,7 +1082,7 @@ uint8 MidRootWithMpcLog(SearchTree *deepTree, SearchTree *shallowTree, FILE *log
     if (shallow < deepTree->nbEmpty)
     {
         printf("Searching depth:%d \r", shallow);
-        bestMove = MidPVSRoot(shallowTree, &moveList, shallow, &shallowTree->score, &secondMove);
+        bestMove = MidPVSRoot(shallowTree, &moveList, shallow, &shallowTree->score, &secondMove, latestScoreMap);
         if (abs(shallowTree->score) != SCORE_MAX)
             fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, shallowTree->nbEmpty, shallow, shallowTree->score);
     }
@@ -1002,7 +1092,7 @@ uint8 MidRootWithMpcLog(SearchTree *deepTree, SearchTree *shallowTree, FILE *log
     if (deep < deepTree->nbEmpty)
     {
         printf("Searching depth:%d \r", deep);
-        bestMove = MidPVSRoot(deepTree, &moveList, deep, &deepTree->score, &secondMove);
+        bestMove = MidPVSRoot(deepTree, &moveList, deep, &deepTree->score, &secondMove, latestScoreMap);
         if (abs(deepTree->score) != SCORE_MAX)
             fprintf(logFile, "%d,%d,%d,%d\n", matchIdx, deepTree->nbEmpty, deep, deepTree->score);
     }

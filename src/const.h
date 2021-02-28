@@ -16,6 +16,9 @@ typedef unsigned char uint8;
 #define GLOBAL_SEED 42
 //#define GLOBAL_SEED ((unsigned int)time(NULL))
 
+// 探索時間
+#define SEARCH_TIME_SECONDS 2
+
 // 1石の価値 (signed 16bit)
 #define STONE_VALUE (100)
 // 評価関数の最大値 (50 x 64[stone])
@@ -26,6 +29,7 @@ typedef unsigned char uint8;
 #define SCORE_MIN (-6500)
 
 #define MAX_VALUE INT16_MAX
+#define MIN_VALUE INT16_MIN
 /*
 typedef float score_t;
 typedef float score_strict_t;

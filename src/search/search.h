@@ -3,6 +3,8 @@
 
 #define WIN_VALUE (1000000)
 
+#include <time.h>
+
 #include "hash.h"
 #include "moves.h"
 #include "../stones.h"
@@ -70,6 +72,13 @@ typedef struct SearchTree
     score_t score;
     // 終盤探索だったかどうか
     uint8 isEndSearch;
+
+    // タイムリミットの有効・無効
+    bool useTimeLimit;
+    // 探索終了時刻
+    clock_t timeLimit;
+    // 中断されたか
+    bool isIntrrupted;
 
     // CUIメッセージ利用時のバッファ
     char msg[1024];
