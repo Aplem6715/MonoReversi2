@@ -4,6 +4,7 @@
 #define WIN_VALUE (1000000)
 
 #include <time.h>
+#include <process.h>
 
 #include "hash.h"
 #include "moves.h"
@@ -84,6 +85,11 @@ typedef struct SearchTree
     // 探索完了した深度
     int completeDepth;
 
+    // 相手手番中の事前探索スレッドハンドル
+    HANDLE preHashingHandle;
+    // 事前探索が行われたか
+    bool hasPreHashedData;
+
     // CUIメッセージ利用時のバッファ
     char msg[1024];
 } SearchTree;
@@ -109,6 +115,7 @@ void SearchRestoreEnd(SearchTree *tree, Move *move);
 void SearchUpdateEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip);
 void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip);
 
+void SearchPreHashing(SearchTree *tree);
 uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond);
 
 #endif
