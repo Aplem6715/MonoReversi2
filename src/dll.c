@@ -70,7 +70,7 @@ void DllInit()
 {
     srand(GLOBAL_SEED);
     HashInit();
-    InitTree(dllTree, 12, 20, 4, 8, 1, 1, 0, 0);
+    InitTree(dllTree, 12, 20, 4, 8, 1, 1, false, false);
     BoardReset(dllBoard);
 }
 
