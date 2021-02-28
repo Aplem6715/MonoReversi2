@@ -11,6 +11,9 @@
 #define NB_FEAT_COMB 892134
 #define TYPE_NB_MAX 167265
 
+// 探索終了時刻のチェック深度(ほぼ一瞬で探索が終了する深度)
+#define TIME_LIMIT_CHECK_MIN_DEPTH 10
+
 // 3累乗
 #define POW0_0 0
 #define POW3_0 1

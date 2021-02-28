@@ -3,6 +3,8 @@
 
 #define WIN_VALUE (1000000)
 
+#include <time.h>
+
 #include "hash.h"
 #include "moves.h"
 #include "../stones.h"
@@ -71,6 +73,17 @@ typedef struct SearchTree
     // 終盤探索だったかどうか
     uint8 isEndSearch;
 
+    // タイムリミットの有効・無効
+    bool useTimeLimit;
+    // 探索終了時刻
+    clock_t timeLimit;
+    // 1手にかける時間
+    int oneMoveTime;
+    // 中断されたか
+    bool isIntrrupted;
+    // 探索完了した深度
+    int completeDepth;
+
     // CUIメッセージ利用時のバッファ
     char msg[1024];
 } SearchTree;
@@ -78,9 +91,9 @@ typedef struct SearchTree
 typedef score_t (*SearchFunc_t)(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, bool passed);
 typedef score_t (*SearchFuncNullWindow_t)(SearchTree *tree, score_t alpha, unsigned char depth, bool passed);
 
-void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, bool useHash, bool usePvHash, bool useMPC, bool nestMPC);
+void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, bool useHash, bool usePvHash, bool useMPC, bool nestMPC, bool useTimer);
 void DeleteTree(SearchTree *tree);
-void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth);
+void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC);
 void ResetTree(SearchTree *tree);
 
 void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp);

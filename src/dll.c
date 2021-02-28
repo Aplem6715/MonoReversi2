@@ -15,6 +15,8 @@
 
 #include <time.h>
 #include <stdlib.h>
+#include <windows.h>
+#include <stdio.h>
 #include "search/search.h"
 #include "board.h"
 #include "bit_operation.h"
@@ -41,7 +43,7 @@ SearchTree dllTree[1];
 Board dllBoard[1];
 
 DLLAPI void DllInit();
-DLLAPI void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth);
+DLLAPI void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC);
 DLLAPI int DllSearch(double *value);
 
 DLLAPI void DllBoardReset();
@@ -70,8 +72,13 @@ void DllInit()
 {
     srand(GLOBAL_SEED);
     HashInit();
-    InitTree(dllTree, 12, 20, 4, 8, 1, 1, 0, 0);
+    InitTree(dllTree, 12, 20, 4, 8, 1, 1, false, false, false);
     BoardReset(dllBoard);
+    
+    FILE *fp;
+    AllocConsole();
+    freopen_s(&fp, "CONOUT$", "w", stdout); /* 標準出力(stdout)を新しいコンソールに向ける */
+    freopen_s(&fp, "CONOUT$", "w", stderr); /* 標準エラー出力(stderr)を新しいコンソールに向ける */
 }
 
 /**
@@ -79,10 +86,14 @@ void DllInit()
  * 
  * @param midDepth 中盤探索深度
  * @param endDepth 終盤探索深度
+ * @param oneMoveTime 一手にかける時間
+ * @param useIDD 反復深化のトグル
+ * @param useTimer 時間制限トグル
+ * @param useMPC MPC利用トグル
  */
-void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth)
+void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC)
 {
-    ConfigTree(dllTree, midDepth, endDepth);
+    ConfigTree(dllTree, midDepth, endDepth, oneMoveTime, useIDD, useTimer, useMPC);
 }
 
 /**

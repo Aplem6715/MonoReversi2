@@ -172,8 +172,8 @@ int main()
     srand(GLOBAL_SEED);
     HashInit();
 
-    InitTree(&tree[0], 6, 14, 4, 8, 1, 1, 0, 0);
-    InitTree(&tree[1], 6, 14, 4, 8, 1, 1, 0, 0);
+    InitTree(&tree[0], 6, 14, 4, 8, 1, 1, 0, 0, false);
+    InitTree(&tree[1], 6, 14, 4, 8, 1, 1, 0, 0, false);
     // 設定上書き
     tree[0].useIDDS = 1;
     tree[1].useIDDS = 1;
