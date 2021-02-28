@@ -41,7 +41,7 @@ SearchTree dllTree[1];
 Board dllBoard[1];
 
 DLLAPI void DllInit();
-DLLAPI void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth);
+DLLAPI void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC);
 DLLAPI int DllSearch(double *value);
 
 DLLAPI void DllBoardReset();
@@ -70,7 +70,7 @@ void DllInit()
 {
     srand(GLOBAL_SEED);
     HashInit();
-    InitTree(dllTree, 12, 20, 4, 8, 1, 1, false, false);
+    InitTree(dllTree, 12, 20, 4, 8, 1, 1, false, false, false);
     BoardReset(dllBoard);
 }
 
@@ -79,10 +79,14 @@ void DllInit()
  * 
  * @param midDepth 中盤探索深度
  * @param endDepth 終盤探索深度
+ * @param oneMoveTime 一手にかける時間
+ * @param useIDD 反復深化のトグル
+ * @param useTimer 時間制限トグル
+ * @param useMPC MPC利用トグル
  */
-void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth)
+void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC)
 {
-    ConfigTree(dllTree, midDepth, endDepth);
+    ConfigTree(dllTree, midDepth, endDepth, oneMoveTime, useIDD, useTimer, useMPC);
 }
 
 /**

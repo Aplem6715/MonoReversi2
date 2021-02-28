@@ -77,6 +77,8 @@ typedef struct SearchTree
     bool useTimeLimit;
     // 探索終了時刻
     clock_t timeLimit;
+    // 1手にかける時間
+    int oneMoveTime;
     // 中断されたか
     bool isIntrrupted;
 
@@ -87,9 +89,9 @@ typedef struct SearchTree
 typedef score_t (*SearchFunc_t)(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, bool passed);
 typedef score_t (*SearchFuncNullWindow_t)(SearchTree *tree, score_t alpha, unsigned char depth, bool passed);
 
-void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, bool useHash, bool usePvHash, bool useMPC, bool nestMPC);
+void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, bool useHash, bool usePvHash, bool useMPC, bool nestMPC, bool useTimer);
 void DeleteTree(SearchTree *tree);
-void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth);
+void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC);
 void ResetTree(SearchTree *tree);
 
 void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp);

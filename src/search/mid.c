@@ -959,7 +959,6 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
     // 反復深化
     if (tree->useIDDS)
     {
-        tree->useTimeLimit = true;
         tree->isIntrrupted = false;
         tree->timeLimit = clock() + CLOCKS_PER_SEC * SEARCH_TIME_SECONDS;
 
@@ -1007,15 +1006,8 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
     }
     else
     {
-        tree->useTimeLimit = false;
         bestMove = MidPVSRoot(tree, &moveList, endDepth, &tree->score, &secondMove, completeScoreMap);
     }
-
-    // 最終深度で探索????? 二回目！？！？
-    /*
-    printf("Searching Depth: %d  \n", endDepth);
-    bestMove = MidPVSRoot(tree, &moveList, endDepth, &tree->score, &secondMove, latestScoreMap);
-    */
 
     score_t bestScore = MIN_VALUE;
     uint8 bestPos;

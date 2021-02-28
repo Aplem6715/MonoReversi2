@@ -36,7 +36,7 @@ static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
  * @param useMPC Multi Prob Cutを使うか
  * @param nestMPC MPCの浅い探索中にさらにMPCを許可するか
  */
-void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, bool useHash, bool usePvHash, bool useMPC, bool nestMPC)
+void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, bool useHash, bool usePvHash, bool useMPC, bool nestMPC, bool useTimer)
 {
     tree->midDepth = midDepth;
     tree->endDepth = endDepth;
@@ -48,6 +48,16 @@ void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
     tree->enableMpcNest = nestMPC;
 
     tree->useIDDS = 1;
+    if (tree->useIDDS)
+    {
+        tree->useTimeLimit = useTimer;
+        tree->oneMoveTime = SEARCH_TIME_SECONDS;
+    }
+    else if (useTimer)
+    {
+        printf("反復深化が無効です。時間制限機能は無視されます。\n");
+        tree->useTimeLimit = false;
+    }
 
     EvalInit(tree->eval);
 
@@ -89,11 +99,19 @@ void DeleteTree(SearchTree *tree)
  * @param tree 探索木
  * @param midDepth 中盤探索深度
  * @param endDepth 終盤探索深度
+ * @param oneMoveTime 一手にかける時間
+ * @param useIDD 反復深化のトグル
+ * @param useTimer 時間制限トグル
+ * @param useMPC MPC利用トグル
  */
-void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth)
+void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC)
 {
     tree->midDepth = midDepth;
     tree->endDepth = endDepth;
+    tree->oneMoveTime = oneMoveTime;
+    tree->useIDDS = useIDD;
+    tree->useTimeLimit = useTimer;
+    tree->useMPC = useMPC;
 }
 
 /**
