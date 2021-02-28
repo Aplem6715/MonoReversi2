@@ -112,6 +112,12 @@ void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth
     tree->useIDDS = useIDD;
     tree->useTimeLimit = useTimer;
     tree->useMPC = useMPC;
+
+    if (!tree->useIDDS && useTimer)
+    {
+        printf("反復深化が無効です。時間制限機能は無視されます。\n");
+        tree->useTimeLimit = false;
+    }
 }
 
 /**
@@ -348,10 +354,11 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
     tree->usedTime = (finish - start) / (double)CLOCKS_PER_SEC;
 
     sprintf_s(tree->msg, sizeof(tree->msg),
-              "思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
+              "探索深度: %d  思考時間：%.2f[s]  探索ノード数：%zu[kNode]  探索速度：%.1f[kNode/s]  推定CPUスコア：%.1f",
+              tree->completeDepth,
               tree->usedTime,
-              tree->nodeCount,
-              tree->nodeCount / tree->usedTime,
+              tree->nodeCount / 1000,
+              tree->nodeCount / 1000 / tree->usedTime,
               tree->score / (float)(STONE_VALUE));
 
     assert(tree->nbMpcNested == 0);

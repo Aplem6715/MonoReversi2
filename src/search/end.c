@@ -752,6 +752,7 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
     } // end of moves loop
 
     tree->score = bestScore;
+    tree->completeDepth = depth;
 
     if (choiceSecond && secondMove != NOMOVE_INDEX)
     {

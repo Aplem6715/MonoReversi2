@@ -764,7 +764,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
             }
 
             // 時間切れ・探索の中断
-            if (depth >= TIME_LIMIT_CHECK_MIN_DEPTH && clock() > tree->timeLimit)
+            if (tree->useTimeLimit && depth >= TIME_LIMIT_CHECK_MIN_DEPTH && clock() > tree->timeLimit)
             {
                 tree->isIntrrupted = true;
                 return bestScore;
@@ -877,7 +877,7 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
         }
 
         // 時間切れ・探索の中断
-        if (depth >= TIME_LIMIT_CHECK_MIN_DEPTH && clock() > tree->timeLimit)
+        if (tree->useTimeLimit && depth >= TIME_LIMIT_CHECK_MIN_DEPTH && clock() > tree->timeLimit)
         {
             tree->isIntrrupted = true;
             return bestMove;
@@ -960,7 +960,7 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
     if (tree->useIDDS)
     {
         tree->isIntrrupted = false;
-        tree->timeLimit = clock() + CLOCKS_PER_SEC * SEARCH_TIME_SECONDS;
+        tree->timeLimit = clock() + CLOCKS_PER_SEC * tree->oneMoveTime;
 
         // 深度リストを深い方から設定
         // 深い深度では間隔を開け，浅い深度では間隔を狭める
@@ -984,29 +984,31 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
         for (i = 0; i < nDepths; i++)
         {
             printf("Searching Depth: %d  \n", depths[i]);
-            UpdateScoreMap(latestScoreMap, completeScoreMap);
             bestMove = MidPVSRoot(tree, &moveList, depths[i], &tree->score, &secondMove, latestScoreMap);
-        }
-
-        if (tree->isIntrrupted)
-        {
-            if (i <= 1)
+            if (tree->isIntrrupted)
             {
-                printf("Search Interrupted!!! スペック不足・・・探索できませんでした\n");
+                if (i <= 0)
+                {
+                    printf("Search Interrupted!!! スペック不足・・・探索できませんでした\n");
+                }
+                else
+                {
+                    tree->completeDepth = depths[i - 1];
+                    printf("Search Interrupted!!! Complete Depth: %d\n", tree->completeDepth);
+                }
+                break;
             }
             else
             {
-                printf("Search Interrupted!!! Complete Depth: %d\n", depths[i - 2]);
+                UpdateScoreMap(latestScoreMap, completeScoreMap);
+                tree->completeDepth = endDepth;
             }
-        }
-        else
-        {
-            UpdateScoreMap(latestScoreMap, completeScoreMap);
         }
     }
     else
     {
         bestMove = MidPVSRoot(tree, &moveList, endDepth, &tree->score, &secondMove, completeScoreMap);
+        tree->completeDepth = endDepth;
     }
 
     score_t bestScore = MIN_VALUE;

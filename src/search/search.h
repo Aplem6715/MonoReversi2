@@ -81,6 +81,8 @@ typedef struct SearchTree
     int oneMoveTime;
     // 中断されたか
     bool isIntrrupted;
+    // 探索完了した深度
+    int completeDepth;
 
     // CUIメッセージ利用時のバッファ
     char msg[1024];

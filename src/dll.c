@@ -15,6 +15,8 @@
 
 #include <time.h>
 #include <stdlib.h>
+#include <windows.h>
+#include <stdio.h>
 #include "search/search.h"
 #include "board.h"
 #include "bit_operation.h"
@@ -72,6 +74,11 @@ void DllInit()
     HashInit();
     InitTree(dllTree, 12, 20, 4, 8, 1, 1, false, false, false);
     BoardReset(dllBoard);
+    
+    FILE *fp;
+    AllocConsole();
+    freopen_s(&fp, "CONOUT$", "w", stdout); /* 標準出力(stdout)を新しいコンソールに向ける */
+    freopen_s(&fp, "CONOUT$", "w", stderr); /* 標準エラー出力(stderr)を新しいコンソールに向ける */
 }
 
 /**
