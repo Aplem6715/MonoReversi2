@@ -240,8 +240,8 @@ double LearnFromAscii(SearchTree trees[2], string recordFileName, vector<Feature
     unsigned int winCount = 0;
     for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
     {
-        ResetTree(&trees[0]);
-        ResetTree(&trees[1]);
+        TreeReset(&trees[0]);
+        TreeReset(&trees[1]);
         // 新規ウェイトを黒にしてプレイ
         if (PlayOneGame(dummyRecords, &trees[1], &trees[0], VERSUS_RANDOM_TURNS, 0, 0, false) == BLACK)
         {
@@ -252,8 +252,8 @@ double LearnFromAscii(SearchTree trees[2], string recordFileName, vector<Feature
     // 白黒入れ替えて
     for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
     {
-        ResetTree(&trees[0]);
-        ResetTree(&trees[1]);
+        TreeReset(&trees[0]);
+        TreeReset(&trees[1]);
         // 新規ウェイトを白にしてプレイ
         if (PlayOneGame(dummyRecords, &trees[0], &trees[1], VERSUS_RANDOM_TURNS, 0, 0, false) == WHITE)
         {
@@ -297,8 +297,8 @@ double LearnFromAscii(SearchTree trees[2], string recordFileName, vector<Feature
 void LearnFromAsciiAllFileInDir(bool resetWeight, string folder)
 {
     SearchTree trees[2];
-    InitTree(&trees[0], 4, 10, 4, 8, 1, 1, 0, 0); // 旧
-    InitTree(&trees[1], 4, 10, 4, 8, 1, 1, 0, 0); // 新
+    TreeInit(&trees[0], 4, 10, 4, 8, 1, 1, 0, 0); // 旧
+    TreeInit(&trees[1], 4, 10, 4, 8, 1, 1, 0, 0); // 新
 
     RegrTrainInit(trees[0].eval->regr);
     RegrTrainInit(trees[1].eval->regr);
@@ -359,8 +359,8 @@ void LearnFromAsciiAllFileInDir(bool resetWeight, string folder)
     _mkdir(modelDir.c_str());
     RegrSave(trees[1].eval->regr, modelDir.c_str());
 
-    DeleteTree(&trees[0]);
-    DeleteTree(&trees[1]);
+    TreeDelete(&trees[0]);
+    TreeDelete(&trees[1]);
 }
 
 int main(int argc, char **argv)

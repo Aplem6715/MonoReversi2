@@ -41,11 +41,11 @@ void GameInit(Game *game, PlayerEnum black, PlayerEnum white, int mid, int end)
     // AIの初期化
     if (game->player[WHITE] == AI)
     {
-        InitTree(&game->tree[WHITE], mid, end, 4, 8, 1, 1, false, false, false);
+        TreeInit(&game->tree[WHITE], mid, end, 4, 8, 1, 1, false, false, false);
     }
     if (game->player[BLACK] == AI)
     {
-        InitTree(&game->tree[BLACK], mid, end, 4, 8, 1, 1, false, false, false);
+        TreeInit(&game->tree[BLACK], mid, end, 4, 8, 1, 1, false, false, false);
     }
     GameReset(game);
 }
@@ -60,11 +60,11 @@ void GameFree(Game *game)
     // AIの初期化
     if (game->player[WHITE] == AI)
     {
-        DeleteTree(&game->tree[WHITE]);
+        TreeDelete(&game->tree[WHITE]);
     }
     if (game->player[BLACK] == AI)
     {
-        DeleteTree(&game->tree[BLACK]);
+        TreeDelete(&game->tree[BLACK]);
     }
 }
 

@@ -107,7 +107,7 @@ int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn
     int nbEmpty = 60;
     Board board[1];
 
-    InitTree(tree, MID_DEPTH, 18, 4, 8, 1, 1, USE_MPC, USE_NEST_MPC, false);
+    TreeInit(tree, MID_DEPTH, 18, 4, 8, 1, 1, USE_MPC, USE_NEST_MPC, false);
     BoardReset(board);
     BoardSetStones(board, black, white, turn);
     while (!BoardIsFinished(board))
@@ -143,7 +143,7 @@ int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn
             pos = WaitMoveResponse(pipe);
             if (pos == ERROR_POS)
             {
-                DeleteTree(tree);
+                TreeDelete(tree);
                 return ERROR_POS;
             }
             //printf("\n%f\n", treeWhite->score);
@@ -162,7 +162,7 @@ int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn
         nbEmpty--;
 
     } //end of loop:　while (!BoardIsFinished(board))
-    DeleteTree(tree);
+    TreeDelete(tree);
     return 0;
 }
 

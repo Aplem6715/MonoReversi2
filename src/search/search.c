@@ -36,7 +36,7 @@ static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
  * @param useMPC Multi Prob Cutを使うか
  * @param nestMPC MPCの浅い探索中にさらにMPCを許可するか
  */
-void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, bool useHash, bool usePvHash, bool useMPC, bool nestMPC, bool useTimer)
+void TreeInit(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, bool useHash, bool usePvHash, bool useMPC, bool nestMPC, bool useTimer)
 {
     tree->midDepth = midDepth;
     tree->endDepth = endDepth;
@@ -81,7 +81,7 @@ void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
  * 
  * @param tree 解放する探索木
  */
-void DeleteTree(SearchTree *tree)
+void TreeDelete(SearchTree *tree)
 {
     EvalDelete(tree->eval);
     if (tree->useHash)
@@ -104,7 +104,7 @@ void DeleteTree(SearchTree *tree)
  * @param useTimer 時間制限トグル
  * @param useMPC MPC利用トグル
  */
-void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC)
+void TreeConfig(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC)
 {
     tree->midDepth = midDepth;
     tree->endDepth = endDepth;
@@ -120,12 +120,16 @@ void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth
     }
 }
 
+void TreeClone(SearchTree *src, SearchTree *dst)
+{
+}
+
 /**
  * @brief 探索木をリセット
  * 
  * @param tree 探索木
  */
-void ResetTree(SearchTree *tree)
+void TreeReset(SearchTree *tree)
 {
     if (tree->useHash)
     {
@@ -143,7 +147,7 @@ void ResetTree(SearchTree *tree)
  */
 void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
 {
-    //ResetTree(tree);
+    //TreeReset(tree);
     // 評価パターンの初期化
     EvalReload(tree->eval, own, opp, OWN);
     if (tree->usePvHash)

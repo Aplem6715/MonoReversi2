@@ -72,7 +72,7 @@ void DllInit()
 {
     srand(GLOBAL_SEED);
     HashInit();
-    InitTree(dllTree, 12, 20, 4, 8, 1, 1, false, false, false);
+    TreeInit(dllTree, 12, 20, 4, 8, 1, 1, false, false, false);
     BoardReset(dllBoard);
     
     FILE *fp;
@@ -93,7 +93,7 @@ void DllInit()
  */
 void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC)
 {
-    ConfigTree(dllTree, midDepth, endDepth, oneMoveTime, useIDD, useTimer, useMPC);
+    TreeConfig(dllTree, midDepth, endDepth, oneMoveTime, useIDD, useTimer, useMPC);
 }
 
 /**
@@ -115,7 +115,7 @@ int DllSearch(double *value)
  */
 void DllBoardReset()
 {
-    ResetTree(dllTree);
+    TreeReset(dllTree);
     BoardReset(dllBoard);
 }
 

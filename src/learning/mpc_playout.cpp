@@ -43,8 +43,8 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, bool enableL
 
     minimum = deep > minimum ? deep : minimum;
     // 中盤探索深度は後から設定される
-    InitTree(shallowTree, 100, minimum, 4, 8, 1, 1, 1, 1); // 深すぎる深度 = 超遅い 設定忘れを防ぐ
-    InitTree(deepTree, 100, minimum, 4, 8, 1, 1, 1, 1);
+    TreeInit(shallowTree, 100, minimum, 4, 8, 1, 1, 1, 1); // 深すぎる深度 = 超遅い 設定忘れを防ぐ
+    TreeInit(deepTree, 100, minimum, 4, 8, 1, 1, 1, 1);
     logFile = fopen(MPC_RAW_FILE, "a");
 
     for (i = 0; i < nbPlay; i++)
@@ -97,8 +97,8 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, bool enableL
         printf("Game %d Finished                 \n", i);
     }
 
-    DeleteTree(deepTree);
-    DeleteTree(shallowTree);
+    TreeDelete(deepTree);
+    TreeDelete(shallowTree);
     fclose(logFile);
 }
 

@@ -172,8 +172,8 @@ int main()
     srand(GLOBAL_SEED);
     HashInit();
 
-    InitTree(&tree[0], 6, 14, 4, 8, 1, 1, 0, 0, false);
-    InitTree(&tree[1], 6, 14, 4, 8, 1, 1, 0, 0, false);
+    TreeInit(&tree[0], 6, 14, 4, 8, 1, 1, 0, 0, false);
+    TreeInit(&tree[1], 6, 14, 4, 8, 1, 1, 0, 0, false);
     // 設定上書き
     tree[0].useIDDS = 1;
     tree[1].useIDDS = 1;
@@ -186,8 +186,8 @@ int main()
 
     for (i = 0; i < 100; i++)
     {
-        ResetTree(&tree[0]);
-        ResetTree(&tree[1]);
+        TreeReset(&tree[0]);
+        TreeReset(&tree[1]);
 
         printf("match %d\n", i);
         if (i < NB_RECORDS)
