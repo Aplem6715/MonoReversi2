@@ -328,6 +328,10 @@ void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
     tree->nbEmpty++;
 }
 
+void SearchLaunchAsync(SearchTree *tree){
+
+}
+
 /**
  * @brief 予想最善手の探索（AIのメイン処理）
  * 
