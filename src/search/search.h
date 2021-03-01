@@ -12,12 +12,42 @@
 #include "../const.h"
 #include "../ai/eval.h"
 
+typedef struct SearchOption
+{
+    // 中盤探索深度
+    unsigned char midDepth;
+    // 終盤探索深度
+    unsigned char endDepth;
+    // 中盤探索PVS限界
+    unsigned char midPvsDepth;
+    // 終盤探索PVS限界
+    unsigned char endPvsDepth;
+    // 1手にかける時間
+    int oneMoveTime;
+
+    // ハッシュ表を利用するかどうか
+    bool useHash;
+    // PVハッシュを利用するかどうか
+    bool usePvHash;
+    // 反復深化を利用するかどうか
+    bool useIDDS;
+    // Multi Prob Cutを利用するかどうか
+    bool useMPC;
+    // MPCの探索内でさらにMPCを許可するかどうか
+    bool enableMpcNest;
+    // タイムリミットの有効・無効
+    bool useTimeLimit;
+
+} SearchOption;
+
 /**
  * @brief 探索木の情報を持つオブジェクト
  * 
  */
 typedef struct SearchTree
 {
+    SearchOption option;
+
     // NullWindowSearch用ハッシュ表
     HashTable *nwsTable;
     // PVノード用ハッシュ表
@@ -29,7 +59,6 @@ typedef struct SearchTree
     Stones stones[1];
     // 残り空きマス数
     uint8 nbEmpty;
-
     // 探索深度
     unsigned char depth;
     // move ordering 限界深度
@@ -41,24 +70,6 @@ typedef struct SearchTree
     // PVS限界深度
     unsigned char pvsDepth;
 
-    // 中盤探索深度
-    unsigned char midDepth;
-    // 終盤探索深度
-    unsigned char endDepth;
-    // 中盤探索PVS限界
-    unsigned char midPvsDepth;
-    // 終盤探索PVS限界
-    unsigned char endPvsDepth;
-
-    // ハッシュ表を利用するかどうか
-    bool useHash;
-    bool usePvHash;
-    // 反復深化を利用するかどうか
-    bool useIDDS;
-    // Multi Prob Cutを利用するかどうか
-    bool useMPC;
-    // MPCの探索内でさらにMPCを許可するかどうか
-    bool enableMpcNest;
     // MPCの重複回数
     uint8 nbMpcNested;
 
@@ -74,19 +85,13 @@ typedef struct SearchTree
     // 終盤探索だったかどうか
     uint8 isEndSearch;
 
-    // タイムリミットの有効・無効
-    bool useTimeLimit;
     // 探索終了時刻
     clock_t timeLimit;
-    // 1手にかける時間
-    int oneMoveTime;
     // 中断されたか
     bool isIntrrupted;
     // 探索完了した深度
     int completeDepth;
 
-    // 相手手番中の事前探索スレッドハンドル
-    HANDLE preHashingHandle;
     // 探索の中断
     bool killFlag;
 

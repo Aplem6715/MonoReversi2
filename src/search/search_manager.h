@@ -18,7 +18,7 @@ typedef enum SearchMangerState
 
 typedef struct BranchProcess
 {
-    SearchTree *tree;
+    SearchTree tree[1];
     HANDLE processHandle;
     HANDLE scoreMapMutex;
 
@@ -37,10 +37,12 @@ typedef struct SearchManager
     bool enableAsyncPreSearching;
 } SearchManager;
 
-void SearchManagerSetup(uint64_t own, uint64_t opp);
-void SearchManagerStartSearch();
-void SearchManagerKillWithEnemyPut(uint8 pos);
-int SearchManagerGetScoreMap(score_t map[64]);
-void SearchManagerKillAll();
+void SearchManagerInit(SearchManager *sManager, int maxSubProcess);
+void SearchManagerDelete(SearchManager *sManager);
+void SearchManagerSetup(SearchManager *sManager, uint64_t own, uint64_t opp);
+void SearchManagerStartSearch(SearchManager *sManager);
+void SearchManagerKillWithEnemyPut(SearchManager *sManager, uint8 pos);
+int SearchManagerGetScoreMap(SearchManager *sManager, score_t map[64]);
+void SearchManagerKillAll(SearchManager *sManager);
 
 #endif // _SEARCH_MANAGER_H_

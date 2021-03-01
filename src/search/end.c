@@ -161,7 +161,7 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     }
     else
     {
-        if (tree->usePvHash == 1 && depth >= tree->pvHashDepth)
+        if (tree->option.usePvHash == 1 && depth >= tree->pvHashDepth)
         {
             hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
             if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
@@ -213,7 +213,7 @@ score_t EndAlphaBeta(SearchTree *tree, score_t alpha, score_t beta, unsigned cha
     nbChildNode = tree->nodeCount - nbChildNode;
     cost = CalcCost(nbChildNode);
 
-    if (tree->usePvHash == 1 && depth >= tree->pvHashDepth)
+    if (tree->option.usePvHash == 1 && depth >= tree->pvHashDepth)
     {
         HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, cost, depth, alpha, beta, maxScore);
     }
@@ -261,7 +261,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
         return SolveLast1(tree->stones, alpha);
     }
 
-    if (tree->usePvHash == 1 && depth >= tree->pvHashDepth)
+    if (tree->option.usePvHash == 1 && depth >= tree->pvHashDepth)
     {
         hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
         if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
@@ -333,7 +333,7 @@ score_t EndAlphaBetaDeep(SearchTree *tree, score_t alpha, score_t beta, unsigned
     nbChildNode = tree->nodeCount - nbChildNode;
     cost = CalcCost(nbChildNode);
 
-    if (tree->usePvHash == 1 && depth >= tree->pvHashDepth)
+    if (tree->option.usePvHash == 1 && depth >= tree->pvHashDepth)
     {
         HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, cost, depth, alpha, beta, maxScore);
     }
@@ -378,7 +378,7 @@ score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
         return SolveLast1(tree->stones, alpha);
     }
 
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->option.useHash == 1 && depth >= tree->hashDepth)
     {
         hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
         if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
@@ -435,7 +435,7 @@ score_t EndNullWindowDeep(SearchTree *tree, const score_t beta, unsigned char de
     nbChildNode = tree->nodeCount - nbChildNode;
     cost = CalcCost(nbChildNode);
 
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->option.useHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, cost, depth, alpha, beta, bestScore);
     }
@@ -480,7 +480,7 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
         return SolveLast1(tree->stones, alpha);
     }
 
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->option.useHash == 1 && depth >= tree->hashDepth)
     {
         hashData = HashTableGetData(tree->nwsTable, tree->stones, depth, &hashCode);
         if (hashData != NULL && IsHashCutNullWindow(hashData, depth, alpha, &score))
@@ -543,7 +543,7 @@ score_t EndNullWindow(SearchTree *tree, const score_t beta, unsigned char depth,
     nbChildNode = tree->nodeCount - nbChildNode;
     cost = CalcCost(nbChildNode);
 
-    if (tree->useHash == 1 && depth >= tree->hashDepth)
+    if (tree->option.useHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->nwsTable, hashCode, tree->stones, bestMove, cost, depth, alpha, beta, bestScore);
     }
@@ -592,7 +592,7 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
 
     alpha = in_alpha;
     beta = in_beta;
-    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
+    if (tree->option.usePvHash == 1 && depth >= tree->hashDepth)
     { // ハッシュの記録をもとにカット/探索範囲の縮小
         hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
         if (hashData != NULL && IsHashCut(hashData, depth, &alpha, &beta, &score))
@@ -671,7 +671,7 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
     nbChildNode = tree->nodeCount - nbChildNode;
     cost = CalcCost(nbChildNode);
 
-    if (tree->usePvHash == 1 && depth >= tree->hashDepth)
+    if (tree->option.usePvHash == 1 && depth >= tree->hashDepth)
     {
         HashTableRegist(tree->pvTable, hashCode, tree->stones, bestMove, cost, depth, in_alpha, in_beta, bestScore);
     }
@@ -710,7 +710,7 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
     beta = MAX_VALUE;
     bestScore = -MAX_VALUE;
 
-    if (tree->usePvHash)
+    if (tree->option.usePvHash)
     {
         hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
         if (hashData != NULL)
