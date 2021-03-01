@@ -18,9 +18,19 @@
 void BranchInit(BranchProcess *branch)
 {
     TreeInit(branch->tree);
+    branch->processHandle = NULL;
+    branch->scoreMapMutex = NULL;
+    branch->enemyMove = NOMOVE_INDEX;
 }
 
-void SearchManagerInit(SearchManager *sManager, int maxSubProcess)
+void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAsyncPreSearch)
 {
     sManager->numMaxBranches = maxSubProcess;
+    sManager->state = SM_WAIT;
+    sManager->enableAsyncPreSearching = enableAsyncPreSearch;
+    sManager->branches = (BranchProcess *)malloc(maxSubProcess * sizeof(BranchProcess));
+    for (int i = 0; i < maxSubProcess; i++)
+    {
+        BranchInit(&sManager->branches[i]);
+    }
 }
