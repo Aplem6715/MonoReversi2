@@ -23,6 +23,11 @@ void BranchInit(BranchProcess *branch)
     branch->enemyMove = NOMOVE_INDEX;
 }
 
+void BranchDelete(BranchProcess *branch)
+{
+    TreeDelete(branch->tree);
+}
+
 void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAsyncPreSearch)
 {
     sManager->numMaxBranches = maxSubProcess;
@@ -33,4 +38,20 @@ void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAs
     {
         BranchInit(&sManager->branches[i]);
     }
+}
+
+void SearchManagerDelete(SearchManager *sManager)
+{
+    for (int i = 0; i < sManager->numMaxBranches; i++)
+    {
+        BranchDelete(&sManager->branches[i]);
+    }
+    free(sManager->branches);
+}
+
+void SearchManagerSetup(SearchManager *sManager, uint64_t own, uint64_t opp)
+{
+    SearchManagerKillAll(sManager);
+    sManager->stones->own = own;
+    sManager->stones->opp = opp;
 }

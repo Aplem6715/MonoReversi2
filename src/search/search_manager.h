@@ -2,7 +2,6 @@
 #define _SEARCH_MANAGER_H_
 
 #include "../const.h"
-#include "../board.h"
 #include "search.h"
 
 #include <windows.h>
@@ -27,7 +26,7 @@ typedef struct BranchProcess
 
 typedef struct SearchManager
 {
-    Board board[1];
+    Stones stones[1];
     BranchProcess *branches;
     SearchMangerState state;
 
