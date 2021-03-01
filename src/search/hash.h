@@ -56,6 +56,8 @@ void HashTableInit(HashTable *table, uint64_t size);
 // ハッシュテーブルの開放
 void HashTableFree(HashTable *table);
 
+void HashTableClone(HashTable *src, HashTable *dst);
+
 // ハッシュテーブル内のデータをリセット
 void HashTableReset(HashTable *table);
 
