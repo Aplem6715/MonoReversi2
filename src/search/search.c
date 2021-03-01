@@ -122,6 +122,32 @@ void TreeConfig(SearchTree *tree, unsigned char midDepth, unsigned char endDepth
 
 void TreeClone(SearchTree *src, SearchTree *dst)
 {
+    *(dst->stones) = *(src->stones);
+    dst->nbEmpty = src->nbEmpty;
+
+    dst->depth = src->depth;
+    dst->orderDepth = src->orderDepth;
+    dst->hashDepth = src->hashDepth;
+    dst->pvHashDepth = src->pvHashDepth;
+    dst->pvsDepth = src->pvsDepth;
+    dst->midDepth = src->midDepth;
+    dst->endDepth = src->endDepth;
+    dst->midPvsDepth = src->midPvsDepth;
+    dst->endPvsDepth = src->endPvsDepth;
+
+    dst->useHash = src->useHash;
+    dst->usePvHash = src->usePvHash;
+    dst->useIDDS = src->useIDDS;
+    dst->useMPC = src->useMPC;
+    dst->enableMpcNest = src->enableMpcNest;
+
+    dst->nbMpcNested = src->nbMpcNested;
+    dst->useTimeLimit = src->useTimeLimit;
+    dst->oneMoveTime = src->oneMoveTime;
+
+    HashTableClone(src->nwsTable, dst->nwsTable);
+    HashTableClone(src->pvTable, dst->pvTable);
+    EvalClone(src->eval, dst->eval);
 }
 
 /**
