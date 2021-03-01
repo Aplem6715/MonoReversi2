@@ -87,8 +87,8 @@ typedef struct SearchTree
 
     // 相手手番中の事前探索スレッドハンドル
     HANDLE preHashingHandle;
-    // 事前探索が行われたか
-    bool hasPreHashedData;
+    // 探索の中断
+    bool killFlag;
 
     // CUIメッセージ利用時のバッファ
     char msg[1024];

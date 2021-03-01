@@ -47,6 +47,8 @@ void TreeInit(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
     tree->useMPC = useMPC;
     tree->enableMpcNest = nestMPC;
 
+    tree->killFlag = false;
+
     tree->useIDDS = 1;
     if (tree->useIDDS)
     {
@@ -328,8 +330,8 @@ void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
     tree->nbEmpty++;
 }
 
-void SearchLaunchAsync(SearchTree *tree){
-
+void SearchLaunchAsync(SearchTree *tree)
+{
 }
 
 /**
