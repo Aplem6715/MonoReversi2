@@ -172,17 +172,12 @@ int main()
     srand(GLOBAL_SEED);
     HashInit();
 
-    TreeInit(&tree[0], 6, 14, 4, 8, 1, 1, 0, 0, false);
-    TreeInit(&tree[1], 6, 14, 4, 8, 1, 1, 0, 0, false);
+    TreeInit(&tree[0]);
+    TreeInit(&tree[1]);
+
     // 設定上書き
-    tree[0].useIDDS = 1;
-    tree[1].useIDDS = 1;
-
-    tree[0].hashDepth = 4;
-    tree[1].hashDepth = 4;
-
-    tree[0].orderDepth = 5;
-    tree[1].orderDepth = 5;
+    TreeConfig(&tree[0], 6, 14, 0, true, false, false);
+    TreeConfig(&tree[1], 6, 14, 0, true, false, false);
 
     for (i = 0; i < 100; i++)
     {

@@ -72,9 +72,9 @@ void DllInit()
 {
     srand(GLOBAL_SEED);
     HashInit();
-    TreeInit(dllTree, 12, 20, 4, 8, 1, 1, false, false, false);
+    TreeInit(dllTree);
     BoardReset(dllBoard);
-    
+
     FILE *fp;
     AllocConsole();
     freopen_s(&fp, "CONOUT$", "w", stdout); /* 標準出力(stdout)を新しいコンソールに向ける */

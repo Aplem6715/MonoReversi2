@@ -49,17 +49,17 @@ static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
  * @param useMPC Multi Prob Cutを使うか
  * @param nestMPC MPCの浅い探索中にさらにMPCを許可するか
  */
-void TreeInit(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, bool useHash, bool usePvHash, bool useMPC, bool nestMPC, bool useTimer)
+void TreeInit(SearchTree *tree)
 {
     tree->option = DEFAULT_OPTION;
 
     tree->killFlag = false;
     if (tree->option.useIDDS)
     {
-        tree->option.useTimeLimit = useTimer;
+        tree->option.useTimeLimit = tree->option.useTimeLimit;
         tree->option.oneMoveTime = SEARCH_TIME_SECONDS;
     }
-    else if (useTimer)
+    else if (tree->option.useTimeLimit)
     {
         printf("反復深化が無効です。時間制限機能は無視されます。\n");
         tree->option.useTimeLimit = false;
@@ -67,7 +67,7 @@ void TreeInit(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
 
     EvalInit(tree->eval);
 
-    if (useHash)
+    if (tree->option.useHash)
     {
         tree->nwsTable = (HashTable *)malloc(sizeof(HashTable));
         tree->pvTable = (HashTable *)malloc(sizeof(HashTable));
@@ -124,6 +124,12 @@ void TreeConfig(SearchTree *tree, unsigned char midDepth, unsigned char endDepth
         printf("反復深化が無効です。時間制限機能は無視されます。\n");
         tree->option.useTimeLimit = false;
     }
+}
+
+void TreeConfigDepth(SearchTree *tree, unsigned char midDepth, unsigned char endDepth)
+{
+    tree->option.midDepth = midDepth;
+    tree->option.endDepth = endDepth;
 }
 
 void TreeClone(SearchTree *src, SearchTree *dst)

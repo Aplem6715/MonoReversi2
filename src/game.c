@@ -41,11 +41,13 @@ void GameInit(Game *game, PlayerEnum black, PlayerEnum white, int mid, int end)
     // AIの初期化
     if (game->player[WHITE] == AI)
     {
-        TreeInit(&game->tree[WHITE], mid, end, 4, 8, 1, 1, false, false, false);
+        TreeInit(&game->tree[WHITE]);
+        TreeConfigDepth(&game->tree[WHITE], mid, end);
     }
     if (game->player[BLACK] == AI)
     {
-        TreeInit(&game->tree[BLACK], mid, end, 4, 8, 1, 1, false, false, false);
+        TreeInit(&game->tree[BLACK]);
+        TreeConfigDepth(&game->tree[BLACK], mid, end);
     }
     GameReset(game);
 }

@@ -164,8 +164,10 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight, vector<FeatureRe
 {
 
     SearchTree trees[2];
-    TreeInit(&trees[0], midDepth, endDepth, 4, 8, 1, 1, 0, 0); // 旧
-    TreeInit(&trees[1], midDepth, endDepth, 4, 8, 1, 1, 0, 0); // 新
+    TreeInit(&trees[0]); // 旧
+    TreeInit(&trees[1]); // 新
+    TreeConfigDepth(&trees[0], midDepth, endDepth);
+    TreeConfigDepth(&trees[1], midDepth, endDepth);
 
 #ifdef USE_NN
 #elif USE_REGRESSION
