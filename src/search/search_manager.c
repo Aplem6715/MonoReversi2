@@ -54,4 +54,15 @@ void SearchManagerSetup(SearchManager *sManager, uint64_t own, uint64_t opp)
     SearchManagerKillAll(sManager);
     sManager->stones->own = own;
     sManager->stones->opp = opp;
+    sManager->state = SM_WAIT;
+}
+
+void SearchManagerKillAll(SearchManager *sManager)
+{
+    for (int i = 0; i < sManager->numMaxBranches; i++)
+    {
+        BranchProcess *branch = &sManager->branches[i];
+        branch->tree->killFlag = true;
+    }
+    sManager->state = SM_WAIT;
 }
