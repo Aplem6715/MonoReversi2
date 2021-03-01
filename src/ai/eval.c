@@ -238,6 +238,16 @@ void EvalDelete(Evaluator *eval)
 #endif
 }
 
+void EvalClone(Evaluator *src, Evaluator *dst)
+{
+    dst->player = src->player;
+    for (int i = 0; i < FEAT_NUM; i++)
+    {
+        dst->FeatureStates[i] = src->FeatureStates[i];
+    }
+    RegrCopyWeight(src->regr, dst->regr);
+}
+
 void EvalReload(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player)
 {
     const PosToFeature *pos2f;

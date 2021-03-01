@@ -32,6 +32,7 @@ uint16_t OpponentIndex(uint16_t idx, uint8 digit);
 
 void EvalInit(Evaluator *eval);
 void EvalDelete(Evaluator *eval);
+void EvalClone(Evaluator *src, Evaluator *dst);
 void EvalReload(Evaluator *eval, uint64_t own, uint64_t opp, uint8 player);
 void EvalUpdate(Evaluator *eval, uint8 pos, uint64_t flip);
 void EvalUndo(Evaluator *eval, uint8 pos, uint64_t flip);
