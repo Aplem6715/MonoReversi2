@@ -36,6 +36,21 @@ void CopyScoreMap(score_t src[64], score_t dst[64])
     }
 }
 
+uint8 BestMoveFromMap(score_t map[64])
+{
+    score_t best = MIN_VALUE;
+    uint8 bestMove;
+    for (int pos = 0; pos < 64; pos++)
+    {
+        if (map[pos] > best)
+        {
+            bestMove = pos;
+            best = map[pos];
+        }
+    }
+    return bestMove;
+}
+
 void BranchInit(BranchProcess *branch)
 {
     TreeInit(branch->tree);
@@ -214,10 +229,11 @@ void SearchManagerStartSearch(SearchManager *sManager, uint8 enemyPos)
     }
 }
 
-int SearchManagerGetScoreMap(SearchManager *sManager, score_t map[64])
+uint8 SearchManagerGetMove(SearchManager *sManager, score_t map[64])
 {
     SearchManagerKillAll(sManager);
     CopyScoreMap(sManager->primaryBranch->tree->scoreMap, map);
+    return BestMoveFromMap(map);
 }
 
 void SearchManagerKillAll(SearchManager *sManager)

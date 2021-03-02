@@ -54,7 +54,7 @@ void SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 enemyPos);
 void SearchManagerStartPrimeSearch(SearchManager *sManager);
 void SearchManagerStartPreSearch(SearchManager *sManager);
 void SearchManagerStartSearch(SearchManager *sManager, uint8 enemyPos);
-int SearchManagerGetScoreMap(SearchManager *sManager, score_t map[64]);
+uint8 SearchManagerGetMove(SearchManager *sManager, score_t map[64]);
 void SearchManagerKillAll(SearchManager *sManager);
 
 #endif // _SEARCH_MANAGER_H_
