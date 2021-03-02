@@ -202,6 +202,7 @@ void SearchManagerStartPrimeSearch(SearchManager *sManager)
     BranchProcess *branch = sManager->branches;
     sManager->primaryBranch = branch;
 
+    branch->tree->killFlag = false;
     branch->state = BRANCH_PRIME_SEARCH;
     SearchWithSetup(branch->tree, sManager->stones->own, sManager->stones->opp, false);
     branch->state = BRANCH_WAIT;

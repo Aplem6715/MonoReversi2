@@ -795,5 +795,5 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
     {
         return secondMove;
     }
-    return bestMove;
+    return bestPos;
 }
