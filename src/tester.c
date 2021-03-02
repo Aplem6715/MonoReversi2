@@ -140,7 +140,7 @@ int Match(char *record, SearchTree tree[2], FILE *logFile)
             continue;
         }
 
-        pos = Search(&tree[BoardGetTurnColor(board)], BoardGetOwn(board), BoardGetOpp(board), 0);
+        pos = SearchWithSetup(&tree[BoardGetTurnColor(board)], BoardGetOwn(board), BoardGetOpp(board), 0);
 
         // 合法手判定
         if (!BoardIsLegalTT(board, pos))

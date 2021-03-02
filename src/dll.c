@@ -104,7 +104,7 @@ void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneM
  */
 int DllSearch(double *value)
 {
-    uint8 pos = Search(dllTree, BoardGetOwn(dllBoard), BoardGetOpp(dllBoard), 0);
+    uint8 pos = SearchWithSetup(dllTree, BoardGetOwn(dllBoard), BoardGetOpp(dllBoard), 0);
     *value = dllTree->score;
     return pos;
 }

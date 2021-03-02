@@ -114,7 +114,7 @@ uint8 WaitPosAI(Game *game, uint8 color)
 {
     uint8 input;
     printf("※考え中・・・\r");
-    input = Search(&game->tree[color], BoardGetOwn(game->board), BoardGetOpp(game->board), 0);
+    input = SearchWithSetup(&game->tree[color], BoardGetOwn(game->board), BoardGetOpp(game->board), 0);
     printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
            game->tree[color].usedTime, game->tree[color].nodeCount, game->tree[color].nodeCount / game->tree[color].usedTime, game->tree[color].score / (float)(STONE_VALUE));
     if (game->tree[color].isEndSearch)

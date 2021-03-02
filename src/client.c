@@ -126,7 +126,7 @@ int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn
         {
             printf("※考え中・・・\r");
             // AIが着手位置を決める
-            pos = Search(tree, BoardGetOwn(board), BoardGetOpp(board), 0);
+            pos = SearchWithSetup(tree, BoardGetOwn(board), BoardGetOpp(board), 0);
             printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
                    tree->usedTime, tree->nodeCount, tree->nodeCount / tree->usedTime, tree->score / (float)(STONE_VALUE));
             if (tree->isEndSearch)

@@ -38,6 +38,9 @@ typedef struct SearchOption
     // タイムリミットの有効・無効
     bool useTimeLimit;
 
+    // 次善手を選ぶか
+    bool choiceSecond;
+
 } SearchOption;
 
 /**
@@ -83,6 +86,8 @@ typedef struct SearchTree
     // 終盤探索だったかどうか
     uint8 isEndSearch;
 
+    // 最善手
+    uint8 bestMove;
     // 予想最善手の探索スコア
     score_t score;
     // スコアマップ
@@ -129,6 +134,6 @@ void SearchUpdateEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip);
 void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip);
 
 void SearchLaunchAsync(SearchTree *tree);
-uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond);
+uint8 SearchWithSetup(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond);
 
 #endif

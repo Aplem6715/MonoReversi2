@@ -94,13 +94,13 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
             if (BoardGetTurnColor(board) == BLACK)
             {
                 // AIが着手位置を決める
-                pos = Search(treeBlack, BoardGetOwn(board), BoardGetOpp(board), useSecondMove);
+                pos = SearchWithSetup(treeBlack, BoardGetOwn(board), BoardGetOpp(board), useSecondMove);
                 //printf("\n%f\n", treeBlack->score);
             }
             else
             {
                 // AIが着手位置を決める
-                pos = Search(treeWhite, BoardGetOwn(board), BoardGetOpp(board), useSecondMove);
+                pos = SearchWithSetup(treeWhite, BoardGetOwn(board), BoardGetOpp(board), useSecondMove);
                 //printf("\n%f\n", treeWhite->score);
             }
         }

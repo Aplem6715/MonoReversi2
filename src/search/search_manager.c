@@ -18,12 +18,14 @@
 #include "search_manager.h"
 #include "../bit_operation.h"
 
-void ApplyEnemyPut(Stones *stones, uint8 enemyPos)
+Stones ApplyEnemyPut(Stones *stones, uint8 enemyPos)
 {
+    Stones newStones;
     uint64_t flip = CalcFlip64(stones->opp, stones->own, enemyPos);
     uint64_t posBit = CalcPosBit(enemyPos);
-    stones->opp ^= flip | posBit;
-    stones->own ^= flip;
+    newStones.opp = stones->opp ^ (flip | posBit);
+    newStones.own = stones->own ^ flip;
+    return newStones;
 }
 
 void CopyScoreMap(score_t src[64], score_t dst[64])
@@ -47,8 +49,18 @@ void BranchDelete(BranchProcess *branch)
     TreeDelete(branch->tree);
 }
 
-void BranchLaunchAsync(BranchProcess *branch)
+void StartSearchAsync(void *tree)
 {
+    SearchWithoutSetup((SearchTree *)tree);
+    _endthread();
+}
+
+void BranchLaunch(BranchProcess *branch, Stones *beforeEnemyStones)
+{
+    Stones stones = ApplyEnemyPut(beforeEnemyStones, branch->enemyMove);
+    SearchSetup(branch->tree, stones.own, stones.opp);
+
+    branch->processHandle = (HANDLE)_beginthread(StartSearchAsync, 0, branch->tree);
 }
 
 void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAsyncPreSearch)
@@ -97,7 +109,7 @@ void SearchManagerStartPrimeSearch(SearchManager *sManager)
     assert(sManager->state == SM_WAIT);
     BranchProcess *branch = sManager->branches;
 
-    Search(branch->tree, sManager->stones->own, sManager->stones->opp, false);
+    SearchWithSetup(branch->tree, sManager->stones->own, sManager->stones->opp, false);
     CopyScoreMap(branch->tree->scoreMap, sManager->scoreMap);
 
     sManager->state = SM_WAIT;
@@ -148,7 +160,7 @@ void SearchManagerStartPreSearch(SearchManager *sManager)
 
     // 敵盤面で浅い探索をして，スコアマップを作成
     sManager->state = SM_PRE_SORT;
-    Search(branch->tree, sManager->stones->opp, sManager->stones->own, false);
+    SearchWithSetup(branch->tree, sManager->stones->opp, sManager->stones->own, false);
 
     // スコアマップの上位いくつかを抽出してBranchに設定
     ResetBranches(sManager);
@@ -161,7 +173,7 @@ void SearchManagerStartPreSearch(SearchManager *sManager)
     sManager->state = SM_PRE_SEARCH;
     for (int i = 0; i < sManager->numMaxBranches; i++)
     {
-        BranchLaunchAsync(&sManager->branches[i]);
+        BranchLaunch(&sManager->branches[i], sManager->stones);
     }
 }
 
@@ -174,7 +186,7 @@ void SearchManagerStartSearch(SearchManager *sManager, uint8 enemyPos)
         break;
 
     case SM_WAIT:
-        ApplyEnemyPut(sManager->stones, enemyPos);
+        *sManager->stones = ApplyEnemyPut(sManager->stones, enemyPos);
         SearchManagerStartPrimeSearch(sManager);
         break;
 
@@ -183,7 +195,7 @@ void SearchManagerStartSearch(SearchManager *sManager, uint8 enemyPos)
         assert(true);
 
         // fail soft
-        ApplyEnemyPut(sManager->stones, enemyPos);
+        *sManager->stones = ApplyEnemyPut(sManager->stones, enemyPos);
         SearchManagerKillAll(sManager);
         SearchManagerStartPrimeSearch(sManager);
     }

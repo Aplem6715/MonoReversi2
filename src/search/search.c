@@ -33,6 +33,7 @@ static const SearchOption DEFAULT_OPTION = {
     false, // MPCの有効無効
     false, // MPCのネスト可否
     true,  // タイムリミットの有効・無効
+    false, // 次善手を選ぶかどうか
 };
 
 static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
@@ -346,34 +347,18 @@ void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
     tree->nbEmpty++;
 }
 
-void SearchLaunchAsync(SearchTree *tree)
-{
-}
-
-/**
- * @brief 予想最善手の探索（AIのメイン処理）
- * 
- * @param tree 探索木
- * @param own 自身の石配置
- * @param opp 相手の石配置
- * @param choiceSecond 次善手を選ぶかどうか
- * @return uint8 予想最善手の位置番号
- */
-uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
+uint8 SearchWithoutSetup(SearchTree *tree)
 {
     uint8 pos = NOMOVE_INDEX;
-    uint8 nbEmpty = CountBits(~(own | opp));
 
     clock_t start, finish;
     start = clock();
-
-    SearchSetup(tree, own, opp);
 
     if (tree->nbEmpty == 60)
     {
         pos = FIRST_MOVES_INDEX[rand() % 4];
     }
-    else if (nbEmpty <= tree->option.endDepth)
+    else if (tree->nbEmpty <= tree->option.endDepth)
     {
         if (!tree->isEndSearch)
         {
@@ -384,12 +369,12 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
             if (tree->option.useHash)
                 HashTableResetScoreWindows(tree->nwsTable);
         }
-        tree->depth = nbEmpty;
+        tree->depth = tree->nbEmpty;
         tree->pvsDepth = tree->option.endPvsDepth;
         tree->orderDepth = tree->pvsDepth;
         tree->hashDepth = tree->pvsDepth;
         tree->pvHashDepth = tree->pvsDepth - 1;
-        pos = EndRoot(tree, choiceSecond);
+        pos = EndRoot(tree, tree->option.choiceSecond);
     }
     else
     {
@@ -399,7 +384,7 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
         tree->orderDepth = tree->pvsDepth;
         tree->hashDepth = tree->pvsDepth;
         tree->pvHashDepth = tree->pvsDepth - 1;
-        pos = MidRoot(tree, choiceSecond);
+        pos = MidRoot(tree, tree->option.choiceSecond);
     }
 
     finish = clock();
@@ -414,5 +399,25 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
               tree->score / (float)(STONE_VALUE));
 
     assert(tree->nbMpcNested == 0);
+
+    tree->bestMove = pos;
+    return pos;
+}
+
+/**
+ * @brief 予想最善手の探索（AIのメイン処理）
+ * 
+ * @param tree 探索木
+ * @param own 自身の石配置
+ * @param opp 相手の石配置
+ * @param choiceSecond 次善手を選ぶかどうか
+ * @return uint8 予想最善手の位置番号
+ */
+uint8 SearchWithSetup(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
+{
+    SearchSetup(tree, own, opp);
+    tree->option.choiceSecond = choiceSecond;
+    uint8 pos = SearchWithoutSetup(tree);
+
     return pos;
 }

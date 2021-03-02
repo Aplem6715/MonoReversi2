@@ -119,7 +119,7 @@ void Bench1Game(SearchTree tree[2], vector<uint8> moves, int nbPut, ofstream &lo
         {
             BoardSkip(board);
         }
-        pos = Search(turnTree, BoardGetOwn(board), BoardGetOpp(board), 0);
+        pos = SearchWithSetup(turnTree, BoardGetOwn(board), BoardGetOpp(board), 0);
         BoardPutTT(board, pos);
         BoardDraw(board);
         CalcPosAscii(pos, &xAscii, &y);
