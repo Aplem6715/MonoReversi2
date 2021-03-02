@@ -39,8 +39,10 @@ typedef struct SearchManager
 void SearchManagerInit(SearchManager *sManager, int maxSubProcess);
 void SearchManagerDelete(SearchManager *sManager);
 void SearchManagerSetup(SearchManager *sManager, uint64_t own, uint64_t opp);
-void SearchManagerStartSearch(SearchManager *sManager);
-void SearchManagerKillWithEnemyPut(SearchManager *sManager, uint8 pos);
+void SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 enemyPos);
+void SearchManagerStartPrimeSearch(SearchManager *sManager);
+void SearchManagerStartPreSearch(SearchManager *sManager);
+void SearchManagerStartSearch(SearchManager *sManager, uint8 enemyPos);
 int SearchManagerGetScoreMap(SearchManager *sManager, score_t map[64]);
 void SearchManagerKillAll(SearchManager *sManager);
 

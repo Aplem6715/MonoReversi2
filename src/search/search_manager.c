@@ -13,7 +13,18 @@
  * Branchは探索を続行，それ以外のプロセスの探索を終了する。
  * 
  */
+#include <assert.h>
+#include <stdio.h>
 #include "search_manager.h"
+#include "../bit_operation.h"
+
+void ApplyEnemyPut(Stones *stones, uint8 enemyPos)
+{
+    uint64_t flip = CalcFlip64(stones->opp, stones->own, enemyPos);
+    uint64_t posBit = CalcPosBit(enemyPos);
+    stones->opp ^= flip | posBit;
+    stones->own ^= flip;
+}
 
 void BranchInit(BranchProcess *branch)
 {
@@ -55,6 +66,41 @@ void SearchManagerSetup(SearchManager *sManager, uint64_t own, uint64_t opp)
     sManager->stones->own = own;
     sManager->stones->opp = opp;
     sManager->state = SM_WAIT;
+}
+
+void SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 enemyPos)
+{
+    for (int i = 0; i < sManager->numMaxBranches; i++)
+    {
+        BranchProcess *branch = &sManager->branches[i];
+        if (branch->enemyMove != enemyPos)
+        {
+            branch->tree->killFlag = true;
+        }
+    }
+}
+
+void SearchManagerStartPrimeSearch(SearchManager *sManager);
+void SearchManagerStartPreSearch(SearchManager *sManager);
+
+void SearchManagerStartSearch(SearchManager *sManager, uint8 enemyPos)
+{
+    switch (sManager->state)
+    {
+    case SM_PRE_SEARCH:
+        SearchManagerKillWithoutEnemyPut(sManager, enemyPos);
+    case SM_WAIT:
+        ApplyEnemyPut(sManager->stones, enemyPos);
+        SearchManagerStartPrimeSearch(sManager);
+    default:
+        // Unreachable
+        assert(true);
+
+        // fail soft
+        ApplyEnemyPut(sManager->stones, enemyPos);
+        SearchManagerKillAll(sManager);
+        SearchManagerStartPrimeSearch(sManager);
+    }
 }
 
 void SearchManagerKillAll(SearchManager *sManager)
