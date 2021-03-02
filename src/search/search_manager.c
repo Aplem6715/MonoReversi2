@@ -47,6 +47,10 @@ void BranchDelete(BranchProcess *branch)
     TreeDelete(branch->tree);
 }
 
+void BranchLaunchAsync(BranchProcess *branch)
+{
+}
+
 void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAsyncPreSearch)
 {
     sManager->numMaxBranches = maxSubProcess;
@@ -99,8 +103,66 @@ void SearchManagerStartPrimeSearch(SearchManager *sManager)
     sManager->state = SM_WAIT;
 }
 
+void ResetBranches(SearchManager *sManager)
+{
+    for (int i = 0; i < sManager->numMaxBranches; i++)
+    {
+        sManager->branches[i].enemyMove = NOMOVE_INDEX;
+        sManager->branches[i].enemyScore = MIN_VALUE;
+    }
+}
+
+void InsertBranch(SearchManager *sManager, uint8 pos, score_t score, int idx)
+{
+    // 終端からidxまでをシフトして，idx位置のbranchを開ける
+    for (int i = sManager->numMaxBranches - 1; i > idx; i--)
+    {
+        BranchProcess *betterBranch = &sManager->branches[i - 1];
+        BranchProcess *currentBranch = &sManager->branches[i];
+
+        currentBranch->enemyMove = betterBranch->enemyMove;
+        currentBranch->enemyScore = betterBranch->enemyScore;
+    }
+    // 空いた場所に新しいbranch情報を追加
+    sManager->branches[idx].enemyMove = pos;
+    sManager->branches[idx].enemyScore = score;
+}
+
+void InsertBestBranch(SearchManager *sManager, uint8 pos, score_t score)
+{
+    for (int i = 0; i < sManager->numMaxBranches; i++)
+    {
+        BranchProcess *branch = &sManager->branches[i];
+        if (branch->enemyScore < score)
+        {
+            InsertBranch(sManager, pos, score, i);
+            break;
+        }
+    }
+}
+
 void SearchManagerStartPreSearch(SearchManager *sManager)
 {
+    assert(sManager->state == SM_WAIT);
+    BranchProcess *branch = sManager->branches;
+
+    // 敵盤面で浅い探索をして，スコアマップを作成
+    sManager->state = SM_PRE_SORT;
+    Search(branch->tree, sManager->stones->opp, sManager->stones->own, false);
+
+    // スコアマップの上位いくつかを抽出してBranchに設定
+    ResetBranches(sManager);
+    for (int pos = 0; pos < 64; pos++)
+    {
+        InsertBestBranch(sManager, pos, branch->tree->scoreMap[pos]);
+    }
+
+    // 各Branchで非同期探索開始
+    sManager->state = SM_PRE_SEARCH;
+    for (int i = 0; i < sManager->numMaxBranches; i++)
+    {
+        BranchLaunchAsync(&sManager->branches[i]);
+    }
 }
 
 void SearchManagerStartSearch(SearchManager *sManager, uint8 enemyPos)
@@ -109,9 +171,13 @@ void SearchManagerStartSearch(SearchManager *sManager, uint8 enemyPos)
     {
     case SM_PRE_SEARCH:
         SearchManagerKillWithoutEnemyPut(sManager, enemyPos);
+        break;
+
     case SM_WAIT:
         ApplyEnemyPut(sManager->stones, enemyPos);
         SearchManagerStartPrimeSearch(sManager);
+        break;
+
     default:
         // Unreachable
         assert(true);

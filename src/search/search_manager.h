@@ -22,6 +22,7 @@ typedef struct BranchProcess
     HANDLE scoreMapMutex;
 
     uint8 enemyMove;
+    score_t enemyScore;
 } BranchProcess;
 
 typedef struct SearchManager
