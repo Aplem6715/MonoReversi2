@@ -29,6 +29,7 @@ typedef struct SearchManager
     Stones stones[1];
     BranchProcess *branches;
     SearchMangerState state;
+    score_t scoreMap[64];
 
     int numMaxBranches;
     int numBranches;

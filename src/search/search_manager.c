@@ -26,6 +26,14 @@ void ApplyEnemyPut(Stones *stones, uint8 enemyPos)
     stones->own ^= flip;
 }
 
+void CopyScoreMap(score_t src[64], score_t dst[64])
+{
+    for (int i = 0; i < 64; i++)
+    {
+        dst[i] = src[i];
+    }
+}
+
 void BranchInit(BranchProcess *branch)
 {
     TreeInit(branch->tree);
@@ -80,8 +88,20 @@ void SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 enemyPos)
     }
 }
 
-void SearchManagerStartPrimeSearch(SearchManager *sManager);
-void SearchManagerStartPreSearch(SearchManager *sManager);
+void SearchManagerStartPrimeSearch(SearchManager *sManager)
+{
+    assert(sManager->state == SM_WAIT);
+    BranchProcess *branch = sManager->branches;
+
+    Search(branch->tree, sManager->stones->own, sManager->stones->opp, false);
+    CopyScoreMap(branch->tree->scoreMap, sManager->scoreMap);
+
+    sManager->state = SM_WAIT;
+}
+
+void SearchManagerStartPreSearch(SearchManager *sManager)
+{
+}
 
 void SearchManagerStartSearch(SearchManager *sManager, uint8 enemyPos)
 {
@@ -102,6 +122,8 @@ void SearchManagerStartSearch(SearchManager *sManager, uint8 enemyPos)
         SearchManagerStartPrimeSearch(sManager);
     }
 }
+
+int SearchManagerGetScoreMap(SearchManager *sManager, score_t map[64]);
 
 void SearchManagerKillAll(SearchManager *sManager)
 {

@@ -80,10 +80,13 @@ typedef struct SearchTree
     size_t nbCut;
     // 探索時間
     double usedTime;
-    // 予想最善手の探索スコア
-    score_t score;
     // 終盤探索だったかどうか
     uint8 isEndSearch;
+
+    // 予想最善手の探索スコア
+    score_t score;
+    // スコアマップ
+    score_t scoreMap[64];
 
     // 探索終了時刻
     clock_t timeLimit;
