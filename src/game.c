@@ -52,7 +52,7 @@ void GameInit(Game *game, GameMode mode, int mid, int end)
         break;
     case GM_CPU_BLACK:
     case GM_CPU_WHITE:
-        SearchManagerInit(game->sManager, DEFAULT_PROCESS_NUM, false);
+        SearchManagerInit(game->sManager, DEFAULT_PROCESS_NUM, true);
         SearchManagerConfigure(game->sManager, mid, end);
     default:
         assert(true);
@@ -171,10 +171,10 @@ void GameStart(Game *game)
     game->turn = 0;
     GameReset(game);
 
+    BoardDraw(game->board);
     while (!BoardIsFinished(game->board))
     {
         turnColor = BoardGetTurnColor(game->board);
-        BoardDraw(game->board);
         if (BoardGetMobility(game->board) == 0)
         {
             if (turnColor == BLACK)
@@ -207,6 +207,7 @@ void GameStart(Game *game)
         // 合法手判定
         if (!BoardIsLegalTT(game->board, pos))
         {
+            BoardDraw(game->board);
             printf("%c%dには置けません\n",
                    (char)('A' + pos % 8),
                    pos / 8 + 1);
@@ -218,6 +219,10 @@ void GameStart(Game *game)
                    (turnColor == BLACK ? "○" : "●"),
                    (char)('A' + pos % 8),
                    pos / 8 + 1);
+
+            // 実際に着手
+            BoardPutTT(game->board, pos);
+            BoardDraw(game->board);
             game->moves[game->turn] = pos;
             game->turn++;
             if (IsAITurn(game->mode, turnColor))
@@ -229,10 +234,6 @@ void GameStart(Game *game)
                 SearchManagerUpdateOpp(game->sManager, pos);
             }
         }
-
-        // 実際に着手
-        BoardPutTT(game->board, pos);
-
     } //end of loop:　while (!BoardIsFinished(game->board))
 
     // 勝敗を表示

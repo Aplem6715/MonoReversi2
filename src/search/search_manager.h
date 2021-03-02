@@ -56,7 +56,7 @@ void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAs
 void SearchManagerConfigure(SearchManager *sManager, int mid, int end);
 void SearchManagerDelete(SearchManager *sManager);
 void SearchManagerSetup(SearchManager *sManager, uint64_t own, uint64_t opp);
-void SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 enemyPos);
+BranchProcess *SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 enemyPos);
 void SearchManagerStartPrimeSearch(SearchManager *sManager);
 void SearchManagerStartPreSearch(SearchManager *sManager);
 void SearchManagerStartSearch(SearchManager *sManager);

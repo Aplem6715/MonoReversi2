@@ -764,7 +764,7 @@ score_t MidPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
             }
 
             // 時間切れ・探索の中断
-            if (tree->option.useTimeLimit && depth >= TIME_LIMIT_CHECK_MIN_DEPTH && clock() > tree->timeLimit)
+            if (tree->killFlag || (tree->option.useTimeLimit && depth >= TIME_LIMIT_CHECK_MIN_DEPTH && SearchIsTimeup(tree)))
             {
                 tree->isIntrrupted = true;
                 return bestScore;
@@ -877,7 +877,7 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
         }
 
         // 時間切れ・探索の中断
-        if (tree->option.useTimeLimit && depth >= TIME_LIMIT_CHECK_MIN_DEPTH && clock() > tree->timeLimit)
+        if (tree->killFlag || (tree->option.useTimeLimit && depth >= TIME_LIMIT_CHECK_MIN_DEPTH && SearchIsTimeup(tree)))
         {
             tree->isIntrrupted = true;
             return bestMove;
@@ -939,7 +939,6 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
     // 反復深化
     if (tree->option.useIDDS)
     {
-        tree->isIntrrupted = false;
         tree->timeLimit = clock() + CLOCKS_PER_SEC * tree->option.oneMoveTime;
 
         // sqrtのほうが早いが，探索中断ができなくなるので1ずつ増やす
@@ -960,7 +959,7 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
 
         for (i = 0; i < nDepths; i++)
         {
-            printf("Searching Depth: %d  \n", depths[i]);
+            //printf("Searching Depth: %d  \n", depths[i]);
             bestMove = MidPVSRoot(tree, &moveList, depths[i], &tree->score, &secondMove, latestScoreMap);
             if (tree->isIntrrupted)
             {

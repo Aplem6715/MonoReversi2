@@ -692,7 +692,6 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
     score_t latestScoreMap[64];
     ResetScoreMap(latestScoreMap);
     ResetScoreMap(tree->scoreMap);
-    tree->isIntrrupted = false;
 
     uint8 depth = tree->depth;
     SearchFunc_t NextSearch;

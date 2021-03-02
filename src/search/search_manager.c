@@ -94,6 +94,10 @@ void StartSearchAsync(void *tree)
 void BranchLaunch(BranchProcess *branch, Stones *beforeEnemyStones)
 {
     Stones stones = ApplyEnemyPut(beforeEnemyStones, branch->enemyMove);
+    branch->tree->killFlag = false;
+
+    // 事前探索をするときは深度制限を到達できないほど深く.タイマーOFF
+    TreeConfig(branch->tree, 20, 20, 10000, true, false, false);
     SearchSetup(branch->tree, stones.own, stones.opp);
 
     branch->processHandle = (HANDLE)_beginthread(StartSearchAsync, 0, branch->tree);
@@ -146,6 +150,8 @@ void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAs
     sManager->state = SM_WAIT;
     sManager->enableAsyncPreSearching = enableAsyncPreSearch;
     sManager->branches = (BranchProcess *)malloc(maxSubProcess * sizeof(BranchProcess));
+    sManager->masterOption = DEFAULT_OPTION;
+
     for (int i = 0; i < maxSubProcess; i++)
     {
         BranchInit(&sManager->branches[i]);
@@ -177,33 +183,47 @@ void SearchManagerSetup(SearchManager *sManager, uint64_t own, uint64_t opp)
     sManager->state = SM_WAIT;
 }
 
-void SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 enemyPos)
+BranchProcess *SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 enemyPos)
 {
     BranchProcess *branch;
+    BranchProcess *primary = NULL;
     for (int i = 0; i < sManager->numMaxBranches; i++)
     {
         branch = &sManager->branches[i];
+        if (branch->state == BRANCH_WAIT)
+            continue;
         if (branch->enemyMove == enemyPos)
         {
-            sManager->primaryBranch = branch;
+            primary = branch;
+            sManager->state = SM_PRIMARY_SEARCH;
         }
         else
         {
             branch->tree->killFlag = true;
         }
     }
-    sManager->state = SM_PRIMARY_SEARCH;
+
+    for (int i = 0; i < sManager->numMaxBranches; i++)
+    {
+        branch = &sManager->branches[i];
+        if (branch->state != BRANCH_WAIT && branch->enemyMove != enemyPos)
+        {
+            WaitForSingleObject(branch->processHandle, INFINITE);
+        }
+    }
+    return primary;
 }
 
 void SearchManagerStartPrimeSearch(SearchManager *sManager)
 {
-    assert(sManager->state == SM_WAIT);
+    assert(sManager->state != SM_PRIMARY_SEARCH);
     sManager->state = SM_PRIMARY_SEARCH;
     BranchProcess *branch = sManager->branches;
     sManager->primaryBranch = branch;
 
     branch->tree->killFlag = false;
     branch->state = BRANCH_PRIME_SEARCH;
+    TreeConfigClone(branch->tree, sManager->masterOption);
     SearchWithSetup(branch->tree, sManager->stones->own, sManager->stones->opp, false);
     branch->state = BRANCH_WAIT;
 
@@ -215,17 +235,33 @@ void SearchManagerStartPrimeSearch(SearchManager *sManager)
 void SearchManagerStartPreSearch(SearchManager *sManager)
 {
     assert(sManager->state == SM_WAIT);
-    BranchProcess *branch = sManager->branches;
+    uint64_t mob = CalcMobility64(sManager->stones->opp, sManager->stones->own);
+    int nbMoves = CountBits(mob);
 
-    // 敵盤面で浅い探索をして，スコアマップを作成
-    sManager->state = SM_PRE_SORT;
-    SearchWithSetup(branch->tree, sManager->stones->opp, sManager->stones->own, false);
-
-    // スコアマップの上位いくつかを抽出してBranchに設定
-    ResetBranches(sManager);
-    for (int pos = 0; pos < 64; pos++)
+    if (nbMoves == 0)
     {
-        InsertBestBranch(sManager, pos, branch->tree->scoreMap[pos]);
+        return;
+    }
+
+    if (nbMoves > 1)
+    {
+        BranchProcess *branch = sManager->branches;
+        // 敵盤面で浅い探索をして，スコアマップを作成
+        sManager->state = SM_PRE_SORT;
+        branch->tree->killFlag = false;
+        TreeConfigDepth(branch->tree, 6, 10);
+        SearchWithSetup(branch->tree, sManager->stones->opp, sManager->stones->own, false);
+        // スコアマップの上位いくつかを抽出してBranchに設定
+        ResetBranches(sManager);
+        for (int pos = 0; pos < 64; pos++)
+        {
+            InsertBestBranch(sManager, pos, branch->tree->scoreMap[pos]);
+        }
+    }
+    else
+    {
+        ResetBranches(sManager);
+        InsertBestBranch(sManager, PosIndexFromBit(mob), MAX_VALUE);
     }
 
     // 各Branchで非同期探索開始
@@ -233,8 +269,12 @@ void SearchManagerStartPreSearch(SearchManager *sManager)
     sManager->primaryBranch = NULL;
     for (int i = 0; i < sManager->numMaxBranches; i++)
     {
-        sManager->branches[i].state = BRANCH_PRE_SEARCH;
-        BranchLaunch(&sManager->branches[i], sManager->stones);
+        assert(sManager->branches[i].state == BRANCH_WAIT);
+        if (sManager->branches[i].enemyMove != NOMOVE_INDEX)
+        {
+            sManager->branches[i].state = BRANCH_PRE_SEARCH;
+            BranchLaunch(&sManager->branches[i], sManager->stones);
+        }
     }
 }
 
@@ -245,13 +285,17 @@ void SearchManagerStartSearch(SearchManager *sManager)
     case SM_PRE_SEARCH:
         break;
 
+    case SM_PRIMARY_SEARCH:
+        // すでに探索実行中
+        break;
+
     case SM_WAIT:
         SearchManagerStartPrimeSearch(sManager);
         break;
 
     default:
         // Unreachable
-        assert(true);
+        assert(false);
 
         // fail soft
         SearchManagerKillAll(sManager);
@@ -262,20 +306,36 @@ void SearchManagerStartSearch(SearchManager *sManager)
 void SearchManagerUpdateOpp(SearchManager *sManager, uint8 enemyPos)
 {
     *sManager->stones = ApplyEnemyPut(sManager->stones, enemyPos);
-    if (sManager->state == SM_PRE_SEARCH)
+    if (sManager->enableAsyncPreSearching && sManager->state == SM_PRE_SEARCH)
     {
-        SearchManagerKillWithoutEnemyPut(sManager, enemyPos);
+        sManager->primaryBranch = SearchManagerKillWithoutEnemyPut(sManager, enemyPos);
+        if (sManager->primaryBranch == NULL)
+        {
+            SearchManagerStartPrimeSearch(sManager);
+        }
+        else
+        {
+            printf("Found PreSearch!!\n");
+        }
     }
 }
 
 void SearchManagerUpdateOwn(SearchManager *sManager, uint8 myPos)
 {
     *sManager->stones = ApplyOwnPut(sManager->stones, myPos);
+    if (sManager->enableAsyncPreSearching)
+    {
+        SearchManagerStartPreSearch(sManager);
+    }
 }
 
 uint8 SearchManagerGetMove(SearchManager *sManager, score_t map[64])
 {
+    assert(sManager->primaryBranch != NULL);
     SearchTree *tree = sManager->primaryBranch->tree;
+
+    Sleep(1000 * sManager->masterOption.oneMoveTime);
+
     SearchManagerKillAll(sManager);
     CopyScoreMap(tree->scoreMap, map);
     printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
@@ -298,8 +358,13 @@ void SearchManagerKillAll(SearchManager *sManager)
 
     for (int i = 0; i < sManager->numMaxBranches; i++)
     {
-        WaitForSingleObject(sManager->branches[i].processHandle, INFINITE);
-        sManager->branches[i].state = BRANCH_WAIT;
+        BranchProcess *branch = &sManager->branches[i];
+        if (branch->state != BRANCH_WAIT)
+        {
+            WaitForSingleObject(branch->processHandle, INFINITE);
+            branch->state = BRANCH_WAIT;
+            branch->tree->killFlag = false;
+        }
     }
     sManager->state = SM_WAIT;
 }

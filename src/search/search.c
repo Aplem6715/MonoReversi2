@@ -22,20 +22,6 @@
 #include "../ai/nnet.h"
 #include "../bit_operation.h"
 
-static const SearchOption DEFAULT_OPTION = {
-    12,    // 中盤探索深度
-    20,    // 終盤探索深度
-    4,     // 中盤PVS限界
-    8,     // 終盤PVS限界
-    true,  // ハッシュ表の利用
-    true,  // PVハッシュの利用
-    true,  // 反復深化の利用
-    false, // MPCの有効無効
-    false, // MPCのネスト可否
-    true,  // タイムリミットの有効・無効
-    false, // 次善手を選ぶかどうか
-};
-
 static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
 
 void ResetScoreMap(score_t scoreMap[64])
@@ -143,6 +129,11 @@ void TreeConfig(SearchTree *tree, unsigned char midDepth, unsigned char endDepth
     }
 }
 
+void TreeConfigClone(SearchTree *tree, SearchOption newOption)
+{
+    tree->option = newOption;
+}
+
 void TreeConfigDepth(SearchTree *tree, unsigned char midDepth, unsigned char endDepth)
 {
     tree->option.midDepth = midDepth;
@@ -211,6 +202,20 @@ void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
 
     tree->stones->own = own;
     tree->stones->opp = opp;
+}
+
+void SearchMutexSetup(SearchTree *tree, HANDLE timerMutex)
+{
+    tree->timerMutex = timerMutex;
+}
+
+bool SearchIsTimeup(SearchTree *tree)
+{
+    bool isTimeup;
+    WaitForSingleObject(tree->timerMutex, INFINITE);
+    isTimeup = clock() > tree->timeLimit;
+    ReleaseMutex(tree->timerMutex);
+    return isTimeup;
 }
 
 /**
@@ -350,6 +355,7 @@ void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
 uint8 SearchWithoutSetup(SearchTree *tree)
 {
     uint8 pos = NOMOVE_INDEX;
+    tree->isIntrrupted = false;
 
     clock_t start, finish;
     start = clock();

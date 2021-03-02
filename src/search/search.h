@@ -3,14 +3,16 @@
 
 #define WIN_VALUE (1000000)
 
+#undef D8
 #include <time.h>
+#include <Windows.h>
 #include <process.h>
 
+#include "../const.h"
+#include "../stones.h"
+#include "../ai/eval.h"
 #include "hash.h"
 #include "moves.h"
-#include "../stones.h"
-#include "../const.h"
-#include "../ai/eval.h"
 
 typedef struct SearchOption
 {
@@ -42,6 +44,21 @@ typedef struct SearchOption
     bool choiceSecond;
 
 } SearchOption;
+
+static const SearchOption DEFAULT_OPTION = {
+    12,    // 中盤探索深度
+    20,    // 終盤探索深度
+    4,     // 中盤PVS限界
+    8,     // 終盤PVS限界
+    1,     // 一手にかける時間
+    true,  // ハッシュ表の利用
+    true,  // PVハッシュの利用
+    true,  // 反復深化の利用
+    false, // MPCの有効無効
+    false, // MPCのネスト可否
+    true,  // タイムリミットの有効・無効
+    false, // 次善手を選ぶかどうか
+};
 
 /**
  * @brief 探索木の情報を持つオブジェクト
@@ -93,6 +110,7 @@ typedef struct SearchTree
     // スコアマップ
     score_t scoreMap[64];
 
+    HANDLE timerMutex;
     // 探索終了時刻
     clock_t timeLimit;
     // 中断されたか
@@ -116,11 +134,15 @@ void UpdateScoreMap(score_t latest[64], score_t complete[64]);
 void TreeInit(SearchTree *tree);
 void TreeDelete(SearchTree *tree);
 void TreeConfig(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC);
+void TreeConfigClone(SearchTree *tree, SearchOption newOption);
 void TreeConfigDepth(SearchTree *tree, unsigned char midDepth, unsigned char endDepth);
 void TreeClone(SearchTree *src, SearchTree *dst);
 void TreeReset(SearchTree *tree);
 
 void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp);
+void SearchMutexSetup(SearchTree *tree, HANDLE timerMutex);
+bool SearchIsTimeup(SearchTree *tree);
+
 void SearchPassMid(SearchTree *tree);
 void SearchUpdateMid(SearchTree *tree, Move *move);
 void SearchRestoreMid(SearchTree *tree, Move *move);
