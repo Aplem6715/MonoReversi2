@@ -1,11 +1,14 @@
 #if !defined(_SEARCH_MANAGER_H_)
 #define _SEARCH_MANAGER_H_
 
+#undef D8
+#include <process.h>
+#include <windows.h>
+
 #include "../const.h"
 #include "search.h"
 
-#include <windows.h>
-#include <process.h>
+#define DEFAULT_PROCESS_NUM 4
 
 typedef enum BranchState
 {
@@ -39,6 +42,8 @@ typedef struct SearchManager
     BranchProcess *branches;
     BranchProcess *primaryBranch;
     SearchMangerState state;
+    SearchOption masterOption;
+
     score_t scoreMap[64];
 
     int numMaxBranches;
@@ -47,13 +52,16 @@ typedef struct SearchManager
     bool enableAsyncPreSearching;
 } SearchManager;
 
-void SearchManagerInit(SearchManager *sManager, int maxSubProcess);
+void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAsyncPreSearch);
+void SearchManagerConfigure(SearchManager *sManager, int mid, int end);
 void SearchManagerDelete(SearchManager *sManager);
 void SearchManagerSetup(SearchManager *sManager, uint64_t own, uint64_t opp);
 void SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 enemyPos);
 void SearchManagerStartPrimeSearch(SearchManager *sManager);
 void SearchManagerStartPreSearch(SearchManager *sManager);
-void SearchManagerStartSearch(SearchManager *sManager, uint8 enemyPos);
+void SearchManagerStartSearch(SearchManager *sManager);
+void SearchManagerUpdateOpp(SearchManager *sManager, uint8 enemyPos);
+void SearchManagerUpdateOwn(SearchManager *sManager, uint8 myPos);
 uint8 SearchManagerGetMove(SearchManager *sManager, score_t map[64]);
 void SearchManagerKillAll(SearchManager *sManager);
 

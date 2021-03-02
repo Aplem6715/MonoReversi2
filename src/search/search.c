@@ -353,10 +353,12 @@ uint8 SearchWithoutSetup(SearchTree *tree)
 
     clock_t start, finish;
     start = clock();
+    ResetScoreMap(tree->scoreMap);
 
     if (tree->nbEmpty == 60)
     {
         pos = FIRST_MOVES_INDEX[rand() % 4];
+        tree->scoreMap[pos] = 0;
     }
     else if (tree->nbEmpty <= tree->option.endDepth)
     {

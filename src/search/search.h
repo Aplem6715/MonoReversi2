@@ -1,5 +1,5 @@
-#ifndef PVS_DEFINED
-#define PVS_DEFINED
+#ifndef _SEARCH_H_
+#define _SEARCH_H_
 
 #define WIN_VALUE (1000000)
 
@@ -134,6 +134,7 @@ void SearchUpdateEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip);
 void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip);
 
 void SearchLaunchAsync(SearchTree *tree);
+uint8 SearchWithoutSetup(SearchTree *tree);
 uint8 SearchWithSetup(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond);
 
 #endif

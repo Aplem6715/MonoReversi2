@@ -15,11 +15,31 @@
  */
 #include <assert.h>
 #include <stdio.h>
+
 #include "search_manager.h"
 #include "../bit_operation.h"
 
+Stones ApplyOwnPut(Stones *stones, uint8 myPos)
+{
+    if (myPos == NOMOVE_INDEX)
+    {
+        return *stones;
+    }
+    Stones newStones;
+    uint64_t flip = CalcFlip64(stones->own, stones->opp, myPos);
+    uint64_t posBit = CalcPosBit(myPos);
+    newStones.own = stones->own ^ (flip | posBit);
+    newStones.opp = stones->opp ^ flip;
+
+    return newStones;
+}
+
 Stones ApplyEnemyPut(Stones *stones, uint8 enemyPos)
 {
+    if (enemyPos == NOMOVE_INDEX)
+    {
+        return *stones;
+    }
     Stones newStones;
     uint64_t flip = CalcFlip64(stones->opp, stones->own, enemyPos);
     uint64_t posBit = CalcPosBit(enemyPos);
@@ -79,6 +99,47 @@ void BranchLaunch(BranchProcess *branch, Stones *beforeEnemyStones)
     branch->processHandle = (HANDLE)_beginthread(StartSearchAsync, 0, branch->tree);
 }
 
+void ResetBranches(SearchManager *sManager)
+{
+    for (int i = 0; i < sManager->numMaxBranches; i++)
+    {
+        sManager->branches[i].enemyMove = NOMOVE_INDEX;
+        sManager->branches[i].enemyScore = MIN_VALUE;
+    }
+}
+
+void InsertBranch(SearchManager *sManager, uint8 pos, score_t score, int idx)
+{
+    BranchProcess *betterBranch;
+    BranchProcess *currentBranch;
+    // 終端からidxまでをシフトして，idx位置のbranchを開ける
+    for (int i = sManager->numMaxBranches - 1; i > idx; i--)
+    {
+        betterBranch = &sManager->branches[i - 1];
+        currentBranch = &sManager->branches[i];
+
+        currentBranch->enemyMove = betterBranch->enemyMove;
+        currentBranch->enemyScore = betterBranch->enemyScore;
+    }
+    // 空いた場所に新しいbranch情報を追加
+    sManager->branches[idx].enemyMove = pos;
+    sManager->branches[idx].enemyScore = score;
+}
+
+void InsertBestBranch(SearchManager *sManager, uint8 pos, score_t score)
+{
+    BranchProcess *branch;
+    for (int i = 0; i < sManager->numMaxBranches; i++)
+    {
+        branch = &sManager->branches[i];
+        if (branch->enemyScore < score)
+        {
+            InsertBranch(sManager, pos, score, i);
+            break;
+        }
+    }
+}
+
 void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAsyncPreSearch)
 {
     sManager->numMaxBranches = maxSubProcess;
@@ -88,6 +149,14 @@ void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAs
     for (int i = 0; i < maxSubProcess; i++)
     {
         BranchInit(&sManager->branches[i]);
+    }
+}
+
+void SearchManagerConfigure(SearchManager *sManager, int mid, int end)
+{
+    for (int i = 0; i < sManager->numMaxBranches; i++)
+    {
+        TreeConfigDepth(sManager->branches[i].tree, mid, end);
     }
 }
 
@@ -110,9 +179,10 @@ void SearchManagerSetup(SearchManager *sManager, uint64_t own, uint64_t opp)
 
 void SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 enemyPos)
 {
+    BranchProcess *branch;
     for (int i = 0; i < sManager->numMaxBranches; i++)
     {
-        BranchProcess *branch = &sManager->branches[i];
+        branch = &sManager->branches[i];
         if (branch->enemyMove == enemyPos)
         {
             sManager->primaryBranch = branch;
@@ -141,44 +211,6 @@ void SearchManagerStartPrimeSearch(SearchManager *sManager)
     sManager->state = SM_WAIT;
 }
 
-void ResetBranches(SearchManager *sManager)
-{
-    for (int i = 0; i < sManager->numMaxBranches; i++)
-    {
-        sManager->branches[i].enemyMove = NOMOVE_INDEX;
-        sManager->branches[i].enemyScore = MIN_VALUE;
-    }
-}
-
-void InsertBranch(SearchManager *sManager, uint8 pos, score_t score, int idx)
-{
-    // 終端からidxまでをシフトして，idx位置のbranchを開ける
-    for (int i = sManager->numMaxBranches - 1; i > idx; i--)
-    {
-        BranchProcess *betterBranch = &sManager->branches[i - 1];
-        BranchProcess *currentBranch = &sManager->branches[i];
-
-        currentBranch->enemyMove = betterBranch->enemyMove;
-        currentBranch->enemyScore = betterBranch->enemyScore;
-    }
-    // 空いた場所に新しいbranch情報を追加
-    sManager->branches[idx].enemyMove = pos;
-    sManager->branches[idx].enemyScore = score;
-}
-
-void InsertBestBranch(SearchManager *sManager, uint8 pos, score_t score)
-{
-    for (int i = 0; i < sManager->numMaxBranches; i++)
-    {
-        BranchProcess *branch = &sManager->branches[i];
-        if (branch->enemyScore < score)
-        {
-            InsertBranch(sManager, pos, score, i);
-            break;
-        }
-    }
-}
-
 void SearchManagerStartPreSearch(SearchManager *sManager)
 {
     assert(sManager->state == SM_WAIT);
@@ -205,16 +237,14 @@ void SearchManagerStartPreSearch(SearchManager *sManager)
     }
 }
 
-void SearchManagerStartSearch(SearchManager *sManager, uint8 enemyPos)
+void SearchManagerStartSearch(SearchManager *sManager)
 {
     switch (sManager->state)
     {
     case SM_PRE_SEARCH:
-        SearchManagerKillWithoutEnemyPut(sManager, enemyPos);
         break;
 
     case SM_WAIT:
-        *sManager->stones = ApplyEnemyPut(sManager->stones, enemyPos);
         SearchManagerStartPrimeSearch(sManager);
         break;
 
@@ -223,16 +253,37 @@ void SearchManagerStartSearch(SearchManager *sManager, uint8 enemyPos)
         assert(true);
 
         // fail soft
-        *sManager->stones = ApplyEnemyPut(sManager->stones, enemyPos);
         SearchManagerKillAll(sManager);
         SearchManagerStartPrimeSearch(sManager);
     }
 }
 
+void SearchManagerUpdateOpp(SearchManager *sManager, uint8 enemyPos)
+{
+    *sManager->stones = ApplyEnemyPut(sManager->stones, enemyPos);
+    if (sManager->state == SM_PRE_SEARCH)
+    {
+        SearchManagerKillWithoutEnemyPut(sManager, enemyPos);
+    }
+}
+
+void SearchManagerUpdateOwn(SearchManager *sManager, uint8 myPos)
+{
+    *sManager->stones = ApplyOwnPut(sManager->stones, myPos);
+}
+
 uint8 SearchManagerGetMove(SearchManager *sManager, score_t map[64])
 {
+    SearchTree *tree = sManager->primaryBranch->tree;
     SearchManagerKillAll(sManager);
-    CopyScoreMap(sManager->primaryBranch->tree->scoreMap, map);
+    CopyScoreMap(tree->scoreMap, map);
+    printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
+           tree->usedTime, tree->nodeCount, tree->nodeCount / tree->usedTime, tree->score / (float)(STONE_VALUE));
+    if (tree->isEndSearch)
+    {
+        printf("(WLD)");
+    }
+    printf("\n");
     return BestMoveFromMap(map);
 }
 
