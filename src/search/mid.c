@@ -899,22 +899,6 @@ uint8 MidPVSRoot(SearchTree *tree, MoveList *moveList, uint8 depth, score_t *sco
     return bestMove;
 }
 
-void ResetScoreMap(score_t scoreMap[64])
-{
-    for (int pos = 0; pos < 64; pos++)
-    {
-        scoreMap[pos] = MIN_VALUE;
-    }
-}
-
-void UpdateScoreMap(score_t latest[64], score_t complete[64])
-{
-    for (int pos = 0; pos < 64; pos++)
-    {
-        complete[pos] = latest[pos];
-    }
-}
-
 /**
  * @brief 中盤探索のルートノード
  * 
@@ -941,11 +925,9 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
 
     // 探索中の予想最善スコアマップ
     score_t latestScoreMap[64];
-    // 全着手位置探索済みのスコアマップ
-    score_t completeScoreMap[64];
 
     ResetScoreMap(latestScoreMap);
-    ResetScoreMap(completeScoreMap);
+    ResetScoreMap(tree->scoreMap);
 
     CreateMoveList(&moveList, tree->stones);
     EvaluateMoveList(tree, &moveList, tree->stones, SCORE_MIN, NULL); // 着手の事前評価
@@ -995,14 +977,14 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
             }
             else
             {
-                UpdateScoreMap(latestScoreMap, completeScoreMap);
+                UpdateScoreMap(latestScoreMap, tree->scoreMap);
                 tree->completeDepth = endDepth;
             }
         }
     }
     else
     {
-        bestMove = MidPVSRoot(tree, &moveList, endDepth, &tree->score, &secondMove, completeScoreMap);
+        bestMove = MidPVSRoot(tree, &moveList, endDepth, &tree->score, &secondMove, tree->scoreMap);
         tree->completeDepth = endDepth;
     }
 
@@ -1010,9 +992,9 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
     uint8 bestPos;
     for (int pos = 0; pos < 64; pos++)
     {
-        if (completeScoreMap[pos] > bestScore)
+        if (tree->scoreMap[pos] > bestScore)
         {
-            bestScore = completeScoreMap[pos];
+            bestScore = tree->scoreMap[pos];
             bestPos = pos;
         }
     }

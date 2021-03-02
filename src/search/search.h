@@ -105,6 +105,9 @@ typedef struct SearchTree
 typedef score_t (*SearchFunc_t)(SearchTree *tree, score_t alpha, score_t beta, unsigned char depth, bool passed);
 typedef score_t (*SearchFuncNullWindow_t)(SearchTree *tree, score_t alpha, unsigned char depth, bool passed);
 
+void ResetScoreMap(score_t scoreMap[64]);
+void UpdateScoreMap(score_t latest[64], score_t complete[64]);
+
 void TreeInit(SearchTree *tree);
 void TreeDelete(SearchTree *tree);
 void TreeConfig(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC);

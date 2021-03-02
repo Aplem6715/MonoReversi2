@@ -37,6 +37,22 @@ static const SearchOption DEFAULT_OPTION = {
 
 static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
 
+void ResetScoreMap(score_t scoreMap[64])
+{
+    for (int pos = 0; pos < 64; pos++)
+    {
+        scoreMap[pos] = MIN_VALUE;
+    }
+}
+
+void UpdateScoreMap(score_t latest[64], score_t complete[64])
+{
+    for (int pos = 0; pos < 64; pos++)
+    {
+        complete[pos] = latest[pos];
+    }
+}
+
 /**
  * @brief 探索木の生成
  * 

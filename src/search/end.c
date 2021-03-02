@@ -687,16 +687,13 @@ score_t EndPVS(SearchTree *tree, const score_t in_alpha, const score_t in_beta, 
  */
 uint8 EndRoot(SearchTree *tree, bool choiceSecond)
 {
-    SearchFunc_t NextSearch;
-    HashData *hashData = NULL;
-    uint64_t hashCode;
-    score_t score, alpha, beta;
-    score_t bestScore;
-    uint8 bestMove = NOMOVE_INDEX, secondMove = NOMOVE_INDEX;
-    uint8 depth = tree->depth;
-    MoveList moveList;
-    Move *move;
+    // 探索中の予想最善スコアマップ
+    score_t latestScoreMap[64];
+    ResetScoreMap(latestScoreMap);
+    ResetScoreMap(tree->scoreMap);
 
+    uint8 depth = tree->depth;
+    SearchFunc_t NextSearch;
     if (depth - 1 >= tree->pvsDepth)
     {
         NextSearch = EndPVS;
@@ -706,10 +703,14 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
         NextSearch = EndAlphaBeta;
     }
 
+    score_t score, alpha, beta;
+    score_t bestScore;
     alpha = -MAX_VALUE;
     beta = MAX_VALUE;
     bestScore = -MAX_VALUE;
 
+    HashData *hashData = NULL;
+    uint64_t hashCode;
     if (tree->option.usePvHash)
     {
         hashData = HashTableGetData(tree->pvTable, tree->stones, depth, &hashCode);
@@ -719,16 +720,18 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
         }
     }
 
+    MoveList moveList;
     CreateMoveList(&moveList, tree->stones);                          // 着手リストを作成
     EvaluateMoveList(tree, &moveList, tree->stones, alpha, hashData); // 着手の事前評価
     assert(moveList.nbMoves > 0);
 
-    for (move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
+    uint8 bestMove = NOMOVE_INDEX, secondMove = NOMOVE_INDEX;
+    for (Move *move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
     { // すべての着手についてループ
         SearchUpdateEnd(tree, move);
         if (bestScore == -MAX_VALUE)
-        {                                                               // PVが見つかっていない
-            score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常探索
+        {                                                                                              // PVが見つかっていない
+            latestScoreMap[move->posIdx] = score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常探索
         }
         else
         {                                                           // PVが見つかっている
@@ -736,6 +739,12 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
             if (score > alpha)                                      // 予想が外れていたら
             {
                 score = -NextSearch(tree, -beta, -alpha, depth - 1, false); // 通常のWindowで再探索
+                latestScoreMap[move->posIdx] = score;
+            }
+            else
+            {
+                // カットされたときは最高スコアより低くマッピング
+                latestScoreMap[move->posIdx] = score - 1;
             }
         }
         SearchRestoreEnd(tree, move);
@@ -749,8 +758,34 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
                 alpha = bestScore;
             }
         }
+
+        // 探索の中断
+        if (tree->killFlag)
+        {
+            tree->isIntrrupted = true;
+            return NOMOVE_INDEX;
+        }
     } // end of moves loop
 
+    if (tree->isIntrrupted)
+    {
+        printf("Search Interrupted!!! 探索を中断します\n");
+    }
+    else
+    {
+        UpdateScoreMap(latestScoreMap, tree->scoreMap);
+    }
+
+    bestScore = MIN_VALUE;
+    uint8 bestPos;
+    for (int pos = 0; pos < 64; pos++)
+    {
+        if (tree->scoreMap[pos] > bestScore)
+        {
+            bestScore = tree->scoreMap[pos];
+            bestPos = pos;
+        }
+    }
     tree->score = bestScore;
     tree->completeDepth = depth;
 
