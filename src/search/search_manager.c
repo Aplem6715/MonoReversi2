@@ -42,6 +42,7 @@ void BranchInit(BranchProcess *branch)
     branch->processHandle = NULL;
     branch->scoreMapMutex = NULL;
     branch->enemyMove = NOMOVE_INDEX;
+    branch->state = BRANCH_WAIT;
 }
 
 void BranchDelete(BranchProcess *branch)
@@ -97,19 +98,29 @@ void SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 enemyPos)
     for (int i = 0; i < sManager->numMaxBranches; i++)
     {
         BranchProcess *branch = &sManager->branches[i];
-        if (branch->enemyMove != enemyPos)
+        if (branch->enemyMove == enemyPos)
+        {
+            sManager->primaryBranch = branch;
+        }
+        else
         {
             branch->tree->killFlag = true;
         }
     }
+    sManager->state = SM_PRIMARY_SEARCH;
 }
 
 void SearchManagerStartPrimeSearch(SearchManager *sManager)
 {
     assert(sManager->state == SM_WAIT);
+    sManager->state = SM_PRIMARY_SEARCH;
     BranchProcess *branch = sManager->branches;
+    sManager->primaryBranch = branch;
 
+    branch->state = BRANCH_PRIME_SEARCH;
     SearchWithSetup(branch->tree, sManager->stones->own, sManager->stones->opp, false);
+    branch->state = BRANCH_WAIT;
+
     CopyScoreMap(branch->tree->scoreMap, sManager->scoreMap);
 
     sManager->state = SM_WAIT;
@@ -171,8 +182,10 @@ void SearchManagerStartPreSearch(SearchManager *sManager)
 
     // 各Branchで非同期探索開始
     sManager->state = SM_PRE_SEARCH;
+    sManager->primaryBranch = NULL;
     for (int i = 0; i < sManager->numMaxBranches; i++)
     {
+        sManager->branches[i].state = BRANCH_PRE_SEARCH;
         BranchLaunch(&sManager->branches[i], sManager->stones);
     }
 }
@@ -201,7 +214,11 @@ void SearchManagerStartSearch(SearchManager *sManager, uint8 enemyPos)
     }
 }
 
-int SearchManagerGetScoreMap(SearchManager *sManager, score_t map[64]);
+int SearchManagerGetScoreMap(SearchManager *sManager, score_t map[64])
+{
+    SearchManagerKillAll(sManager);
+    CopyScoreMap(sManager->primaryBranch->tree->scoreMap, map);
+}
 
 void SearchManagerKillAll(SearchManager *sManager)
 {
@@ -209,6 +226,12 @@ void SearchManagerKillAll(SearchManager *sManager)
     {
         BranchProcess *branch = &sManager->branches[i];
         branch->tree->killFlag = true;
+    }
+
+    for (int i = 0; i < sManager->numMaxBranches; i++)
+    {
+        WaitForSingleObject(sManager->branches[i].processHandle, INFINITE);
+        sManager->branches[i].state = BRANCH_WAIT;
     }
     sManager->state = SM_WAIT;
 }

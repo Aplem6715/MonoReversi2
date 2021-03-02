@@ -7,6 +7,13 @@
 #include <windows.h>
 #include <process.h>
 
+typedef enum BranchState
+{
+    BRANCH_WAIT,
+    BRANCH_PRE_SEARCH,
+    BRANCH_PRIME_SEARCH,
+} BranchState;
+
 typedef enum SearchMangerState
 {
     SM_PRE_SORT,
@@ -20,6 +27,7 @@ typedef struct BranchProcess
     SearchTree tree[1];
     HANDLE processHandle;
     HANDLE scoreMapMutex;
+    BranchState state;
 
     uint8 enemyMove;
     score_t enemyScore;
@@ -29,6 +37,7 @@ typedef struct SearchManager
 {
     Stones stones[1];
     BranchProcess *branches;
+    BranchProcess *primaryBranch;
     SearchMangerState state;
     score_t scoreMap[64];
 
