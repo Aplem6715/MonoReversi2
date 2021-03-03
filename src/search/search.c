@@ -23,6 +23,7 @@
 #include "../bit_operation.h"
 #include "../debug_util.h"
 
+// 初手の着手位置はどこに打っても同じ
 static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
 
 void ResetScoreMap(score_t scoreMap[64])
@@ -45,6 +46,7 @@ void UpdateScoreMap(score_t latest[64], score_t complete[64])
  * @brief 探索木の生成
  * 
  * @param tree 生成した探索木
+ * @param isShallow 浅い探索用の木か
  */
 void TreeInit(SearchTree *tree, bool isShallow)
 {
@@ -131,17 +133,36 @@ void TreeConfig(SearchTree *tree, unsigned char midDepth, unsigned char endDepth
     }
 }
 
+/**
+ * @brief 探索木の設定を複製
+ * 
+ * @param tree 設定される探索木
+ * @param newOption 新設定
+ */
 void TreeConfigClone(SearchTree *tree, SearchOption newOption)
 {
     tree->option = newOption;
 }
 
+/**
+ * @brief 探索木の探索深度設定
+ * 
+ * @param tree 探索木
+ * @param midDepth 中盤探索深度
+ * @param endDepth 終盤探索深度
+ */
 void TreeConfigDepth(SearchTree *tree, unsigned char midDepth, unsigned char endDepth)
 {
     tree->option.midDepth = midDepth;
     tree->option.endDepth = endDepth;
 }
 
+/**
+ * @brief 探索木の複製
+ * 
+ * @param src オリジナル
+ * @param dst 複製上書き先
+ */
 void TreeClone(SearchTree *src, SearchTree *dst)
 {
     *(dst->stones) = *(src->stones);
@@ -206,11 +227,19 @@ void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
     tree->stones->opp = opp;
 }
 
+/*
 void SearchMutexSetup(SearchTree *tree, HANDLE timerMutex)
 {
     tree->timerMutex = timerMutex;
 }
+*/
 
+/**
+ * @brief 時間切れかどうか判別
+ * 
+ * @param tree 探索木
+ * @return bool 時間切れかどうか
+ */
 bool SearchIsTimeup(SearchTree *tree)
 {
     bool isTimeup;
@@ -354,6 +383,12 @@ void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
     tree->nbEmpty++;
 }
 
+/**
+ * @brief 石情報の設定等無しでの探索
+ * 
+ * @param tree 
+ * @return uint8 
+ */
 uint8 SearchWithoutSetup(SearchTree *tree)
 {
     uint8 pos = NOMOVE_INDEX;
@@ -438,7 +473,7 @@ uint8 SearchWithoutSetup(SearchTree *tree)
  * @param own 自身の石配置
  * @param opp 相手の石配置
  * @param choiceSecond 次善手を選ぶかどうか
- * @return uint8 予想最善手の位置番号
+ * @return uint8 予想最善手の位置
  */
 uint8 SearchWithSetup(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
 {
