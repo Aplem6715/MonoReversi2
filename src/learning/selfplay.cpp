@@ -63,7 +63,7 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
         //_sleep(750);
 
         // 終盤探索は確定的に
-        if (nbEmpty <= treeBlack->endDepth)
+        if (nbEmpty <= treeBlack->option.endDepth)
         {
             randMoveRatio = 0;
             secondMoveRatio = 0;
@@ -164,8 +164,8 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight, vector<FeatureRe
 {
 
     SearchTree trees[2];
-    TreeInit(&trees[0]); // 旧
-    TreeInit(&trees[1]); // 新
+    TreeInit(&trees[0], false); // 旧
+    TreeInit(&trees[1], false); // 新
     TreeConfigDepth(&trees[0], midDepth, endDepth);
     TreeConfigDepth(&trees[1], midDepth, endDepth);
 

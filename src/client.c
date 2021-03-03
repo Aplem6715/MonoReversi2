@@ -107,7 +107,7 @@ int Match(HANDLE pipe, uint8 myColor, uint64_t black, uint64_t white, uint8 turn
     int nbEmpty = 60;
     Board board[1];
 
-    TreeInit(tree);
+    TreeInit(tree, false);
     TreeConfig(tree, MID_DEPTH, 18, 0, true, false, false);
     BoardReset(board);
     BoardSetStones(board, black, white, turn);

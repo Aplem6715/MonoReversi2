@@ -43,8 +43,8 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, bool enableL
 
     minimum = deep > minimum ? deep : minimum;
     // 中盤探索深度は後から設定される
-    TreeInit(shallowTree);
-    TreeInit(deepTree);
+    TreeInit(shallowTree, false);
+    TreeInit(deepTree, false);
 
     // 深すぎる深度 = 超遅い 設定忘れを防ぐ
     TreeConfig(shallowTree, 100, minimum, 0, true, false, true);

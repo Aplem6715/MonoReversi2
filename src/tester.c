@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2021 Daichi Sato
  * 
  */
-
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -172,8 +172,8 @@ int main()
     srand(GLOBAL_SEED);
     HashInit();
 
-    TreeInit(&tree[0]);
-    TreeInit(&tree[1]);
+    TreeInit(&tree[0], false);
+    TreeInit(&tree[1], false);
 
     // 設定上書き
     TreeConfig(&tree[0], 6, 14, 0, true, false, false);
