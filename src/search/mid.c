@@ -988,7 +988,6 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
         tree->completeDepth = endDepth;
     }
 
-    printf("finish search\n");
     score_t bestScore = MIN_VALUE;
     uint8 bestPos;
     for (int pos = 0; pos < 64; pos++)
@@ -998,7 +997,6 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
             bestScore = tree->scoreMap[pos];
             bestPos = pos;
         }
-        printf("%d: %d\n", pos, tree->scoreMap[pos]);
     }
     tree->score = bestScore;
 
