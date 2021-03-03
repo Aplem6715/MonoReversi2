@@ -94,13 +94,13 @@ uint8 PlayOneGame(vector<FeatureRecord> &featRecords, SearchTree *treeBlack, Sea
             if (BoardGetTurnColor(board) == BLACK)
             {
                 // AIが着手位置を決める
-                pos = Search(treeBlack, BoardGetOwn(board), BoardGetOpp(board), useSecondMove);
+                pos = SearchWithSetup(treeBlack, BoardGetOwn(board), BoardGetOpp(board), useSecondMove);
                 //printf("\n%f\n", treeBlack->score);
             }
             else
             {
                 // AIが着手位置を決める
-                pos = Search(treeWhite, BoardGetOwn(board), BoardGetOpp(board), useSecondMove);
+                pos = SearchWithSetup(treeWhite, BoardGetOwn(board), BoardGetOpp(board), useSecondMove);
                 //printf("\n%f\n", treeWhite->score);
             }
         }
@@ -164,8 +164,10 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight, vector<FeatureRe
 {
 
     SearchTree trees[2];
-    InitTree(&trees[0], midDepth, endDepth, 4, 8, 1, 1, 0, 0); // 旧
-    InitTree(&trees[1], midDepth, endDepth, 4, 8, 1, 1, 0, 0); // 新
+    TreeInit(&trees[0]); // 旧
+    TreeInit(&trees[1]); // 新
+    TreeConfigDepth(&trees[0], midDepth, endDepth);
+    TreeConfigDepth(&trees[1], midDepth, endDepth);
 
 #ifdef USE_NN
 #elif USE_REGRESSION
@@ -210,7 +212,7 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight, vector<FeatureRe
         for (int gameCnt = 0; gameCnt < nbGameOneCycle; gameCnt++)
         {
             cout << "Cycle: " << nbCycles << "\tPlaying: " << gameCnt << "\r";
-            ResetTree(&trees[0]);
+            TreeReset(&trees[0]);
             PlayOneGame(featRecords, &trees[0], &trees[0], TRAIN_RANDOM_TURNS, TRAIN_RANDOM_RATIO, TRAIN_SECOND_RATIO, true);
         }
 
@@ -225,8 +227,8 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight, vector<FeatureRe
         winCount = 0;
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
-            ResetTree(&trees[0]);
-            ResetTree(&trees[1]);
+            TreeReset(&trees[0]);
+            TreeReset(&trees[1]);
             // 新規ウェイトを黒にしてプレイ
             if (PlayOneGame(dummyRecords, &trees[1], &trees[0], VERSUS_RANDOM_TURNS, 0, 0, false) == BLACK)
             {
@@ -237,8 +239,8 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight, vector<FeatureRe
         // 白黒入れ替えて
         for (int nbVS = 0; nbVS < TRAIN_NB_VERSUS; nbVS++)
         {
-            ResetTree(&trees[0]);
-            ResetTree(&trees[1]);
+            TreeReset(&trees[0]);
+            TreeReset(&trees[1]);
             // 新規ウェイトを白にしてプレイ
             if (PlayOneGame(dummyRecords, &trees[0], &trees[1], VERSUS_RANDOM_TURNS, 0, 0, false) == WHITE)
             {
@@ -288,6 +290,6 @@ void SelfPlay(uint8 midDepth, uint8 endDepth, bool resetWeight, vector<FeatureRe
         logFile.flush();
     }
     logFile.close();
-    DeleteTree(&trees[0]);
-    DeleteTree(&trees[1]);
+    TreeDelete(&trees[0]);
+    TreeDelete(&trees[1]);
 }

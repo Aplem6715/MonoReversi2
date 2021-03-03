@@ -21,47 +21,50 @@
 #include "end.h"
 #include "../ai/nnet.h"
 #include "../bit_operation.h"
+#include "../debug_util.h"
 
 static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
+
+void ResetScoreMap(score_t scoreMap[64])
+{
+    for (int pos = 0; pos < 64; pos++)
+    {
+        scoreMap[pos] = MIN_VALUE;
+    }
+}
+
+void UpdateScoreMap(score_t latest[64], score_t complete[64])
+{
+    for (int pos = 0; pos < 64; pos++)
+    {
+        complete[pos] = latest[pos];
+    }
+}
 
 /**
  * @brief 探索木の生成
  * 
  * @param tree 生成した探索木
- * @param midDepth 中盤探索深度
- * @param endDepth 終盤探索深度
- * @param midPvsDepth 中盤探索PVS-αβ切り替え深度
- * @param endPvsDepth 終盤探索PVS-αβ切り替え深度
- * @param useHash ハッシュ表を使うか
- * @param useMPC Multi Prob Cutを使うか
- * @param nestMPC MPCの浅い探索中にさらにMPCを許可するか
  */
-void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, unsigned char midPvsDepth, unsigned char endPvsDepth, bool useHash, bool usePvHash, bool useMPC, bool nestMPC, bool useTimer)
+void TreeInit(SearchTree *tree, bool isShallow)
 {
-    tree->midDepth = midDepth;
-    tree->endDepth = endDepth;
-    tree->midPvsDepth = midPvsDepth;
-    tree->endPvsDepth = endPvsDepth;
-    tree->useHash = useHash;
-    tree->usePvHash = usePvHash;
-    tree->useMPC = useMPC;
-    tree->enableMpcNest = nestMPC;
+    tree->option = DEFAULT_OPTION;
 
-    tree->useIDDS = 1;
-    if (tree->useIDDS)
+    tree->killFlag = false;
+    if (tree->option.useIDDS)
     {
-        tree->useTimeLimit = useTimer;
-        tree->oneMoveTime = SEARCH_TIME_SECONDS;
+        tree->option.useTimeLimit = tree->option.useTimeLimit;
+        tree->option.oneMoveTime = SEARCH_TIME_SECONDS;
     }
-    else if (useTimer)
+    else if (tree->option.useTimeLimit)
     {
         printf("反復深化が無効です。時間制限機能は無視されます。\n");
-        tree->useTimeLimit = false;
+        tree->option.useTimeLimit = false;
     }
 
     EvalInit(tree->eval);
 
-    if (useHash)
+    if (tree->option.useHash)
     {
         tree->nwsTable = (HashTable *)malloc(sizeof(HashTable));
         tree->pvTable = (HashTable *)malloc(sizeof(HashTable));
@@ -71,8 +74,16 @@ void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
             return;
         }
 
-        HashTableInit(tree->nwsTable, NWS_TABLE_SIZE);
-        HashTableInit(tree->pvTable, PV_TABLE_SIZE);
+        if (isShallow)
+        {
+            HashTableInit(tree->nwsTable, SHALLOW_NWS_TABLE_SIZE);
+            HashTableInit(tree->pvTable, SHALLOW_PV_TABLE_SIZE);
+        }
+        else
+        {
+            HashTableInit(tree->nwsTable, NWS_TABLE_SIZE);
+            HashTableInit(tree->pvTable, PV_TABLE_SIZE);
+        }
     }
 }
 
@@ -81,10 +92,10 @@ void InitTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, 
  * 
  * @param tree 解放する探索木
  */
-void DeleteTree(SearchTree *tree)
+void TreeDelete(SearchTree *tree)
 {
     EvalDelete(tree->eval);
-    if (tree->useHash)
+    if (tree->option.useHash)
     {
         HashTableFree(tree->nwsTable);
         HashTableFree(tree->pvTable);
@@ -104,20 +115,51 @@ void DeleteTree(SearchTree *tree)
  * @param useTimer 時間制限トグル
  * @param useMPC MPC利用トグル
  */
-void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC)
+void TreeConfig(SearchTree *tree, unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC)
 {
-    tree->midDepth = midDepth;
-    tree->endDepth = endDepth;
-    tree->oneMoveTime = oneMoveTime;
-    tree->useIDDS = useIDD;
-    tree->useTimeLimit = useTimer;
-    tree->useMPC = useMPC;
+    tree->option.midDepth = midDepth;
+    tree->option.endDepth = endDepth;
+    tree->option.oneMoveTime = oneMoveTime;
+    tree->option.useIDDS = useIDD;
+    tree->option.useTimeLimit = useTimer;
+    tree->option.useMPC = useMPC;
 
-    if (!tree->useIDDS && useTimer)
+    if (!tree->option.useIDDS && useTimer)
     {
         printf("反復深化が無効です。時間制限機能は無視されます。\n");
-        tree->useTimeLimit = false;
+        tree->option.useTimeLimit = false;
     }
+}
+
+void TreeConfigClone(SearchTree *tree, SearchOption newOption)
+{
+    tree->option = newOption;
+}
+
+void TreeConfigDepth(SearchTree *tree, unsigned char midDepth, unsigned char endDepth)
+{
+    tree->option.midDepth = midDepth;
+    tree->option.endDepth = endDepth;
+}
+
+void TreeClone(SearchTree *src, SearchTree *dst)
+{
+    *(dst->stones) = *(src->stones);
+    dst->option = src->option;
+
+    dst->nbEmpty = src->nbEmpty;
+
+    dst->depth = src->depth;
+    dst->orderDepth = src->orderDepth;
+    dst->hashDepth = src->hashDepth;
+    dst->pvHashDepth = src->pvHashDepth;
+    dst->pvsDepth = src->pvsDepth;
+
+    dst->nbMpcNested = src->nbMpcNested;
+
+    HashTableClone(src->nwsTable, dst->nwsTable);
+    HashTableClone(src->pvTable, dst->pvTable);
+    EvalClone(src->eval, dst->eval);
 }
 
 /**
@@ -125,9 +167,9 @@ void ConfigTree(SearchTree *tree, unsigned char midDepth, unsigned char endDepth
  * 
  * @param tree 探索木
  */
-void ResetTree(SearchTree *tree)
+void TreeReset(SearchTree *tree)
 {
-    if (tree->useHash)
+    if (tree->option.useHash)
     {
         HashTableReset(tree->nwsTable);
         HashTableReset(tree->pvTable);
@@ -143,14 +185,14 @@ void ResetTree(SearchTree *tree)
  */
 void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
 {
-    //ResetTree(tree);
+    //TreeReset(tree);
     // 評価パターンの初期化
     EvalReload(tree->eval, own, opp, OWN);
-    if (tree->usePvHash)
+    if (tree->option.usePvHash)
     {
         HashTableVersionUp(tree->pvTable);
     }
-    if (tree->useHash)
+    if (tree->option.useHash)
     {
         HashTableVersionUp(tree->nwsTable);
     }
@@ -162,6 +204,20 @@ void SearchSetup(SearchTree *tree, uint64_t own, uint64_t opp)
 
     tree->stones->own = own;
     tree->stones->opp = opp;
+}
+
+void SearchMutexSetup(SearchTree *tree, HANDLE timerMutex)
+{
+    tree->timerMutex = timerMutex;
+}
+
+bool SearchIsTimeup(SearchTree *tree)
+{
+    bool isTimeup;
+    WaitForSingleObject(tree->timerMutex, INFINITE);
+    isTimeup = clock() > tree->timeLimit;
+    ReleaseMutex(tree->timerMutex);
+    return isTimeup;
 }
 
 /**
@@ -298,56 +354,54 @@ void SearchRestoreEndDeep(SearchTree *tree, uint64_t pos, uint64_t flip)
     tree->nbEmpty++;
 }
 
-/**
- * @brief 予想最善手の探索（AIのメイン処理）
- * 
- * @param tree 探索木
- * @param own 自身の石配置
- * @param opp 相手の石配置
- * @param choiceSecond 次善手を選ぶかどうか
- * @return uint8 予想最善手の位置番号
- */
-uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
+uint8 SearchWithoutSetup(SearchTree *tree)
 {
     uint8 pos = NOMOVE_INDEX;
-    uint8 nbEmpty = CountBits(~(own | opp));
+    tree->isIntrrupted = false;
 
     clock_t start, finish;
     start = clock();
-
-    SearchSetup(tree, own, opp);
+    ResetScoreMap(tree->scoreMap);
 
     if (tree->nbEmpty == 60)
     {
+        DEBUG_PRINTF("\tSearchWithoutSetup FirstPut\n");
         pos = FIRST_MOVES_INDEX[rand() % 4];
+        tree->scoreMap[pos] = 0;
+
+        tree->completeDepth = 1;
+        tree->score = 0;
+        tree->nodeCount = 1;
     }
-    else if (nbEmpty <= tree->endDepth)
+    else if (tree->nbEmpty <= tree->option.endDepth)
     {
+        DEBUG_PRINTF("\tSearchWithoutSetup End\n");
         if (!tree->isEndSearch)
         {
             tree->isEndSearch = true;
             // 中盤 ⇔ 終盤切り替え時，スコアが切り替わるので置換表内のスコアをリセット
-            if (tree->usePvHash)
+            if (tree->option.usePvHash)
                 HashTableResetScoreWindows(tree->pvTable);
-            if (tree->useHash)
+            if (tree->option.useHash)
                 HashTableResetScoreWindows(tree->nwsTable);
         }
-        tree->depth = nbEmpty;
-        tree->pvsDepth = tree->endPvsDepth;
+        tree->depth = tree->nbEmpty;
+        tree->pvsDepth = tree->option.endPvsDepth;
         tree->orderDepth = tree->pvsDepth;
         tree->hashDepth = tree->pvsDepth;
         tree->pvHashDepth = tree->pvsDepth - 1;
-        pos = EndRoot(tree, choiceSecond);
+        pos = EndRoot(tree, tree->option.choiceSecond);
     }
     else
     {
+        DEBUG_PRINTF("\tSearchWithoutSetup Mid:%d\n", tree->option.midDepth);
         tree->isEndSearch = 0;
-        tree->depth = tree->midDepth;
-        tree->pvsDepth = tree->midPvsDepth;
+        tree->depth = tree->option.midDepth;
+        tree->pvsDepth = tree->option.midPvsDepth;
         tree->orderDepth = tree->pvsDepth;
         tree->hashDepth = tree->pvsDepth;
         tree->pvHashDepth = tree->pvsDepth - 1;
-        pos = MidRoot(tree, choiceSecond);
+        pos = MidRoot(tree, tree->option.choiceSecond);
     }
 
     finish = clock();
@@ -362,5 +416,26 @@ uint8 Search(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
               tree->score / (float)(STONE_VALUE));
 
     assert(tree->nbMpcNested == 0);
+
+    tree->bestMove = pos;
+    return pos;
+}
+
+/**
+ * @brief 予想最善手の探索（AIのメイン処理）
+ * 
+ * @param tree 探索木
+ * @param own 自身の石配置
+ * @param opp 相手の石配置
+ * @param choiceSecond 次善手を選ぶかどうか
+ * @return uint8 予想最善手の位置番号
+ */
+uint8 SearchWithSetup(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
+{
+    DEBUG_PRINTF("\tSearchWithSetup\n");
+    SearchSetup(tree, own, opp);
+    tree->option.choiceSecond = choiceSecond;
+    uint8 pos = SearchWithoutSetup(tree);
+
     return pos;
 }

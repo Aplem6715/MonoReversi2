@@ -17,9 +17,10 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <stdio.h>
-#include "search/search.h"
+#include "search/search_manager.h"
 #include "board.h"
 #include "bit_operation.h"
+#include "debug_util.h"
 
 #ifdef _WINDLL
 
@@ -38,12 +39,14 @@ enum GUI_TextColor
 
 typedef const void(__stdcall *GUI_Log)(int knd, char *str);
 
-GUI_Log GUI_Print;
-SearchTree dllTree[1];
-Board dllBoard[1];
+static GUI_Log GUI_Print;
+//SearchTree dllTree[1];
+static SearchManager sManager[1];
+static Board dllBoard[1];
+static uint8 aiColor;
 
 DLLAPI void DllInit();
-DLLAPI void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC);
+DLLAPI void DllConfigureSearch(int color, unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useTimer, bool useMPC, bool enablePreSearch);
 DLLAPI int DllSearch(double *value);
 
 DLLAPI void DllBoardReset();
@@ -70,15 +73,16 @@ DLLAPI void DllShowMsg();
  */
 void DllInit()
 {
-    srand(GLOBAL_SEED);
-    HashInit();
-    InitTree(dllTree, 12, 20, 4, 8, 1, 1, false, false, false);
-    BoardReset(dllBoard);
-    
     FILE *fp;
     AllocConsole();
     freopen_s(&fp, "CONOUT$", "w", stdout); /* 標準出力(stdout)を新しいコンソールに向ける */
     freopen_s(&fp, "CONOUT$", "w", stderr); /* 標準エラー出力(stderr)を新しいコンソールに向ける */
+
+    srand(GLOBAL_SEED);
+    HashInit();
+    //TreeInit(dllTree);
+    BoardReset(dllBoard);
+    SearchManagerInit(sManager, 4, true);
 }
 
 /**
@@ -87,13 +91,14 @@ void DllInit()
  * @param midDepth 中盤探索深度
  * @param endDepth 終盤探索深度
  * @param oneMoveTime 一手にかける時間
- * @param useIDD 反復深化のトグル
  * @param useTimer 時間制限トグル
  * @param useMPC MPC利用トグル
  */
-void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC)
+void DllConfigureSearch(int color, unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useTimer, bool useMPC, bool enablePreSearch)
 {
-    ConfigTree(dllTree, midDepth, endDepth, oneMoveTime, useIDD, useTimer, useMPC);
+    aiColor = color;
+    SearchManagerConfigure(sManager, midDepth, endDepth, oneMoveTime, true, useTimer, useMPC);
+    sManager->enableAsyncPreSearching = enablePreSearch;
 }
 
 /**
@@ -104,8 +109,22 @@ void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneM
  */
 int DllSearch(double *value)
 {
-    uint8 pos = Search(dllTree, BoardGetOwn(dllBoard), BoardGetOpp(dllBoard), 0);
-    *value = dllTree->score;
+    DEBUG_PUTS("Dll Search\n");
+    score_t scoreMap[64];
+
+    SearchManagerStartSearch(sManager);
+    uint8 pos = SearchManagerGetMove(sManager, scoreMap);
+    //*value = sManager->primaryBranch->tree->score;
+    DEBUG_PRINTF("Dll Search - pos:%d\n", pos);
+    for (int y = 0; y < 8; y++)
+    {
+        DEBUG_PRINTF("\t｜");
+        for (int x = 0; x < 8; x++)
+        {
+            DEBUG_PRINTF("%d｜", scoreMap[x + y * 8]);
+        }
+        DEBUG_PRINTF("\n");
+    }
     return pos;
 }
 
@@ -115,8 +134,19 @@ int DllSearch(double *value)
  */
 void DllBoardReset()
 {
-    ResetTree(dllTree);
+    uint64_t own, opp;
     BoardReset(dllBoard);
+    if (aiColor == BLACK)
+    {
+        own = BoardGetBlack(dllBoard);
+        opp = BoardGetWhite(dllBoard);
+    }
+    else
+    {
+        own = BoardGetWhite(dllBoard);
+        opp = BoardGetBlack(dllBoard);
+    }
+    SearchManagerReset(sManager, own, opp);
 }
 
 /**
@@ -129,11 +159,22 @@ int DllPut(int pos)
 {
     if (BoardIsLegalTT(dllBoard, pos))
     {
+        if (BoardGetTurnColor(dllBoard) == aiColor)
+        {
+            SearchManagerUpdateOwn(sManager, pos);
+        }
+        else
+        {
+            SearchManagerUpdateOpp(sManager, pos);
+        }
+
         BoardPutTT(dllBoard, pos);
         if (BoardGetMobility(dllBoard) == 0)
         {
             BoardSkip(dllBoard);
+            return 1;
         }
+
         return 1;
     }
     return 0;
@@ -153,15 +194,17 @@ int DllStoneCount(int color)
 /**
  * @brief 一手戻す
  * 
- * @return int 実行結果bool 
+ * @return int 戻した後の色
  */
 int DllUndo()
 {
     if (BoardUndo(dllBoard))
     {
-        return 1;
+        SearchManagerUndo(sManager, BoardGetOpp(dllBoard), BoardGetOwn(dllBoard));
+        return BoardGetTurnColor(dllBoard);
     }
-    return 0;
+    // これ以上戻せない
+    return -1;
 }
 
 /**
@@ -241,6 +284,6 @@ void SetCallBack(GUI_Log printCallback)
  */
 void DllShowMsg()
 {
-    GUI_Print(GUI_LIME, dllTree->msg);
+    GUI_Print(GUI_LIME, sManager->msg);
 }
 #endif

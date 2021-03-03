@@ -6,6 +6,8 @@
 
 #define NWS_TABLE_SIZE (1 << 20)
 #define PV_TABLE_SIZE (1 << 12)
+#define SHALLOW_NWS_TABLE_SIZE (1 << 12)
+#define SHALLOW_PV_TABLE_SIZE (1 << 8)
 
 // ハッシュテーブルに格納されるデータ
 // 8x2 + 3 + 1*4 + 2x2 = 27[byte]
@@ -55,6 +57,8 @@ void HashTableInit(HashTable *table, uint64_t size);
 
 // ハッシュテーブルの開放
 void HashTableFree(HashTable *table);
+
+void HashTableClone(HashTable *src, HashTable *dst);
 
 // ハッシュテーブル内のデータをリセット
 void HashTableReset(HashTable *table);

@@ -43,8 +43,13 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, bool enableL
 
     minimum = deep > minimum ? deep : minimum;
     // 中盤探索深度は後から設定される
-    InitTree(shallowTree, 100, minimum, 4, 8, 1, 1, 1, 1); // 深すぎる深度 = 超遅い 設定忘れを防ぐ
-    InitTree(deepTree, 100, minimum, 4, 8, 1, 1, 1, 1);
+    TreeInit(shallowTree);
+    TreeInit(deepTree);
+
+    // 深すぎる深度 = 超遅い 設定忘れを防ぐ
+    TreeConfig(shallowTree, 100, minimum, 0, true, false, true);
+    TreeConfig(deepTree, 100, minimum, 0, true, false, true);
+
     logFile = fopen(MPC_RAW_FILE, "a");
 
     for (i = 0; i < nbPlay; i++)
@@ -71,7 +76,7 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, bool enableL
             }
 
             // 着手
-            if (nbEmpty > deepTree->endDepth && ((nbEmpty >= 60 - randomTurns) || rnd_prob01(mt) < randMoveRatio))
+            if (nbEmpty > deepTree->option.endDepth && ((nbEmpty >= 60 - randomTurns) || rnd_prob01(mt) < randMoveRatio))
             {
                 // ランダム着手位置
                 pos = BoardGetRandomPosMoveable(board);
@@ -97,8 +102,8 @@ void MPCSampling(int nbPlay, int randomTurns, double randMoveRatio, bool enableL
         printf("Game %d Finished                 \n", i);
     }
 
-    DeleteTree(deepTree);
-    DeleteTree(shallowTree);
+    TreeDelete(deepTree);
+    TreeDelete(shallowTree);
     fclose(logFile);
 }
 
