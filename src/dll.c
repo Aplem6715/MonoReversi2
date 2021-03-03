@@ -45,7 +45,7 @@ static Board dllBoard[1];
 static uint8 aiColor;
 
 DLLAPI void DllInit();
-DLLAPI void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useTimer, bool useMPC, bool enablePreSearch);
+DLLAPI void DllConfigureSearch(int color, unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useTimer, bool useMPC, bool enablePreSearch);
 DLLAPI int DllSearch(double *value);
 
 DLLAPI void DllBoardReset();
@@ -75,8 +75,8 @@ void DllInit()
     srand(GLOBAL_SEED);
     HashInit();
     //TreeInit(dllTree);
-    SearchManagerInit(sManager, 4, true);
     BoardReset(dllBoard);
+    SearchManagerInit(sManager, 4, true);
 
     FILE *fp;
     AllocConsole();
@@ -93,8 +93,9 @@ void DllInit()
  * @param useTimer 時間制限トグル
  * @param useMPC MPC利用トグル
  */
-void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useTimer, bool useMPC, bool enablePreSearch)
+void DllConfigureSearch(int color, unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useTimer, bool useMPC, bool enablePreSearch)
 {
+    aiColor = color;
     SearchManagerConfigure(sManager, midDepth, endDepth, oneMoveTime, true, useTimer, useMPC);
     sManager->enableAsyncPreSearching = enablePreSearch;
 }
@@ -108,9 +109,10 @@ void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneM
 int DllSearch(double *value)
 {
     score_t scoreMap[64];
+
+    SearchManagerStartSearch(sManager);
     uint8 pos = SearchManagerGetMove(sManager, scoreMap);
-    SearchManagerUpdateOwn(sManager, pos);
-    *value = sManager->primaryBranch->tree->score;
+    //*value = sManager->primaryBranch->tree->score;
     return pos;
 }
 
@@ -149,6 +151,16 @@ int DllPut(int pos)
         if (BoardGetMobility(dllBoard) == 0)
         {
             BoardSkip(dllBoard);
+            return 1;
+        }
+
+        if (BoardGetTurnColor(dllBoard) == aiColor)
+        {
+            SearchManagerUpdateOwn(sManager, pos);
+        }
+        else
+        {
+            SearchManagerUpdateOpp(sManager, pos);
         }
         return 1;
     }
@@ -175,6 +187,7 @@ int DllUndo()
 {
     if (BoardUndo(dllBoard))
     {
+        SearchManagerUndo(sManager, BoardGetOpp(dllBoard), BoardGetOwn(dllBoard));
         return 1;
     }
     return 0;

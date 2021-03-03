@@ -28,6 +28,7 @@ OBJS=\
 	$(SEARCH_OUTDIR)\mid.o\
 	$(SEARCH_OUTDIR)\end.o\
 	$(SEARCH_OUTDIR)\search.o\
+	$(SEARCH_OUTDIR)\search_manager.o\
 	$(OUTDIR)\dll.o
 	
 CFLAGS=\
