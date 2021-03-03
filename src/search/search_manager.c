@@ -91,13 +91,13 @@ void StartSearchAsync(void *tree)
     _endthread();
 }
 
-void BranchLaunch(BranchProcess *branch, Stones *beforeEnemyStones)
+void BranchLaunch(BranchProcess *branch, Stones *beforeEnemyStones, int depth)
 {
     Stones stones = ApplyEnemyPut(beforeEnemyStones, branch->enemyMove);
     branch->tree->killFlag = false;
 
-    // 事前探索をするときは深度制限を到達できないほど深く.タイマーOFF
-    TreeConfig(branch->tree, 20, 20, 10000, true, false, false);
+    // 事前探索をするときはタイマーOFF
+    TreeConfig(branch->tree, depth, 20, 10000, true, false, false);
     SearchSetup(branch->tree, stones.own, stones.opp);
 
     branch->processHandle = (HANDLE)_beginthread(StartSearchAsync, 0, branch->tree);
@@ -151,6 +151,7 @@ void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAs
     sManager->enableAsyncPreSearching = enableAsyncPreSearch;
     sManager->branches = (BranchProcess *)malloc(maxSubProcess * sizeof(BranchProcess));
     sManager->masterOption = DEFAULT_OPTION;
+    sManager->primaryBranch = NULL;
 
     for (int i = 0; i < maxSubProcess; i++)
     {
@@ -158,12 +159,25 @@ void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAs
     }
 }
 
-void SearchManagerConfigure(SearchManager *sManager, int mid, int end)
+void SearchManagerConfigureDepth(SearchManager *sManager, int mid, int end)
 {
+    sManager->masterOption.midDepth = mid;
+    sManager->masterOption.endDepth = end;
     for (int i = 0; i < sManager->numMaxBranches; i++)
     {
         TreeConfigDepth(sManager->branches[i].tree, mid, end);
     }
+}
+
+void SearchManagerConfigure(SearchManager *sManager, int mid, int end, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC)
+{
+    SearchManagerConfigureDepth(sManager, mid, end);
+
+    SearchOption *option = &sManager->masterOption;
+    option->oneMoveTime = oneMoveTime;
+    option->useIDDS = useIDD;
+    option->useTimeLimit = useTimer;
+    option->useMPC = useMPC;
 }
 
 void SearchManagerDelete(SearchManager *sManager)
@@ -181,6 +195,15 @@ void SearchManagerSetup(SearchManager *sManager, uint64_t own, uint64_t opp)
     sManager->stones->own = own;
     sManager->stones->opp = opp;
     sManager->state = SM_WAIT;
+}
+
+void SearchManagerReset(SearchManager *sManager, uint64_t own, uint64_t opp)
+{
+    SearchManagerSetup(sManager, own, opp);
+    for (int i = 0; i < sManager->numMaxBranches; i++)
+    {
+        TreeReset(sManager->branches[i].tree);
+    }
 }
 
 BranchProcess *SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 enemyPos)
@@ -272,8 +295,9 @@ void SearchManagerStartPreSearch(SearchManager *sManager)
         assert(sManager->branches[i].state == BRANCH_WAIT);
         if (sManager->branches[i].enemyMove != NOMOVE_INDEX)
         {
+            int depth = sManager->masterOption.useTimeLimit ? 20 : sManager->masterOption.midDepth;
             sManager->branches[i].state = BRANCH_PRE_SEARCH;
-            BranchLaunch(&sManager->branches[i], sManager->stones);
+            BranchLaunch(&sManager->branches[i], sManager->stones, depth);
         }
     }
 }
@@ -312,9 +336,12 @@ void SearchManagerUndo(SearchManager *sManager, uint64_t own, uint64_t opp)
 void SearchManagerUpdateOpp(SearchManager *sManager, uint8 enemyPos)
 {
     *sManager->stones = ApplyEnemyPut(sManager->stones, enemyPos);
-    if (sManager->enableAsyncPreSearching && sManager->state == SM_PRE_SEARCH)
+    if (sManager->enableAsyncPreSearching)
     {
-        sManager->primaryBranch = SearchManagerKillWithoutEnemyPut(sManager, enemyPos);
+        if (sManager->state == SM_PRE_SEARCH)
+        {
+            sManager->primaryBranch = SearchManagerKillWithoutEnemyPut(sManager, enemyPos);
+        }
         if (sManager->primaryBranch == NULL)
         {
             SearchManagerStartPrimeSearch(sManager);
@@ -341,10 +368,17 @@ uint8 SearchManagerGetMove(SearchManager *sManager, score_t map[64])
     SearchTree *tree = sManager->primaryBranch->tree;
     DWORD primeThreadState;
 
-    GetExitCodeThread(sManager->primaryBranch->processHandle, &primeThreadState);
-    if (primeThreadState == STILL_ACTIVE)
+    if (sManager->masterOption.useTimeLimit)
     {
-        Sleep(1000 * sManager->masterOption.oneMoveTime);
+        GetExitCodeThread(sManager->primaryBranch->processHandle, &primeThreadState);
+        if (primeThreadState == STILL_ACTIVE)
+        {
+            Sleep(1000 * sManager->masterOption.oneMoveTime);
+        }
+    }
+    else
+    {
+        WaitForSingleObject(sManager->primaryBranch->processHandle, INFINITE);
     }
 
     SearchManagerKillAll(sManager);
@@ -378,4 +412,5 @@ void SearchManagerKillAll(SearchManager *sManager)
         }
     }
     sManager->state = SM_WAIT;
+    sManager->primaryBranch = NULL;
 }

@@ -53,9 +53,11 @@ typedef struct SearchManager
 } SearchManager;
 
 void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAsyncPreSearch);
-void SearchManagerConfigure(SearchManager *sManager, int mid, int end);
+void SearchManagerConfigureDepth(SearchManager *sManager, int mid, int end);
+void SearchManagerConfigure(SearchManager *sManager, int mid, int end, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC);
 void SearchManagerDelete(SearchManager *sManager);
 void SearchManagerSetup(SearchManager *sManager, uint64_t own, uint64_t opp);
+void SearchManagerReset(SearchManager *sManager, uint64_t own, uint64_t opp);
 BranchProcess *SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 enemyPos);
 void SearchManagerStartPrimeSearch(SearchManager *sManager);
 void SearchManagerStartPreSearch(SearchManager *sManager);

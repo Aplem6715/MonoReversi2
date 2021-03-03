@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <stdio.h>
-#include "search/search.h"
+#include "search/search_manager.h"
 #include "board.h"
 #include "bit_operation.h"
 
@@ -38,12 +38,14 @@ enum GUI_TextColor
 
 typedef const void(__stdcall *GUI_Log)(int knd, char *str);
 
-GUI_Log GUI_Print;
-SearchTree dllTree[1];
-Board dllBoard[1];
+static GUI_Log GUI_Print;
+//SearchTree dllTree[1];
+static SearchManager sManager[1];
+static Board dllBoard[1];
+static uint8 aiColor;
 
 DLLAPI void DllInit();
-DLLAPI void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC);
+DLLAPI void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useTimer, bool useMPC, bool enablePreSearch);
 DLLAPI int DllSearch(double *value);
 
 DLLAPI void DllBoardReset();
@@ -72,7 +74,8 @@ void DllInit()
 {
     srand(GLOBAL_SEED);
     HashInit();
-    TreeInit(dllTree);
+    //TreeInit(dllTree);
+    SearchManagerInit(sManager, 4, true);
     BoardReset(dllBoard);
 
     FILE *fp;
@@ -87,13 +90,13 @@ void DllInit()
  * @param midDepth 中盤探索深度
  * @param endDepth 終盤探索深度
  * @param oneMoveTime 一手にかける時間
- * @param useIDD 反復深化のトグル
  * @param useTimer 時間制限トグル
  * @param useMPC MPC利用トグル
  */
-void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useIDD, bool useTimer, bool useMPC)
+void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useTimer, bool useMPC, bool enablePreSearch)
 {
-    TreeConfig(dllTree, midDepth, endDepth, oneMoveTime, useIDD, useTimer, useMPC);
+    SearchManagerConfigure(sManager, midDepth, endDepth, oneMoveTime, true, useTimer, useMPC);
+    sManager->enableAsyncPreSearching = enablePreSearch;
 }
 
 /**
@@ -104,8 +107,10 @@ void DllConfigureSearch(unsigned char midDepth, unsigned char endDepth, int oneM
  */
 int DllSearch(double *value)
 {
-    uint8 pos = SearchWithSetup(dllTree, BoardGetOwn(dllBoard), BoardGetOpp(dllBoard), 0);
-    *value = dllTree->score;
+    score_t scoreMap[64];
+    uint8 pos = SearchManagerGetMove(sManager, scoreMap);
+    SearchManagerUpdateOwn(sManager, pos);
+    *value = sManager->primaryBranch->tree->score;
     return pos;
 }
 
@@ -115,8 +120,19 @@ int DllSearch(double *value)
  */
 void DllBoardReset()
 {
-    TreeReset(dllTree);
+    uint64_t own, opp;
     BoardReset(dllBoard);
+    if (aiColor == BLACK)
+    {
+        own = BoardGetBlack(dllBoard);
+        opp = BoardGetWhite(dllBoard);
+    }
+    else
+    {
+        own = BoardGetWhite(dllBoard);
+        opp = BoardGetBlack(dllBoard);
+    }
+    SearchManagerReset(sManager, own, opp);
 }
 
 /**
@@ -241,6 +257,6 @@ void SetCallBack(GUI_Log printCallback)
  */
 void DllShowMsg()
 {
-    GUI_Print(GUI_LIME, dllTree->msg);
+    GUI_Print(GUI_LIME, sManager->primaryBranch->tree->msg);
 }
 #endif

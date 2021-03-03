@@ -53,7 +53,7 @@ void GameInit(Game *game, GameMode mode, int mid, int end)
     case GM_CPU_BLACK:
     case GM_CPU_WHITE:
         SearchManagerInit(game->sManager, DEFAULT_PROCESS_NUM, true);
-        SearchManagerConfigure(game->sManager, mid, end);
+        SearchManagerConfigureDepth(game->sManager, mid, end);
     default:
         assert(true);
         printf("Unreachable Code\n");
@@ -156,7 +156,14 @@ void GameReset(Game *game)
     }
     BoardReset(game->board);
     game->turn = 0;
-    SearchManagerSetup(game->sManager, BoardGetOwn(game->board), BoardGetOpp(game->board));
+    if (game->mode == GM_CPU_BLACK)
+    {
+        SearchManagerReset(game->sManager, BoardGetBlack(game->board), BoardGetWhite(game->board));
+    }
+    else
+    {
+        SearchManagerReset(game->sManager, BoardGetWhite(game->board), BoardGetBlack(game->board));
+    }
 }
 
 /**
