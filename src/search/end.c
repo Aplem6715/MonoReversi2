@@ -693,6 +693,7 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
     ResetScoreMap(latestScoreMap);
     ResetScoreMap(tree->scoreMap);
 
+    // 探索設定
     uint8 depth = tree->depth;
     SearchFunc_t NextSearch;
     if (depth - 1 >= tree->pvsDepth)
@@ -704,12 +705,14 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
         NextSearch = EndAlphaBeta;
     }
 
+    // スコアの初期化
     score_t score, alpha, beta;
     score_t bestScore;
     alpha = -MAX_VALUE;
     beta = MAX_VALUE;
     bestScore = -MAX_VALUE;
 
+    // ハッシュによる探索の効率化
     HashData *hashData = NULL;
     uint64_t hashCode;
     if (tree->option.usePvHash)
@@ -721,14 +724,16 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
         }
     }
 
+    // 着手リストの取得
     MoveList moveList;
     CreateMoveList(&moveList, tree->stones);                          // 着手リストを作成
     EvaluateMoveList(tree, &moveList, tree->stones, alpha, hashData); // 着手の事前評価
     assert(moveList.nbMoves > 0);
 
+    // すべての着手についてPVS探索
     uint8 bestMove = NOMOVE_INDEX, secondMove = NOMOVE_INDEX;
     for (Move *move = NextBestMoveWithSwap(moveList.moves); move != NULL; move = NextBestMoveWithSwap(move))
-    { // すべての着手についてループ
+    {
         SearchUpdateEnd(tree, move);
         if (bestScore == -MAX_VALUE)
         {                                                                                              // PVが見つかっていない
@@ -744,13 +749,13 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
             }
             else
             {
-                // カットされたときは最高スコアより低くマッピング
+                // カットされたときは最高スコアより低スコアで記録
                 latestScoreMap[move->posIdx] = score - 1;
             }
         }
         SearchRestoreEnd(tree, move);
 
-        if (score > bestScore) // alphaを上回る着手を発見したら
+        if (score > bestScore)
         {
             bestScore = score;
             bestMove = move->posIdx;
@@ -777,6 +782,7 @@ uint8 EndRoot(SearchTree *tree, bool choiceSecond)
         UpdateScoreMap(latestScoreMap, tree->scoreMap);
     }
 
+    // スコアマップから最善手を計算
     bestScore = MIN_VALUE;
     uint8 bestPos;
     for (int pos = 0; pos < 64; pos++)

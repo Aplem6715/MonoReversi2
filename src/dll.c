@@ -88,11 +88,13 @@ void DllInit()
 /**
  * @brief 探索深度の設定を行う
  * 
+ * @param color AIの色
  * @param midDepth 中盤探索深度
  * @param endDepth 終盤探索深度
  * @param oneMoveTime 一手にかける時間
  * @param useTimer 時間制限トグル
  * @param useMPC MPC利用トグル
+ * @param enablePreSearch 事前探索を有効にするか
  */
 void DllConfigureSearch(int color, unsigned char midDepth, unsigned char endDepth, int oneMoveTime, bool useTimer, bool useMPC, bool enablePreSearch)
 {
