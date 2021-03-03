@@ -104,6 +104,22 @@ void HashTableFree(HashTable *table)
 }
 
 /**
+ * @brief ハッシュ表の複製
+ * 
+ * @param src 複製元のハッシュ表
+ * @param dst 上書きされるハッシュ表
+ */
+void HashTableClone(HashTable *src, HashTable *dst)
+{
+    dst->size = src->size;
+    for (size_t i = 0; i < src->size; i++)
+    {
+        dst->data[i] = src->data[i];
+    }
+    dst->version = src->version;
+}
+
+/**
  * @brief ハッシュ表のリセット
  * 
  * @param table リセットするハッシュ表

@@ -21,8 +21,16 @@
 #include "const.h"
 #include "game.h"
 #include "board.h"
-#include "search/search.h"
 #include "bit_operation.h"
+
+bool IsAITurn(GameMode mode, uint8 color)
+{
+    if (mode == GM_CPU_BLACK && color == BLACK || mode == GM_CPU_WHITE && color == WHITE)
+    {
+        return true;
+    }
+    return false;
+}
 
 /**
  * @brief 対戦の初期化
@@ -33,19 +41,22 @@
  * @param mid 中盤探索深度
  * @param end 終盤探索深度
  */
-void GameInit(Game *game, PlayerEnum black, PlayerEnum white, int mid, int end)
+void GameInit(Game *game, GameMode mode, int mid, int end)
 {
-    game->player[WHITE] = white;
-    game->player[BLACK] = black;
+    game->mode = mode;
 
     // AIの初期化
-    if (game->player[WHITE] == AI)
+    switch (mode)
     {
-        InitTree(&game->tree[WHITE], mid, end, 4, 8, 1, 1, false, false, false);
-    }
-    if (game->player[BLACK] == AI)
-    {
-        InitTree(&game->tree[BLACK], mid, end, 4, 8, 1, 1, false, false, false);
+    case GM_PVP:
+        break;
+    case GM_CPU_BLACK:
+    case GM_CPU_WHITE:
+        SearchManagerInit(game->sManager, DEFAULT_PROCESS_NUM, true);
+        SearchManagerConfigureDepth(game->sManager, mid, end);
+    default:
+        assert(true);
+        printf("Unreachable Code\n");
     }
     GameReset(game);
 }
@@ -57,15 +68,7 @@ void GameInit(Game *game, PlayerEnum black, PlayerEnum white, int mid, int end)
  */
 void GameFree(Game *game)
 {
-    // AIの初期化
-    if (game->player[WHITE] == AI)
-    {
-        DeleteTree(&game->tree[WHITE]);
-    }
-    if (game->player[BLACK] == AI)
-    {
-        DeleteTree(&game->tree[BLACK]);
-    }
+    SearchManagerDelete(game->sManager);
 }
 
 /**
@@ -111,15 +114,10 @@ uint8 WaitPosHumanInput(Game *game)
 uint8 WaitPosAI(Game *game, uint8 color)
 {
     uint8 input;
+    score_t scoreMap[64];
     printf("※考え中・・・\r");
-    input = Search(&game->tree[color], BoardGetOwn(game->board), BoardGetOpp(game->board), 0);
-    printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
-           game->tree[color].usedTime, game->tree[color].nodeCount, game->tree[color].nodeCount / game->tree[color].usedTime, game->tree[color].score / (float)(STONE_VALUE));
-    if (game->tree[color].isEndSearch)
-    {
-        printf("(WLD)");
-    }
-    printf("\n");
+    SearchManagerStartSearch(game->sManager);
+    input = SearchManagerGetMove(game->sManager, scoreMap);
     return input;
 }
 
@@ -134,19 +132,13 @@ uint8 WaitPosAI(Game *game, uint8 color)
  */
 uint8 WaitPos(Game *game, uint8 color)
 {
-    if (game->player[color] == HUMAN)
-    {
-        return WaitPosHumanInput(game);
-    }
-    else if (game->player[color] == AI)
+    if (game->mode == GM_CPU_BLACK && color == BLACK || game->mode == GM_CPU_WHITE && color == WHITE)
     {
         return WaitPosAI(game, color); // TODO
     }
     else
     {
-        printf("Unreachable");
-        assert(0);
-        return 0;
+        return WaitPosHumanInput(game);
     }
 }
 
@@ -164,6 +156,14 @@ void GameReset(Game *game)
     }
     BoardReset(game->board);
     game->turn = 0;
+    if (game->mode == GM_CPU_BLACK)
+    {
+        SearchManagerReset(game->sManager, BoardGetBlack(game->board), BoardGetWhite(game->board));
+    }
+    else
+    {
+        SearchManagerReset(game->sManager, BoardGetWhite(game->board), BoardGetBlack(game->board));
+    }
 }
 
 /**
@@ -173,16 +173,18 @@ void GameReset(Game *game)
  */
 void GameStart(Game *game)
 {
-    uint8 pos;
+    uint8 pos = NOMOVE_INDEX;
+    uint8 turnColor;
     game->turn = 0;
     GameReset(game);
 
+    BoardDraw(game->board);
     while (!BoardIsFinished(game->board))
     {
-        BoardDraw(game->board);
+        turnColor = BoardGetTurnColor(game->board);
         if (BoardGetMobility(game->board) == 0)
         {
-            if (BoardGetTurnColor(game->board) == BLACK)
+            if (turnColor == BLACK)
                 printf("○の");
             else
                 printf("●の");
@@ -193,11 +195,11 @@ void GameStart(Game *game)
         }
 
         // 入力/解析の着手位置を待機
-        pos = WaitPos(game, BoardGetTurnColor(game->board));
+        pos = WaitPos(game, turnColor);
         if (pos == UNDO_INDEX)
         {
             // 人間同士対戦なら一手戻す
-            if (game->player[0] == game->player[1])
+            if (game->mode == GM_PVP)
             {
                 BoardUndo(game->board);
             }
@@ -206,12 +208,18 @@ void GameStart(Game *game)
                 BoardUndoUntilColorChange(game->board);
             }
             printf("戻しました");
+            if (game->mode != GM_PVP)
+            {
+                SearchManagerUndo(game->sManager, BoardGetOpp(game->board), BoardGetOwn(game->board));
+            }
+            BoardDraw(game->board);
             continue;
         }
 
         // 合法手判定
         if (!BoardIsLegalTT(game->board, pos))
         {
+            BoardDraw(game->board);
             printf("%c%dには置けません\n",
                    (char)('A' + pos % 8),
                    pos / 8 + 1);
@@ -220,16 +228,24 @@ void GameStart(Game *game)
         else
         {
             printf("%sが%c%dに置きました\n",
-                   (BoardGetTurnColor(game->board) == BLACK ? "○" : "●"),
+                   (turnColor == BLACK ? "○" : "●"),
                    (char)('A' + pos % 8),
                    pos / 8 + 1);
+
+            // 実際に着手
+            BoardPutTT(game->board, pos);
+            BoardDraw(game->board);
             game->moves[game->turn] = pos;
             game->turn++;
+            if (IsAITurn(game->mode, turnColor))
+            {
+                SearchManagerUpdateOwn(game->sManager, pos);
+            }
+            else if (game->mode != GM_PVP)
+            {
+                SearchManagerUpdateOpp(game->sManager, pos);
+            }
         }
-
-        // 実際に着手
-        BoardPutTT(game->board, pos);
-
     } //end of loop:　while (!BoardIsFinished(game->board))
 
     // 勝敗を表示
@@ -263,16 +279,4 @@ void GameStart(Game *game)
     printf("\n");
     getchar();
     getchar();
-}
-
-/**
- * @brief 指定色側の探索木を取得
- * 
- * @param game 対戦情報
- * @param color 色指定
- * @return SearchTree* 指定色の探索木
- */
-SearchTree *GetTree(Game *game, uint8 color)
-{
-    return &game->tree[color];
 }

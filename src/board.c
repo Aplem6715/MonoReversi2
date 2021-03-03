@@ -263,13 +263,13 @@ bool BoardUndo(Board *board)
             board->white = board->white ^ flip ^ posBit;
         }
         board->turn = hist_turn;
+        return true;
     }
     else
     {
         printf("これ以上戻せません\n");
-        return 0;
+        return false;
     }
-    return 1;
 }
 
 /**

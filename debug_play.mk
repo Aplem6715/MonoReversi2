@@ -29,6 +29,7 @@ OBJS=\
 	$(SEARCH_OUTDIR)\mid.o\
 	$(SEARCH_OUTDIR)\end.o\
 	$(SEARCH_OUTDIR)\search.o\
+	$(SEARCH_OUTDIR)\search_manager.o\
 	$(OUTDIR)\main.o
 
 	
@@ -36,10 +37,12 @@ CFLAGS=\
 	/arch:AVX2\
 	/nologo\
 	/W3\
+	/WX\
 	/c\
 	/D_WIN32_WINNT=0x0600\
 	/DUNICODE\
 	/D_UNICODE\
+	/DDEBUG\
 	/source-charset:utf-8\
 	/bigobj\
 	/EHsc\
