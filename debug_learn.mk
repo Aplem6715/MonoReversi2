@@ -28,6 +28,7 @@ LEARN_OBJS=\
 	$(SEARCH_OUTDIR)\mid.o\
 	$(SEARCH_OUTDIR)\end.o\
 	$(SEARCH_OUTDIR)\search.o\
+	$(SEARCH_OUTDIR)\search_manager.o\
 	$(AI_OUTDIR)\eval.o\
 	$(AI_OUTDIR)\ai_const.o\
 	$(AI_OUTDIR)\nnet.o\

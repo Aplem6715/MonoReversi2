@@ -297,8 +297,8 @@ double LearnFromAscii(SearchTree trees[2], string recordFileName, vector<Feature
 void LearnFromAsciiAllFileInDir(bool resetWeight, string folder)
 {
     SearchTree trees[2];
-    TreeInit(&trees[0]); // 旧
-    TreeInit(&trees[1]); // 新
+    TreeInit(&trees[0], false); // 旧
+    TreeInit(&trees[1], false); // 新
     TreeConfigDepth(&trees[0], 4, 10);
     TreeConfigDepth(&trees[1], 4, 10);
 
