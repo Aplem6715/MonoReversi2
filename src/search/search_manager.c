@@ -21,6 +21,9 @@
 #include "../bit_operation.h"
 #include "../debug_util.h"
 
+#define PRE_SEARCH_SHALLO_DEPTH 5
+#define PRE_SEARCH_TOO_DEEP_DEPTH 20
+
 /**
  * @brief 自身の着手を適用する
  * 
@@ -143,13 +146,13 @@ void StartSearchAsync(void *tree)
  * @param beforeEnemyStones 相手が着手する前の石情報
  * @param depth 探索深度
  */
-void BranchLaunch(BranchProcess *branch, Stones *beforeEnemyStones, int depth)
+void BranchLaunch(BranchProcess *branch, Stones *beforeEnemyStones, int depth, int endDepth)
 {
     Stones stones = ApplyEnemyPut(beforeEnemyStones, branch->enemyMove);
     branch->tree->killFlag = false;
 
     // 事前探索をするときはタイマーOFF
-    TreeConfig(branch->tree, depth, 20, 10000, true, false, false);
+    TreeConfig(branch->tree, depth, endDepth, 10000, true, false, false);
     SearchSetup(branch->tree, stones.own, stones.opp);
 
     branch->processHandle = (HANDLE)_beginthread(StartSearchAsync, 0, branch->tree);
@@ -246,9 +249,10 @@ void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAs
 {
     DEBUG_PUTS("SearchManager Init\n");
     sManager->numMaxBranches = maxSubProcess;
+    sManager->branches = (BranchProcess *)malloc(maxSubProcess * sizeof(BranchProcess));
+
     sManager->state = SM_WAIT;
     sManager->enableAsyncPreSearching = enableAsyncPreSearch;
-    sManager->branches = (BranchProcess *)malloc(maxSubProcess * sizeof(BranchProcess));
     sManager->masterOption = DEFAULT_OPTION;
     sManager->primaryBranch = NULL;
 
@@ -363,6 +367,8 @@ BranchProcess *SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 e
     DEBUG_PUTS("SearchManagerKillWithoutEnemy\n");
     BranchProcess *branch;
     BranchProcess *primary = NULL;
+
+    // 不要なプロセスの終了フラグを立てる
     for (int i = 0; i < sManager->numMaxBranches; i++)
     {
         branch = &sManager->branches[i];
@@ -371,6 +377,7 @@ BranchProcess *SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 e
         if (branch->enemyMove == enemyPos)
         {
             DEBUG_PRINTF("\t PrimeSearch Processing @Branch:%d\n", branch->id);
+            // メインルートのプロセスは保持
             primary = branch;
             branch->state = BRANCH_PRIME_SEARCH;
             sManager->state = SM_PRIMARY_SEARCH;
@@ -381,6 +388,7 @@ BranchProcess *SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 e
         }
     }
 
+    // 終了を待機
     for (int i = 0; i < sManager->numMaxBranches; i++)
     {
         branch = &sManager->branches[i];
@@ -390,10 +398,12 @@ BranchProcess *SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 e
         }
     }
 
+    // 事前探索プロセス内にメインルートがなかったら待機状態に
     if (primary == NULL)
     {
         sManager->state = SM_WAIT;
     }
+
     return primary;
 }
 
@@ -409,21 +419,20 @@ void SearchManagerStartPrimeSearch(SearchManager *sManager)
 
     sManager->state = SM_PRIMARY_SEARCH;
     BranchProcess *branch = sManager->branches;
+    sManager->primaryBranch = branch;
 
     DEBUG_PRINTF("\t PrimeSearch Processing @Branch:%d\n", branch->id);
     DEBUG_PRINTF("\t own:%llu opp:%llu\n", sManager->stones->own, sManager->stones->opp);
-
-    sManager->primaryBranch = branch;
 
     branch->tree->killFlag = false;
     branch->processHandle = NULL;
 
     branch->state = BRANCH_PRIME_SEARCH;
-    TreeConfigClone(branch->tree, sManager->masterOption);
-    SearchWithSetup(branch->tree, sManager->stones->own, sManager->stones->opp, false);
+    {
+        TreeConfigClone(branch->tree, sManager->masterOption);
+        SearchWithSetup(branch->tree, sManager->stones->own, sManager->stones->opp, false);
+    }
     branch->state = BRANCH_WAIT;
-
-    //CopyScoreMap(branch->tree->scoreMap, sManager->scoreMap);
 
     sManager->state = SM_PRIMARY_DONE;
 }
@@ -449,7 +458,7 @@ void SearchManagerStartPreSearch(SearchManager *sManager)
     {
         // 敵盤面で浅い探索をして，スコアマップを作成
         sManager->state = SM_PRE_SORT;
-        TreeConfigDepth(sManager->shallowTree, 6, 10);
+        TreeConfigDepth(sManager->shallowTree, PRE_SEARCH_SHALLO_DEPTH, sManager->masterOption.endDepth);
         SearchWithSetup(sManager->shallowTree, sManager->stones->opp, sManager->stones->own, false);
         // スコアマップの上位いくつかを抽出してBranchに設定
         ResetBranches(sManager);
@@ -472,9 +481,9 @@ void SearchManagerStartPreSearch(SearchManager *sManager)
         assert(sManager->branches[i].state == BRANCH_WAIT);
         if (sManager->branches[i].enemyMove != NOMOVE_INDEX)
         {
-            int depth = sManager->masterOption.useTimeLimit ? 20 : sManager->masterOption.midDepth;
             sManager->branches[i].state = BRANCH_PRE_SEARCH;
-            BranchLaunch(&sManager->branches[i], sManager->stones, depth);
+            int depth = sManager->masterOption.useTimeLimit ? PRE_SEARCH_TOO_DEEP_DEPTH : sManager->masterOption.midDepth;
+            BranchLaunch(&sManager->branches[i], sManager->stones, depth, sManager->masterOption.endDepth);
         }
     }
 }
@@ -617,11 +626,15 @@ uint8 SearchManagerGetMove(SearchManager *sManager, score_t map[64])
     SearchTree *tree = primaryBranch->tree;
     CopyScoreMap(tree->scoreMap, map);
     strcpy(sManager->msg, tree->msg);
-    printf("探索深度:%d 思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
-           tree->completeDepth, tree->usedTime, tree->nodeCount, tree->nodeCount / tree->usedTime, tree->score / (float)(STONE_VALUE));
+    printf("探索深度:%d 思考時間：%.2f[s]  探索ノード数：%.2f[MNode]  探索速度：%.2f[MNode/s]  ",
+           tree->completeDepth, tree->usedTime, tree->nodeCount / 1000000.0f, tree->nodeCount / tree->usedTime / 1000000.0f);
     if (tree->isEndSearch)
     {
-        printf("(WLD)");
+        printf("推定CPUスコア：%.1f(完)", tree->score);
+    }
+    else
+    {
+        printf("推定CPUスコア：%.1f", tree->score / (float)(STONE_VALUE));
     }
     printf("\n");
 
@@ -640,12 +653,14 @@ uint8 SearchManagerGetMove(SearchManager *sManager, score_t map[64])
 void SearchManagerKillAll(SearchManager *sManager)
 {
     DEBUG_PUTS("SearchManager KillAll\n");
+    // 終了フラグを立てる
     for (int i = 0; i < sManager->numMaxBranches; i++)
     {
         BranchProcess *branch = &sManager->branches[i];
         branch->tree->killFlag = true;
     }
 
+    // 終了待ち
     for (int i = 0; i < sManager->numMaxBranches; i++)
     {
         BranchProcess *branch = &sManager->branches[i];
