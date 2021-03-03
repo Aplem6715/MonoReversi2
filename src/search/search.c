@@ -45,15 +45,8 @@ void UpdateScoreMap(score_t latest[64], score_t complete[64])
  * @brief 探索木の生成
  * 
  * @param tree 生成した探索木
- * @param midDepth 中盤探索深度
- * @param endDepth 終盤探索深度
- * @param midPvsDepth 中盤探索PVS-αβ切り替え深度
- * @param endPvsDepth 終盤探索PVS-αβ切り替え深度
- * @param useHash ハッシュ表を使うか
- * @param useMPC Multi Prob Cutを使うか
- * @param nestMPC MPCの浅い探索中にさらにMPCを許可するか
  */
-void TreeInit(SearchTree *tree)
+void TreeInit(SearchTree *tree, bool isShallow)
 {
     tree->option = DEFAULT_OPTION;
 
@@ -81,8 +74,16 @@ void TreeInit(SearchTree *tree)
             return;
         }
 
-        HashTableInit(tree->nwsTable, NWS_TABLE_SIZE);
-        HashTableInit(tree->pvTable, PV_TABLE_SIZE);
+        if (isShallow)
+        {
+            HashTableInit(tree->nwsTable, SHALLOW_NWS_TABLE_SIZE);
+            HashTableInit(tree->pvTable, SHALLOW_PV_TABLE_SIZE);
+        }
+        else
+        {
+            HashTableInit(tree->nwsTable, NWS_TABLE_SIZE);
+            HashTableInit(tree->pvTable, PV_TABLE_SIZE);
+        }
     }
 }
 

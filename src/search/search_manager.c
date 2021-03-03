@@ -74,7 +74,7 @@ uint8 BestMoveFromMap(score_t map[64])
 
 void BranchInit(BranchProcess *branch, int id)
 {
-    TreeInit(branch->tree);
+    TreeInit(branch->tree, false);
     branch->processHandle = NULL;
     branch->scoreMapMutex = NULL;
     branch->enemyMove = NOMOVE_INDEX;
@@ -146,6 +146,19 @@ void InsertBestBranch(SearchManager *sManager, uint8 pos, score_t score)
     }
 }
 
+void BroadcastTreeToAllBranch(SearchManager *sManager, BranchProcess *originBranch)
+{
+    BranchProcess *branch;
+    for (int i = 0; i < sManager->numMaxBranches; i++)
+    {
+        branch = &sManager->branches[i];
+        if (branch != originBranch)
+        {
+            TreeClone(originBranch->tree, branch->tree);
+        }
+    }
+}
+
 void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAsyncPreSearch)
 {
     DEBUG_PUTS("SearchManager Init\n");
@@ -155,6 +168,8 @@ void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAs
     sManager->branches = (BranchProcess *)malloc(maxSubProcess * sizeof(BranchProcess));
     sManager->masterOption = DEFAULT_OPTION;
     sManager->primaryBranch = NULL;
+
+    TreeInit(sManager->shallowTree, true);
 
     for (int i = 0; i < maxSubProcess; i++)
     {
@@ -290,17 +305,15 @@ void SearchManagerStartPreSearch(SearchManager *sManager)
 
     if (nbMoves > 1)
     {
-        BranchProcess *branch = sManager->branches;
         // 敵盤面で浅い探索をして，スコアマップを作成
         sManager->state = SM_PRE_SORT;
-        branch->tree->killFlag = false;
-        TreeConfigDepth(branch->tree, 6, 10);
-        SearchWithSetup(branch->tree, sManager->stones->opp, sManager->stones->own, false);
+        TreeConfigDepth(sManager->shallowTree, 6, 10);
+        SearchWithSetup(sManager->shallowTree, sManager->stones->opp, sManager->stones->own, false);
         // スコアマップの上位いくつかを抽出してBranchに設定
         ResetBranches(sManager);
         for (int pos = 0; pos < 64; pos++)
         {
-            InsertBestBranch(sManager, pos, branch->tree->scoreMap[pos]);
+            InsertBestBranch(sManager, pos, sManager->shallowTree->scoreMap[pos]);
         }
     }
     else
@@ -438,6 +451,9 @@ uint8 SearchManagerGetMove(SearchManager *sManager, score_t map[64])
     printf("\n");
 
     sManager->state = SM_WAIT;
+
+    // メイン探索のハッシュ情報など，ツリー情報まるごとクローン
+    //BroadcastTreeToAllBranch(sManager, primaryBranch);
     return BestMoveFromMap(map);
 }
 

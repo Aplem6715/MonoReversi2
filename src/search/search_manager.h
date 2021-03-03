@@ -41,6 +41,7 @@ typedef struct BranchProcess
 typedef struct SearchManager
 {
     Stones stones[1];
+    SearchTree shallowTree[1];
     BranchProcess *branches;
     BranchProcess *primaryBranch;
     SearchMangerState state;
