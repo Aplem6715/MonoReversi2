@@ -20,6 +20,7 @@
 #include "search/search_manager.h"
 #include "board.h"
 #include "bit_operation.h"
+#include "debug_util.h"
 
 #ifdef _WINDLL
 
@@ -72,16 +73,16 @@ DLLAPI void DllShowMsg();
  */
 void DllInit()
 {
+    FILE *fp;
+    AllocConsole();
+    freopen_s(&fp, "CONOUT$", "w", stdout); /* 標準出力(stdout)を新しいコンソールに向ける */
+    freopen_s(&fp, "CONOUT$", "w", stderr); /* 標準エラー出力(stderr)を新しいコンソールに向ける */
+
     srand(GLOBAL_SEED);
     HashInit();
     //TreeInit(dllTree);
     BoardReset(dllBoard);
     SearchManagerInit(sManager, 4, true);
-
-    FILE *fp;
-    AllocConsole();
-    freopen_s(&fp, "CONOUT$", "w", stdout); /* 標準出力(stdout)を新しいコンソールに向ける */
-    freopen_s(&fp, "CONOUT$", "w", stderr); /* 標準エラー出力(stderr)を新しいコンソールに向ける */
 }
 
 /**
@@ -108,11 +109,22 @@ void DllConfigureSearch(int color, unsigned char midDepth, unsigned char endDept
  */
 int DllSearch(double *value)
 {
+    DEBUG_PUTS("Dll Search\n");
     score_t scoreMap[64];
 
     SearchManagerStartSearch(sManager);
     uint8 pos = SearchManagerGetMove(sManager, scoreMap);
     //*value = sManager->primaryBranch->tree->score;
+    DEBUG_PRINTF("Dll Search - pos:%d\n", pos);
+    for (int y = 0; y < 8; y++)
+    {
+        DEBUG_PRINTF("\t｜");
+        for (int x = 0; x < 8; x++)
+        {
+            DEBUG_PRINTF("%d｜", scoreMap[x + y * 8]);
+        }
+        DEBUG_PRINTF("\n");
+    }
     return pos;
 }
 
@@ -147,13 +159,6 @@ int DllPut(int pos)
 {
     if (BoardIsLegalTT(dllBoard, pos))
     {
-        BoardPutTT(dllBoard, pos);
-        if (BoardGetMobility(dllBoard) == 0)
-        {
-            BoardSkip(dllBoard);
-            return 1;
-        }
-
         if (BoardGetTurnColor(dllBoard) == aiColor)
         {
             SearchManagerUpdateOwn(sManager, pos);
@@ -162,6 +167,14 @@ int DllPut(int pos)
         {
             SearchManagerUpdateOpp(sManager, pos);
         }
+
+        BoardPutTT(dllBoard, pos);
+        if (BoardGetMobility(dllBoard) == 0)
+        {
+            BoardSkip(dllBoard);
+            return 1;
+        }
+
         return 1;
     }
     return 0;

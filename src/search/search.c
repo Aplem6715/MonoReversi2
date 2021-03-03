@@ -21,6 +21,7 @@
 #include "end.h"
 #include "../ai/nnet.h"
 #include "../bit_operation.h"
+#include "../debug_util.h"
 
 static const uint8 FIRST_MOVES_INDEX[] = {19, 26, 37, 44};
 
@@ -363,11 +364,17 @@ uint8 SearchWithoutSetup(SearchTree *tree)
 
     if (tree->nbEmpty == 60)
     {
+        DEBUG_PRINTF("\tSearchWithoutSetup FirstPut\n");
         pos = FIRST_MOVES_INDEX[rand() % 4];
         tree->scoreMap[pos] = 0;
+
+        tree->completeDepth = 1;
+        tree->score = 0;
+        tree->nodeCount = 1;
     }
     else if (tree->nbEmpty <= tree->option.endDepth)
     {
+        DEBUG_PRINTF("\tSearchWithoutSetup End\n");
         if (!tree->isEndSearch)
         {
             tree->isEndSearch = true;
@@ -386,6 +393,7 @@ uint8 SearchWithoutSetup(SearchTree *tree)
     }
     else
     {
+        DEBUG_PRINTF("\tSearchWithoutSetup Mid:%d\n", tree->option.midDepth);
         tree->isEndSearch = 0;
         tree->depth = tree->option.midDepth;
         tree->pvsDepth = tree->option.midPvsDepth;
@@ -423,6 +431,7 @@ uint8 SearchWithoutSetup(SearchTree *tree)
  */
 uint8 SearchWithSetup(SearchTree *tree, uint64_t own, uint64_t opp, bool choiceSecond)
 {
+    DEBUG_PRINTF("\tSearchWithSetup\n");
     SearchSetup(tree, own, opp);
     tree->option.choiceSecond = choiceSecond;
     uint8 pos = SearchWithoutSetup(tree);

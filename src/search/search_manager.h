@@ -22,11 +22,13 @@ typedef enum SearchMangerState
     SM_PRE_SORT,
     SM_PRE_SEARCH,
     SM_PRIMARY_SEARCH,
+    SM_PRIMARY_DONE,
     SM_WAIT,
 } SearchMangerState;
 
 typedef struct BranchProcess
 {
+    int id;
     SearchTree tree[1];
     HANDLE processHandle;
     HANDLE scoreMapMutex;

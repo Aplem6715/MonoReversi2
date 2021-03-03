@@ -939,7 +939,8 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
     // 反復深化
     if (tree->option.useIDDS)
     {
-        tree->timeLimit = clock() + CLOCKS_PER_SEC * tree->option.oneMoveTime;
+        if (tree->option.useTimeLimit)
+            tree->timeLimit = clock() + CLOCKS_PER_SEC * tree->option.oneMoveTime;
 
         // sqrtのほうが早いが，探索中断ができなくなるので1ずつ増やす
         for (tmpDepth = endDepth; tmpDepth >= startDepth; tmpDepth -= 1 /*(int)sqrt(tmpDepth)*/)
@@ -987,6 +988,7 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
         tree->completeDepth = endDepth;
     }
 
+    printf("finish search\n");
     score_t bestScore = MIN_VALUE;
     uint8 bestPos;
     for (int pos = 0; pos < 64; pos++)
@@ -996,6 +998,7 @@ uint8 MidRoot(SearchTree *tree, bool choiceSecond)
             bestScore = tree->scoreMap[pos];
             bestPos = pos;
         }
+        printf("%d: %d\n", pos, tree->scoreMap[pos]);
     }
     tree->score = bestScore;
 

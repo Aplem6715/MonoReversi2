@@ -35,6 +35,7 @@ OBJS=\
 	
 CFLAGS=\
 	/arch:AVX2\
+	/DDEBUG\
 	/nologo\
 	/W3\
 	/c\
