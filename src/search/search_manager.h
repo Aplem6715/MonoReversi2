@@ -60,6 +60,7 @@ BranchProcess *SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 e
 void SearchManagerStartPrimeSearch(SearchManager *sManager);
 void SearchManagerStartPreSearch(SearchManager *sManager);
 void SearchManagerStartSearch(SearchManager *sManager);
+void SearchManagerUndo(SearchManager *sManager, uint64_t own, uint64_t opp);
 void SearchManagerUpdateOpp(SearchManager *sManager, uint8 enemyPos);
 void SearchManagerUpdateOwn(SearchManager *sManager, uint8 myPos);
 uint8 SearchManagerGetMove(SearchManager *sManager, score_t map[64]);

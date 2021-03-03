@@ -303,6 +303,12 @@ void SearchManagerStartSearch(SearchManager *sManager)
     }
 }
 
+void SearchManagerUndo(SearchManager *sManager, uint64_t own, uint64_t opp)
+{
+    SearchManagerKillAll(sManager);
+    SearchManagerSetup(sManager, own, opp);
+}
+
 void SearchManagerUpdateOpp(SearchManager *sManager, uint8 enemyPos)
 {
     *sManager->stones = ApplyEnemyPut(sManager->stones, enemyPos);
@@ -333,13 +339,18 @@ uint8 SearchManagerGetMove(SearchManager *sManager, score_t map[64])
 {
     assert(sManager->primaryBranch != NULL);
     SearchTree *tree = sManager->primaryBranch->tree;
+    DWORD primeThreadState;
 
-    Sleep(1000 * sManager->masterOption.oneMoveTime);
+    GetExitCodeThread(sManager->primaryBranch->processHandle, &primeThreadState);
+    if (primeThreadState == STILL_ACTIVE)
+    {
+        Sleep(1000 * sManager->masterOption.oneMoveTime);
+    }
 
     SearchManagerKillAll(sManager);
     CopyScoreMap(tree->scoreMap, map);
-    printf("思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
-           tree->usedTime, tree->nodeCount, tree->nodeCount / tree->usedTime, tree->score / (float)(STONE_VALUE));
+    printf("探索深度:%d 思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
+           tree->completeDepth, tree->usedTime, tree->nodeCount, tree->nodeCount / tree->usedTime, tree->score / (float)(STONE_VALUE));
     if (tree->isEndSearch)
     {
         printf("(WLD)");

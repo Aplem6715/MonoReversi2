@@ -201,6 +201,11 @@ void GameStart(Game *game)
                 BoardUndoUntilColorChange(game->board);
             }
             printf("戻しました");
+            if (game->mode != GM_PVP)
+            {
+                SearchManagerUndo(game->sManager, BoardGetOpp(game->board), BoardGetOwn(game->board));
+            }
+            BoardDraw(game->board);
             continue;
         }
 
