@@ -428,6 +428,7 @@ uint8 SearchManagerGetMove(SearchManager *sManager, score_t map[64])
 
     SearchTree *tree = primaryBranch->tree;
     CopyScoreMap(tree->scoreMap, map);
+    strcpy(sManager->msg, tree->msg);
     printf("探索深度:%d 思考時間：%.2f[s]  探索ノード数：%zu[Node]  探索速度：%.1f[Node/s]  推定CPUスコア：%.1f",
            tree->completeDepth, tree->usedTime, tree->nodeCount, tree->nodeCount / tree->usedTime, tree->score / (float)(STONE_VALUE));
     if (tree->isEndSearch)

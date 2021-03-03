@@ -283,6 +283,6 @@ void SetCallBack(GUI_Log printCallback)
  */
 void DllShowMsg()
 {
-    GUI_Print(GUI_LIME, sManager->primaryBranch->tree->msg);
+    GUI_Print(GUI_LIME, sManager->msg);
 }
 #endif

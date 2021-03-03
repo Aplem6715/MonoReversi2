@@ -52,6 +52,9 @@ typedef struct SearchManager
     int numBranches;
 
     bool enableAsyncPreSearching;
+
+    // CUIメッセージ利用時のバッファ
+    char msg[1024];
 } SearchManager;
 
 void SearchManagerInit(SearchManager *sManager, int maxSubProcess, bool enableAsyncPreSearch);
