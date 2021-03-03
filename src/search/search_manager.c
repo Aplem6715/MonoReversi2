@@ -13,6 +13,7 @@
  * Branchは探索を続行，それ以外のプロセスの探索を終了する。
  * 
  */
+#define _CRT_SECURE_NO_WARNINGS
 #include <assert.h>
 #include <stdio.h>
 
@@ -262,6 +263,11 @@ BranchProcess *SearchManagerKillWithoutEnemyPut(SearchManager *sManager, uint8 e
             WaitForSingleObject(branch->processHandle, INFINITE);
         }
     }
+
+    if (primary == NULL)
+    {
+        sManager->state = SM_WAIT;
+    }
     return primary;
 }
 
@@ -388,11 +394,7 @@ void SearchManagerUpdateOpp(SearchManager *sManager, uint8 enemyPos)
         {
             sManager->primaryBranch = SearchManagerKillWithoutEnemyPut(sManager, enemyPos);
         }
-        if (sManager->primaryBranch == NULL)
-        {
-            SearchManagerStartPrimeSearch(sManager);
-        }
-        else
+        if (sManager->primaryBranch != NULL)
         {
             printf("Found PreSearch!!\n");
         }
@@ -412,7 +414,11 @@ void SearchManagerUpdateOwn(SearchManager *sManager, uint8 myPos)
 uint8 SearchManagerGetMove(SearchManager *sManager, score_t map[64])
 {
     DEBUG_PUTS("SearchManager GetMove\n");
-    assert(sManager->primaryBranch != NULL);
+
+    if (sManager->primaryBranch == NULL)
+    {
+    }
+
     DEBUG_PRINTF("\t From Branch:%d\n", sManager->primaryBranch->id);
     BranchProcess *primaryBranch = sManager->primaryBranch;
 

@@ -42,6 +42,7 @@ CFLAGS=\
 	/D_WIN32_WINNT=0x0600\
 	/DUNICODE\
 	/D_UNICODE\
+	/DDEBUG\
 	/source-charset:utf-8\
 	/bigobj\
 	/EHsc\
