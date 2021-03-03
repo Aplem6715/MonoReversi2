@@ -407,13 +407,23 @@ uint8 SearchWithoutSetup(SearchTree *tree)
     finish = clock();
     tree->usedTime = (finish - start) / (double)CLOCKS_PER_SEC;
 
+    float outScore;
+    if (tree->isEndSearch)
+    {
+        outScore = tree->score;
+    }
+    else
+    {
+        outScore = tree->score / (float)(STONE_VALUE);
+    }
+
     sprintf_s(tree->msg, sizeof(tree->msg),
-              "探索深度: %d  思考時間：%.2f[s]  探索ノード数：%zu[kNode]  探索速度：%.1f[kNode/s]  推定CPUスコア：%.1f",
+              "探索深度: %d  思考時間：%.2f[s]  推定CPU側スコア：%.1f",
               tree->completeDepth,
               tree->usedTime,
-              tree->nodeCount / 1000,
-              tree->nodeCount / 1000 / tree->usedTime,
-              tree->score / (float)(STONE_VALUE));
+              /*tree->nodeCount / 1000000.0,
+              tree->nodeCount / 1000000.0 / tree->usedTime,*/
+              outScore);
 
     assert(tree->nbMpcNested == 0);
 
