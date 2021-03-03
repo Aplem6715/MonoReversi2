@@ -194,16 +194,17 @@ int DllStoneCount(int color)
 /**
  * @brief 一手戻す
  * 
- * @return int 実行結果bool 
+ * @return int 戻した後の色
  */
 int DllUndo()
 {
     if (BoardUndo(dllBoard))
     {
         SearchManagerUndo(sManager, BoardGetOpp(dllBoard), BoardGetOwn(dllBoard));
-        return 1;
+        return BoardGetTurnColor(dllBoard);
     }
-    return 0;
+    // これ以上戻せない
+    return -1;
 }
 
 /**
